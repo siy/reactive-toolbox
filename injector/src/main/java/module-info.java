@@ -1,4 +1,4 @@
-module reactivetoolbox.injector {
+module org.reactivetoolbox.injector {
     exports org.reactivetoolbox.injector;
     requires reactivetoolbox.annotations;
 }
