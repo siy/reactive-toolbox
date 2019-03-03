@@ -16,9 +16,8 @@
 
 package org.reactivetoolbox.injector;
 
-import org.reactivetoolbox.annotations.injector.Named;
-import org.reactivetoolbox.injector.core.annotation.AnnotationFactory;
-import org.reactivetoolbox.injector.core.exception.InjectorException;
+import org.reactivetoolbox.injector.annotations.Named;
+import org.reactivetoolbox.injector.internal.annotation.AnnotationFactory;
 
 import java.util.Collections;
 

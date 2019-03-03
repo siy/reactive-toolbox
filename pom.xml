@@ -11,6 +11,9 @@
         <module>injector</module>
         <module>annotations</module>
         <module>configuration</module>
+        <module>http</module>
+        <module>introspector</module>
+        <module>async</module>
     </modules>
     <packaging>pom</packaging>
 

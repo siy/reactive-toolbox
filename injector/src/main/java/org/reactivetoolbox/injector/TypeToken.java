@@ -16,8 +16,6 @@
 
 package org.reactivetoolbox.injector;
 
-import org.reactivetoolbox.injector.core.exception.InjectorException;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 

@@ -16,7 +16,7 @@
 
 package org.reactivetoolbox.injector;
 
-import org.reactivetoolbox.annotations.injector.ConfiguredBy;
+import org.reactivetoolbox.injector.annotations.ConfiguredBy;
 
 import java.util.List;
 

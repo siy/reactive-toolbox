@@ -16,9 +16,8 @@
 
 package org.reactivetoolbox.injector;
 
-import org.reactivetoolbox.annotations.injector.*;
-import org.reactivetoolbox.injector.core.InjectorImpl;
-import org.reactivetoolbox.injector.core.exception.InjectorException;
+import org.reactivetoolbox.injector.annotations.*;
+import org.reactivetoolbox.injector.internal.InjectorImpl;
 
 import java.util.function.Supplier;
 

@@ -16,10 +16,10 @@
 
 package org.reactivetoolbox.injector;
 
-import org.reactivetoolbox.annotations.injector.BindingAnnotation;
-import org.reactivetoolbox.annotations.injector.ConfiguredBy;
-import org.reactivetoolbox.annotations.injector.Named;
-import org.reactivetoolbox.injector.core.Bindings;
+import org.reactivetoolbox.injector.annotations.BindingAnnotation;
+import org.reactivetoolbox.injector.annotations.ConfiguredBy;
+import org.reactivetoolbox.injector.annotations.Named;
+import org.reactivetoolbox.injector.internal.Bindings;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;

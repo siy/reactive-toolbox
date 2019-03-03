@@ -16,9 +16,8 @@
 
 package org.reactivetoolbox.injector;
 
-import org.reactivetoolbox.annotations.injector.BindingAnnotation;
-import org.reactivetoolbox.injector.core.annotation.AnnotationFactory;
-import org.reactivetoolbox.injector.core.exception.InjectorException;
+import org.reactivetoolbox.injector.annotations.BindingAnnotation;
+import org.reactivetoolbox.injector.internal.annotation.AnnotationFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
