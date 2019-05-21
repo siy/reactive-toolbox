@@ -45,7 +45,7 @@ import static org.reactivetoolbox.core.async.Tuples.of;
  * The result of operation will be accepted only once. Subsequent notifications do not change the result.
  */
 public class Promises {
-    public static <E, T> Promise<E, T> waiting() {
+    public static <E, T> Promise<E, T> create() {
         return new Promise<>();
     }
 
@@ -57,55 +57,31 @@ public class Promises {
         return new Promise<E, T>().resolve(Either.left(value));
     }
 
-    public static <E, T> Promise<E, T> syncWait(final Promise<E, T> promise) {
-        CountDownLatch latch = new CountDownLatch(1);
-        promise.then(value -> latch.countDown());
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            // Ignore exception
-        }
-        return promise;
-    }
-
-    public static <E, T> Promise<E, T> syncWait(final Promise<E, T> promise, long timeout, TimeUnit unit) {
-        CountDownLatch latch = new CountDownLatch(1);
-        promise.then(value -> latch.countDown());
-
-        try {
-            latch.await(timeout, unit);
-        } catch (InterruptedException e) {
-            // Ignore exception
-        }
-        return promise;
-    }
-
     @SuppressWarnings("unchecked")
     public static <E, T> Promise<E, T> any(final Promise<E, T> ... promises) {
-        final Promise<E, T> result = waiting();
+        final Promise<E, T> result = create();
 
-        for(Promise<E, T> promise : promises) {
+        for(final Promise<E, T> promise : promises) {
             promise.then(value -> result.resolve(Either.right(value)))
-                   .onError(error -> result.resolve(Either.left(error)));
+                   .otherwise(error -> result.resolve(Either.left(error)));
         }
 
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1> Promise<E, Tuple1<T1>> zip(final Promise<E, T1> promise) {
+    public static <E, T1> Promise<E, Tuple1<T1>> all(final Promise<E, T1> promise) {
         return zipper(values -> of((T1) values[0]), promise);
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2> Promise<E, Tuple2<T1, T2>> zip(final Promise<E, T1> promise1,
+    public static <E, T1, T2> Promise<E, Tuple2<T1, T2>> all(final Promise<E, T1> promise1,
                                                              final Promise<E, T2> promise2) {
         return zipper(values -> of((T1) values[0], (T2) values[1]), promise1, promise2);
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3> Promise<E, Tuple3<T1, T2, T3>> zip(final Promise<E, T1> promise1,
+    public static <E, T1, T2, T3> Promise<E, Tuple3<T1, T2, T3>> all(final Promise<E, T1> promise1,
                                                                      final Promise<E, T2> promise2,
                                                                      final Promise<E, T3> promise3) {
         return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2]),
@@ -113,7 +89,7 @@ public class Promises {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4> Promise<E, Tuple4<T1, T2, T3, T4>> zip(final Promise<E, T1> promise1,
+    public static <E, T1, T2, T3, T4> Promise<E, Tuple4<T1, T2, T3, T4>> all(final Promise<E, T1> promise1,
                                                                              final Promise<E, T2> promise2,
                                                                              final Promise<E, T3> promise3,
                                                                              final Promise<E, T4> promise4) {
@@ -122,7 +98,7 @@ public class Promises {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5> Promise<E, Tuple5<T1, T2, T3, T4, T5>> zip(final Promise<E, T1> promise1,
+    public static <E, T1, T2, T3, T4, T5> Promise<E, Tuple5<T1, T2, T3, T4, T5>> all(final Promise<E, T1> promise1,
                                                                                      final Promise<E, T2> promise2,
                                                                                      final Promise<E, T3> promise3,
                                                                                      final Promise<E, T4> promise4,
@@ -132,7 +108,7 @@ public class Promises {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5, T6> Promise<E, Tuple6<T1, T2, T3, T4, T5, T6>> zip(final Promise<E, T1> promise1,
+    public static <E, T1, T2, T3, T4, T5, T6> Promise<E, Tuple6<T1, T2, T3, T4, T5, T6>> all(final Promise<E, T1> promise1,
                                                                                              final Promise<E, T2> promise2,
                                                                                              final Promise<E, T3> promise3,
                                                                                              final Promise<E, T4> promise4,
@@ -144,7 +120,7 @@ public class Promises {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5, T6, T7> Promise<E, Tuple7<T1, T2, T3, T4, T5, T6, T7>> zip(final Promise<E, T1> promise1,
+    public static <E, T1, T2, T3, T4, T5, T6, T7> Promise<E, Tuple7<T1, T2, T3, T4, T5, T6, T7>> all(final Promise<E, T1> promise1,
                                                                                                      final Promise<E, T2> promise2,
                                                                                                      final Promise<E, T3> promise3,
                                                                                                      final Promise<E, T4> promise4,
@@ -158,7 +134,7 @@ public class Promises {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5, T6, T7, T8> Promise<E, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>> zip(final Promise<E, T1> promise1,
+    public static <E, T1, T2, T3, T4, T5, T6, T7, T8> Promise<E, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>> all(final Promise<E, T1> promise1,
                                                                                                              final Promise<E, T2> promise2,
                                                                                                              final Promise<E, T3> promise3,
                                                                                                              final Promise<E, T4> promise4,
@@ -173,7 +149,7 @@ public class Promises {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5, T6, T7, T8, T9> Promise<E, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> zip(
+    public static <E, T1, T2, T3, T4, T5, T6, T7, T8, T9> Promise<E, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> all(
             final Promise<E, T1> promise1,
             final Promise<E, T2> promise2,
             final Promise<E, T3> promise3,
@@ -190,8 +166,8 @@ public class Promises {
     }
 
     @SuppressWarnings("unchecked")
-    private static <E, T extends Tuple> Promise<E, T> zipper(Function<Object[], T> valueTransformer,
-                                                             Promise<E, ?>... promises) {
+    private static <E, T extends Tuple> Promise<E, T> zipper(final Function<Object[], T> valueTransformer,
+                                                             final Promise<E, ?>... promises) {
         final Object[] values = new Object[promises.length];
         final Promise<E, T> result = new Promise<>();
         final ThresholdAction thresholdAction = ThresholdAction.of(promises.length,
@@ -199,9 +175,9 @@ public class Promises {
                                                                            values))));
 
         int i = 0;
-        for (Promise promise : promises) {
+        for (final Promise promise : promises) {
             promise.then(nextAction(values, i, thresholdAction))
-                   .onError(error -> result.resolve(Either.left((E) error)));
+                   .otherwise(error -> result.resolve(Either.left((E) error)));
             i++;
         }
         return result;
@@ -215,8 +191,8 @@ public class Promises {
 
     public static class Promise<E, T> {
         private final AtomicMarkableReference<Either<E, T>> value = new AtomicMarkableReference<>(null, false);
-        private final BlockingQueue<Consumer<T>> actions = new LinkedBlockingQueue<>();
-        private final BlockingQueue<Consumer<E>> errorActions = new LinkedBlockingQueue<>();
+        private final BlockingQueue<Consumer<T>> thenActions = new LinkedBlockingQueue<>();
+        private final BlockingQueue<Consumer<E>> otherwiseActions = new LinkedBlockingQueue<>();
 
         private Promise() {
         }
@@ -225,38 +201,62 @@ public class Promises {
             return Optional.ofNullable(value.getReference());
         }
 
-        public Promise<E, T> resolve(Either<E, T> result) {
+        public Promise<E, T> resolve(final Either<E, T> result) {
             if (value.compareAndSet(null, result, false, true)) {
                 if (result.isRight()) {
-                    actions.forEach(action -> action.accept(value.getReference().right().get()));
+                    thenActions.forEach(action -> action.accept(value.getReference().right().get()));
                 } else {
-                    errorActions.forEach(action -> action.accept(value.getReference().left().get()));
+                    otherwiseActions.forEach(action -> action.accept(value.getReference().left().get()));
                 }
 
             }
             return this;
         }
 
-        public Promise<E, T> then(Consumer<T> action) {
+        public Promise<E, T> then(final Consumer<T> action) {
             if (value.isMarked()) {
-                Either<E, T> reference = value.getReference();
+                final Either<E, T> reference = value.getReference();
                 if (reference.isRight()) {
                     action.accept(reference.right().get());
                 }
             } else {
-                actions.offer(action);
+                thenActions.offer(action);
             }
             return this;
         }
 
-        public Promise<E, T> onError(Consumer<E> action) {
+        public Promise<E, T> otherwise(final Consumer<E> action) {
             if (value.isMarked()) {
-                Either<E, T> reference = value.getReference();
+                final Either<E, T> reference = value.getReference();
                 if (reference.isLeft()) {
                     action.accept(reference.left().get());
                 }
             } else {
-                errorActions.offer(action);
+                otherwiseActions.offer(action);
+            }
+            return this;
+        }
+
+        public Promise<E, T> syncWait() {
+            final CountDownLatch latch = new CountDownLatch(1);
+            then(value -> latch.countDown());
+
+            try {
+                latch.await();
+            } catch (final InterruptedException e) {
+                // Ignore exception
+            }
+            return this;
+        }
+
+        public Promise<E, T> syncWait(final long timeout, final TimeUnit unit) {
+            final CountDownLatch latch = new CountDownLatch(1);
+            then(value -> latch.countDown());
+
+            try {
+                latch.await(timeout, unit);
+            } catch (final InterruptedException e) {
+                // Ignore exception
             }
             return this;
         }
@@ -266,12 +266,12 @@ public class Promises {
         private final AtomicInteger counter;
         private final Runnable action;
 
-        private ThresholdAction(int count, Runnable action) {
+        private ThresholdAction(final int count, final Runnable action) {
             counter = new AtomicInteger(count);
             this.action = action;
         }
 
-        public static ThresholdAction of(int count, Runnable action) {
+        public static ThresholdAction of(final int count, final Runnable action) {
             return new ThresholdAction(count, action);
         }
 
