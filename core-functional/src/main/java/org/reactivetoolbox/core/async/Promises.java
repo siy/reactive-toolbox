@@ -189,6 +189,7 @@ public class Promises {
         return value -> { values[index] = value; thresholdAction.event();};
     }
 
+    //TODO: add support for timeouts?
     public static class Promise<E, T> {
         private final AtomicMarkableReference<Either<E, T>> value = new AtomicMarkableReference<>(null, false);
         private final BlockingQueue<Consumer<T>> thenActions = new LinkedBlockingQueue<>();
@@ -199,6 +200,10 @@ public class Promises {
 
         public Optional<Either<E, T>> value() {
             return Optional.ofNullable(value.getReference());
+        }
+
+        public boolean ready() {
+            return value().isPresent();
         }
 
         public Promise<E, T> resolve(final Either<E, T> result) {
