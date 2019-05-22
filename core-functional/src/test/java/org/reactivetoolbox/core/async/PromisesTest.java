@@ -2,16 +2,17 @@ package org.reactivetoolbox.core.async;
 
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.async.Promises.Promise;
-import org.reactivetoolbox.core.async.Tuples.Tuple1;
-import org.reactivetoolbox.core.async.Tuples.Tuple2;
-import org.reactivetoolbox.core.async.Tuples.Tuple3;
-import org.reactivetoolbox.core.async.Tuples.Tuple4;
-import org.reactivetoolbox.core.async.Tuples.Tuple5;
-import org.reactivetoolbox.core.async.Tuples.Tuple6;
-import org.reactivetoolbox.core.async.Tuples.Tuple7;
-import org.reactivetoolbox.core.async.Tuples.Tuple8;
-import org.reactivetoolbox.core.async.Tuples.Tuple9;
 import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.core.functional.Tuples;
+import org.reactivetoolbox.core.functional.Tuples.Tuple1;
+import org.reactivetoolbox.core.functional.Tuples.Tuple2;
+import org.reactivetoolbox.core.functional.Tuples.Tuple3;
+import org.reactivetoolbox.core.functional.Tuples.Tuple4;
+import org.reactivetoolbox.core.functional.Tuples.Tuple5;
+import org.reactivetoolbox.core.functional.Tuples.Tuple6;
+import org.reactivetoolbox.core.functional.Tuples.Tuple7;
+import org.reactivetoolbox.core.functional.Tuples.Tuple8;
+import org.reactivetoolbox.core.functional.Tuples.Tuple9;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;

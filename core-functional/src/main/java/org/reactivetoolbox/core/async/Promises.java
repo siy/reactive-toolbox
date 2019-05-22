@@ -16,17 +16,17 @@ package org.reactivetoolbox.core.async;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.core.async.Tuples.Tuple;
-import org.reactivetoolbox.core.async.Tuples.Tuple1;
-import org.reactivetoolbox.core.async.Tuples.Tuple2;
-import org.reactivetoolbox.core.async.Tuples.Tuple3;
-import org.reactivetoolbox.core.async.Tuples.Tuple4;
-import org.reactivetoolbox.core.async.Tuples.Tuple5;
-import org.reactivetoolbox.core.async.Tuples.Tuple6;
-import org.reactivetoolbox.core.async.Tuples.Tuple7;
-import org.reactivetoolbox.core.async.Tuples.Tuple8;
-import org.reactivetoolbox.core.async.Tuples.Tuple9;
 import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.core.functional.Tuples.Tuple;
+import org.reactivetoolbox.core.functional.Tuples.Tuple1;
+import org.reactivetoolbox.core.functional.Tuples.Tuple2;
+import org.reactivetoolbox.core.functional.Tuples.Tuple3;
+import org.reactivetoolbox.core.functional.Tuples.Tuple4;
+import org.reactivetoolbox.core.functional.Tuples.Tuple5;
+import org.reactivetoolbox.core.functional.Tuples.Tuple6;
+import org.reactivetoolbox.core.functional.Tuples.Tuple7;
+import org.reactivetoolbox.core.functional.Tuples.Tuple8;
+import org.reactivetoolbox.core.functional.Tuples.Tuple9;
 
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.reactivetoolbox.core.async.Tuples.of;
+import static org.reactivetoolbox.core.functional.Tuples.of;
 
 /**
  * Representation of the future result of asynchronous operation.

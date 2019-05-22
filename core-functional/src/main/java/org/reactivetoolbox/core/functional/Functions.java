@@ -15,7 +15,7 @@
  *
  */
 
-package org.reactivetoolbox.core.async;
+package org.reactivetoolbox.core.functional;
 
 public interface Functions {
 

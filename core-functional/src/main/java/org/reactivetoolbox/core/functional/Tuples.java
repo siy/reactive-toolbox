@@ -15,17 +15,17 @@
  *
  */
 
-package org.reactivetoolbox.core.async;
+package org.reactivetoolbox.core.functional;
 
-import org.reactivetoolbox.core.async.Functions.FN1;
-import org.reactivetoolbox.core.async.Functions.FN2;
-import org.reactivetoolbox.core.async.Functions.FN3;
-import org.reactivetoolbox.core.async.Functions.FN4;
-import org.reactivetoolbox.core.async.Functions.FN5;
-import org.reactivetoolbox.core.async.Functions.FN6;
-import org.reactivetoolbox.core.async.Functions.FN7;
-import org.reactivetoolbox.core.async.Functions.FN8;
-import org.reactivetoolbox.core.async.Functions.FN9;
+import org.reactivetoolbox.core.functional.Functions.FN1;
+import org.reactivetoolbox.core.functional.Functions.FN2;
+import org.reactivetoolbox.core.functional.Functions.FN3;
+import org.reactivetoolbox.core.functional.Functions.FN4;
+import org.reactivetoolbox.core.functional.Functions.FN5;
+import org.reactivetoolbox.core.functional.Functions.FN6;
+import org.reactivetoolbox.core.functional.Functions.FN7;
+import org.reactivetoolbox.core.functional.Functions.FN8;
+import org.reactivetoolbox.core.functional.Functions.FN9;
 
 import java.util.Arrays;
 
