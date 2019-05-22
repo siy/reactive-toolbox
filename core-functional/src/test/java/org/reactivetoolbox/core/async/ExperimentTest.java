@@ -31,10 +31,6 @@ public class ExperimentTest {
               .perform(input -> input.map((s, i, u) -> service.invoke(s, i, u)));
     }
 
-    private static class Context {
-
-    }
-
     private static class Validations {
         public static <T> Either<ErrorDescriptor, T> notNull(final T input) {
             //TODO: what to do with error type here?
@@ -65,7 +61,6 @@ public class ExperimentTest {
     }
 
     private static class ErrorDescriptor {
-
         public static final ErrorDescriptor PARAMETER_IS_NULL = new ErrorDescriptor();
         public static final ErrorDescriptor PARAMETER_IS_BELOW_RANGE = new ErrorDescriptor();
         public static final ErrorDescriptor PARAMETER_IS_ABOVE_RANGE = new ErrorDescriptor();
