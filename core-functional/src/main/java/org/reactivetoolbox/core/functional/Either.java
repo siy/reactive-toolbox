@@ -30,7 +30,7 @@ public final class Either<L, R> {
      * @return built instance
      */
     public static <L, R> Either<L, R> left(final L value) {
-        return new Either(value, null);
+        return new Either<>(value, null);
     }
 
     /**
@@ -42,7 +42,7 @@ public final class Either<L, R> {
      * @return built instance
      */
     public static <L, R> Either<L, R> right(final R value) {
-        return new Either(null, value);
+        return new Either<>(null, value);
     }
 
     /**
@@ -54,7 +54,7 @@ public final class Either<L, R> {
      * @return built instance
      */
     public static <L, R> Either<L, R> failure(final L value) {
-        return new Either(value, null);
+        return new Either<>(value, null);
     }
 
     /**
@@ -66,7 +66,7 @@ public final class Either<L, R> {
      * @return built instance
      */
     public static <L, R> Either<L, R> success(final R value) {
-        return new Either(null, value);
+        return new Either<>(null, value);
     }
 
     /**

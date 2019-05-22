@@ -66,7 +66,7 @@ public class ExperimentTest {
         public static final ErrorDescriptor PARAMETER_IS_ABOVE_RANGE = new ErrorDescriptor();
     }
 
-    private static class HandlerBuilder {
+    public static class HandlerBuilder {
         public HandlerBuilder get(final String requestPath) {
             return this;
         }
@@ -91,23 +91,23 @@ public class ExperimentTest {
         }
     }
 
-    private static class Parameters {
+    public static class Parameters {
 
         public static <T> Parameter<T> inPath(final Class<T> type, final String name) {
-            return new Parameter();
+            return new Parameter<>();
         }
 
         public static <T> Parameter<T> inQuery(final Class<T> type, final String name) {
-            return new Parameter();
+            return new Parameter<>();
         }
 
         public static <T> Parameter<T> inBody(final Class<T> type) {
-            return new Parameter();
+            return new Parameter<>();
         }
 
         //TODO: expand it to per-class, like Context, Request, Response, etc.
         public static <T> Parameter<T> internal(final Class<T> type) {
-            return new Parameter();
+            return new Parameter<>();
         }
 
         //TODO: add convert(request) -> Either<E, T>
@@ -132,7 +132,7 @@ public class ExperimentTest {
     }
 
     private static class Performer<T> {
-        public void perform(final FN1<Promise, T> handler) {
+        public void perform(final FN1<Promise<?,?>, T> handler) {
         }
     }
 }

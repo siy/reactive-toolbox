@@ -57,7 +57,7 @@ public class Promises {
         return new Promise<E, T>().resolve(Either.left(value));
     }
 
-    @SuppressWarnings("unchecked")
+    @SafeVarargs
     public static <E, T> Promise<E, T> any(final Promise<E, T> ... promises) {
         final Promise<E, T> result = create();
 
@@ -175,7 +175,7 @@ public class Promises {
                                                                            values))));
 
         int i = 0;
-        for (final Promise promise : promises) {
+        for (final Promise<?, ?> promise : promises) {
             promise.then(nextAction(values, i, thresholdAction))
                    .otherwise(error -> result.resolve(Either.left((E) error)));
             i++;
