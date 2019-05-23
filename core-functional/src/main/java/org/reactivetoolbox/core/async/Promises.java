@@ -41,8 +41,8 @@ import java.util.function.Function;
 import static org.reactivetoolbox.core.functional.Tuples.of;
 
 /**
- * Representation of the future result of asynchronous operation.
- * The result of operation will be accepted only once. Subsequent notifications do not change the result.
+ * Representation of the future result of asynchronous operation. The result of operation will be accepted only once.
+ * Subsequent notifications do not change the result.
  */
 public class Promises {
     public static <E, T> Promise<E, T> create() {
@@ -58,10 +58,10 @@ public class Promises {
     }
 
     @SafeVarargs
-    public static <E, T> Promise<E, T> any(final Promise<E, T> ... promises) {
+    public static <E, T> Promise<E, T> any(final Promise<E, T>... promises) {
         final Promise<E, T> result = create();
 
-        for(final Promise<E, T> promise : promises) {
+        for (final Promise<E, T> promise : promises) {
             promise.then(value -> result.resolve(Either.right(value)))
                    .otherwise(error -> result.resolve(Either.left(error)));
         }
@@ -81,88 +81,64 @@ public class Promises {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3> Promise<E, Tuple3<T1, T2, T3>> all(final Promise<E, T1> promise1,
-                                                                     final Promise<E, T2> promise2,
-                                                                     final Promise<E, T3> promise3) {
-        return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2]),
-                      promise1, promise2, promise3);
+    public static <E, T1, T2, T3> Promise<E, Tuple3<T1, T2, T3>>
+           all(final Promise<E, T1> promise1, final Promise<E, T2> promise2, final Promise<E, T3> promise3) {
+        return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2]), promise1, promise2, promise3);
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4> Promise<E, Tuple4<T1, T2, T3, T4>> all(final Promise<E, T1> promise1,
-                                                                             final Promise<E, T2> promise2,
-                                                                             final Promise<E, T3> promise3,
-                                                                             final Promise<E, T4> promise4) {
-        return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3]),
-                      promise1, promise2, promise3, promise4);
+    public static <E, T1, T2, T3, T4> Promise<E, Tuple4<T1, T2, T3, T4>>
+           all(final Promise<E, T1> promise1, final Promise<E, T2> promise2, final Promise<E, T3> promise3,
+               final Promise<E, T4> promise4) {
+        return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3]), promise1, promise2,
+                      promise3, promise4);
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5> Promise<E, Tuple5<T1, T2, T3, T4, T5>> all(final Promise<E, T1> promise1,
-                                                                                     final Promise<E, T2> promise2,
-                                                                                     final Promise<E, T3> promise3,
-                                                                                     final Promise<E, T4> promise4,
-                                                                                     final Promise<E, T5> promise5) {
+    public static <E, T1, T2, T3, T4, T5> Promise<E, Tuple5<T1, T2, T3, T4, T5>>
+           all(final Promise<E, T1> promise1, final Promise<E, T2> promise2, final Promise<E, T3> promise3,
+               final Promise<E, T4> promise4, final Promise<E, T5> promise5) {
         return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4]),
                       promise1, promise2, promise3, promise4, promise5);
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5, T6> Promise<E, Tuple6<T1, T2, T3, T4, T5, T6>> all(final Promise<E, T1> promise1,
-                                                                                             final Promise<E, T2> promise2,
-                                                                                             final Promise<E, T3> promise3,
-                                                                                             final Promise<E, T4> promise4,
-                                                                                             final Promise<E, T5> promise5,
-                                                                                             final Promise<E, T6> promise6) {
+    public static <E, T1, T2, T3, T4, T5, T6> Promise<E, Tuple6<T1, T2, T3, T4, T5, T6>>
+           all(final Promise<E, T1> promise1, final Promise<E, T2> promise2, final Promise<E, T3> promise3,
+               final Promise<E, T4> promise4, final Promise<E, T5> promise5, final Promise<E, T6> promise6) {
         return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4],
                                    (T6) values[5]),
                       promise1, promise2, promise3, promise4, promise5, promise6);
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5, T6, T7> Promise<E, Tuple7<T1, T2, T3, T4, T5, T6, T7>> all(final Promise<E, T1> promise1,
-                                                                                                     final Promise<E, T2> promise2,
-                                                                                                     final Promise<E, T3> promise3,
-                                                                                                     final Promise<E, T4> promise4,
-                                                                                                     final Promise<E, T5> promise5,
-                                                                                                     final Promise<E, T6> promise6,
-                                                                                                     final Promise<E, T7> promise7) {
+    public static <E, T1, T2, T3, T4, T5, T6, T7> Promise<E, Tuple7<T1, T2, T3, T4, T5, T6, T7>>
+           all(final Promise<E, T1> promise1, final Promise<E, T2> promise2, final Promise<E, T3> promise3,
+               final Promise<E, T4> promise4, final Promise<E, T5> promise5, final Promise<E, T6> promise6,
+               final Promise<E, T7> promise7) {
         return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4],
                                    (T6) values[5], (T7) values[6]),
-                      promise1, promise2, promise3, promise4,
-                      promise5, promise6, promise7);
+                      promise1, promise2, promise3, promise4, promise5, promise6, promise7);
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5, T6, T7, T8> Promise<E, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>> all(final Promise<E, T1> promise1,
-                                                                                                             final Promise<E, T2> promise2,
-                                                                                                             final Promise<E, T3> promise3,
-                                                                                                             final Promise<E, T4> promise4,
-                                                                                                             final Promise<E, T5> promise5,
-                                                                                                             final Promise<E, T6> promise6,
-                                                                                                             final Promise<E, T7> promise7,
-                                                                                                             final Promise<E, T8> promise8) {
+    public static <E, T1, T2, T3, T4, T5, T6, T7, T8> Promise<E, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>
+           all(final Promise<E, T1> promise1, final Promise<E, T2> promise2, final Promise<E, T3> promise3,
+               final Promise<E, T4> promise4, final Promise<E, T5> promise5, final Promise<E, T6> promise6,
+               final Promise<E, T7> promise7, final Promise<E, T8> promise8) {
         return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4],
                                    (T6) values[5], (T7) values[6], (T8) values[7]),
-                      promise1, promise2, promise3, promise4,
-                      promise5, promise6, promise7, promise8);
+                      promise1, promise2, promise3, promise4, promise5, promise6, promise7, promise8);
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, T1, T2, T3, T4, T5, T6, T7, T8, T9> Promise<E, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> all(
-            final Promise<E, T1> promise1,
-            final Promise<E, T2> promise2,
-            final Promise<E, T3> promise3,
-            final Promise<E, T4> promise4,
-            final Promise<E, T5> promise5,
-            final Promise<E, T6> promise6,
-            final Promise<E, T7> promise7,
-            final Promise<E, T8> promise8,
-            final Promise<E, T9> promise9) {
+    public static <E, T1, T2, T3, T4, T5, T6, T7, T8, T9> Promise<E, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>
+           all(final Promise<E, T1> promise1, final Promise<E, T2> promise2, final Promise<E, T3> promise3,
+               final Promise<E, T4> promise4, final Promise<E, T5> promise5, final Promise<E, T6> promise6,
+               final Promise<E, T7> promise7, final Promise<E, T8> promise8, final Promise<E, T9> promise9) {
         return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4],
                                    (T6) values[5], (T7) values[6], (T8) values[7], (T9) values[8]),
-                      promise1, promise2, promise3, promise4, promise5,
-                      promise6, promise7, promise8, promise9);
+                      promise1, promise2, promise3, promise4, promise5, promise6, promise7, promise8, promise9);
     }
 
     @SuppressWarnings("unchecked")
@@ -170,9 +146,9 @@ public class Promises {
                                                              final Promise<E, ?>... promises) {
         final Object[] values = new Object[promises.length];
         final Promise<E, T> result = new Promise<>();
-        final ThresholdAction thresholdAction = ThresholdAction.of(promises.length,
-                                                                   () -> result.resolve(Either.right(valueTransformer.apply(
-                                                                           values))));
+        final ThresholdAction thresholdAction =
+                                              ThresholdAction.of(promises.length,
+                                                                 () -> result.resolve(Either.right(valueTransformer.apply(values))));
 
         int i = 0;
         for (final Promise<?, ?> promise : promises) {
@@ -183,13 +159,15 @@ public class Promises {
         return result;
     }
 
-    private static <T> Consumer<T> nextAction(final Object[] values,
-                                              final int index,
+    private static <T> Consumer<T> nextAction(final Object[] values, final int index,
                                               final ThresholdAction thresholdAction) {
-        return value -> { values[index] = value; thresholdAction.event();};
+        return value -> {
+            values[index] = value;
+            thresholdAction.event();
+        };
     }
 
-    //TODO: add support for timeouts?
+    // TODO: add support for timeouts?
     public static class Promise<E, T> {
         private final AtomicMarkableReference<Either<E, T>> value = new AtomicMarkableReference<>(null, false);
         private final BlockingQueue<Consumer<T>> thenActions = new LinkedBlockingQueue<>();
