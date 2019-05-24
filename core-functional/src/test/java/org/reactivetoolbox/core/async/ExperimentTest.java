@@ -92,7 +92,6 @@ public class ExperimentTest {
     }
 
     public static class Parameters {
-
         public static <T> Parameter<T> inPath(final Class<T> type, final String name) {
             return new Parameter<>();
         }

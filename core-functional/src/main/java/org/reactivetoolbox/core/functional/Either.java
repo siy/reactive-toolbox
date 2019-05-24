@@ -81,7 +81,7 @@ public final class Either<L, R> {
      * @return built instance
      */
     public static <L, R> Either<L, R> failure(final L value) {
-        return new Either<>(value, null);
+        return left(value);
     }
 
     /**
@@ -97,7 +97,18 @@ public final class Either<L, R> {
      * @return built instance
      */
     public static <L, R> Either<L, R> success(final R value) {
-        return new Either<>(null, value);
+        return right(value);
+    }
+
+    /**
+     * Apply transformation and create new instance.
+     *
+     * @param mapper
+     *        Function to apply
+     * @return transformed instance
+     */
+    public <L1, R1> Either<L1, R1> map(final Functions.FN2<Either<L1, R1>, L, R> mapper) {
+        return mapper.apply(left, right);
     }
 
     /**
@@ -143,7 +154,7 @@ public final class Either<L, R> {
         return t -> {
             try {
                 return Either.success(function.apply(t));
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 return Either.failure(ex);
             }
         };
@@ -168,7 +179,7 @@ public final class Either<L, R> {
         return t -> {
             try {
                 return Either.success(function.apply(t));
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 return Either.failure(errorMapper.apply(ex));
             }
         };
@@ -188,11 +199,12 @@ public final class Either<L, R> {
      *        output value type
      * @return {@link Function} which returns {@link Either}
      */
-    public static <T, R> Function<T, Either<Pair<Exception, T>, R>> liftWithValue(final CheckedFunction<T, R> function) {
+    public static <T, R> Function<T, Either<Pair<Exception, T>, R>>
+           liftWithValue(final CheckedFunction<T, R> function) {
         return t -> {
             try {
                 return Either.success(function.apply(t));
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 return Either.failure(Pair.of(ex, t));
             }
         };

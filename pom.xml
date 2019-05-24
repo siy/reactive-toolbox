@@ -9,6 +9,7 @@
 	<version>0.1.0-SNAPSHOT</version>
 	<modules>
 		<module>core-functional</module>
+		<module>web-server</module>
 	</modules>
 	<packaging>pom</packaging>
 
@@ -47,13 +48,13 @@
 		<dependencies>
 			<dependency>
 				<groupId>org.reactive-toolbox</groupId>
-				<artifactId>annotations</artifactId>
+				<artifactId>core-functional</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.reactive-toolbox</groupId>
-				<artifactId>injector</artifactId>
+				<artifactId>web-server</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
