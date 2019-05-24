@@ -15,6 +15,7 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple4;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class ExperimentTest {
     private Service service;
@@ -28,10 +29,10 @@ public class ExperimentTest {
               .get("/some/path/{one}").with(Parameters.inPath(String.class, "one").validated(Validations::notNull),
                                             Parameters.inQuery(Integer.class, "two").validated(Validations::range, 1, 10),
                                             Parameters.inBody(UUID.class).validated(Validations::notNull))
-              .perform(input -> input.map((s, i, u) -> service.invoke(s, i, u)));
+              .perform(input -> input.map(service::invoke));
     }
 
-    private static class Validations {
+    public static class Validations {
         public static <T> Either<ErrorDescriptor, T> notNull(final T input) {
             //TODO: what to do with error type here?
             return input == null ? Either.failure(ErrorDescriptor.PARAMETER_IS_NULL) : Either.success(input);
@@ -49,7 +50,22 @@ public class ExperimentTest {
     }
 
     private static class Server {
-        public <E> HandlerBuilder on() {
+        public <E> PathBuilder on() {
+            return null;
+        }
+    }
+
+    public static class PathBuilder {
+        public HandlerBuilder get(final String path) {
+            return null;
+        }
+        public HandlerBuilder put(final String path) {
+            return null;
+        }
+        public HandlerBuilder post(final String path) {
+            return null;
+        }
+        public HandlerBuilder delete(final String path) {
             return null;
         }
     }
@@ -60,15 +76,14 @@ public class ExperimentTest {
         }
     }
 
-    private static class ErrorDescriptor {
+    public static class ErrorDescriptor {
         public static final ErrorDescriptor PARAMETER_IS_NULL = new ErrorDescriptor();
         public static final ErrorDescriptor PARAMETER_IS_BELOW_RANGE = new ErrorDescriptor();
         public static final ErrorDescriptor PARAMETER_IS_ABOVE_RANGE = new ErrorDescriptor();
     }
 
     public static class HandlerBuilder {
-        public HandlerBuilder get(final String requestPath) {
-            return this;
+        public <T> void perform(final Supplier<Either<?, T>> handler) {
         }
 
         public <T> Performer<Tuple1<T>> with(final Parameters.Parameter<T> first) {

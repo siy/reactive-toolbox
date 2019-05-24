@@ -35,7 +35,6 @@ public class Parameters {
         return new Parameter<>(FACTORY.get(type));
     }
 
-    // TODO: expand it to per-class, like Context, Request, Response, etc.
     public static <T> Parameter<T> internal(final Class<T> type) {
         return new Parameter<>(FACTORY.get(type));
     }

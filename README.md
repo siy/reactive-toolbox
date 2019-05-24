@@ -40,6 +40,6 @@ This library contains basic primitives used across all libraries.
 - ``Tuple1-Tuple9`` - immutable type safe containers for set of values of different types.
 - ``Promise`` - eventual result of asynchronous operation.
 
-These three types enable are base for convenient writing of asynchronous code without introduction of "callback hell".
+These three types are base for convenient writing of asynchronous code without introduction of "callback hell".
 
 (TBD)
