@@ -76,7 +76,7 @@ public class ExperimentTest {
         }
     }
 
-    public static class ErrorDescriptor {
+    public static class ErrorDescriptor implements BaseError {
         public static final ErrorDescriptor PARAMETER_IS_NULL = new ErrorDescriptor();
         public static final ErrorDescriptor PARAMETER_IS_BELOW_RANGE = new ErrorDescriptor();
         public static final ErrorDescriptor PARAMETER_IS_ABOVE_RANGE = new ErrorDescriptor();

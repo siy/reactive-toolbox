@@ -14,6 +14,7 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple7;
 import org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import org.reactivetoolbox.core.functional.Tuples.Tuple9;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,11 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-class PromisesTest {
+public class PromisesTest {
     private final Executor executor = Executors.newSingleThreadExecutor();
     @Test
     void multipleAssignmentsAreIgnored() {
-        final Promise<Throwable, Integer> promise = Promises.create();
+        final Promise<ErrorHolder, Integer> promise = Promises.create();
 
         promise.resolve(Either.right(1));
         promise.resolve(Either.right(2));
@@ -41,7 +42,7 @@ class PromisesTest {
 
     @Test
     void thenActionsAreExecuted() {
-        final Promise<Throwable, Integer> promise = Promises.create();
+        final Promise<ErrorHolder, Integer> promise = Promises.create();
         final AtomicInteger holder = new AtomicInteger(-1);
 
         promise.then(value -> holder.set(value));
@@ -52,7 +53,7 @@ class PromisesTest {
 
     @Test
     void thenActionsAreExecutedEvenIfAddedAfterPromiseResolution() {
-        final Promise<Throwable, Integer> promise = Promises.create();
+        final Promise<ErrorHolder, Integer> promise = Promises.create();
         final AtomicInteger holder = new AtomicInteger(-1);
 
         promise.resolve(Either.right(1));
@@ -63,31 +64,31 @@ class PromisesTest {
 
     @Test
     void otherwiseActionsAreExecuted() {
-        final Promise<Integer, Integer> promise = Promises.create();
+        final Promise<ErrorHolder, Integer> promise = Promises.create();
         final AtomicInteger holder = new AtomicInteger(-1);
 
-        promise.otherwise(value -> holder.set(value));
-        promise.resolve(Either.left(1));
+        promise.otherwise(value -> holder.set(value.code()));
+        promise.resolve(Either.left(ErrorHolder.of(1)));
 
-        assertEquals(Integer.valueOf(1), holder.get());
+        assertEquals(1, holder.get());
     }
 
     @Test
     void otherwiseActionsAreExecutedEvenIfAddedAfterPromiseResolution() {
-        final Promise<Integer, Integer> promise = Promises.create();
+        final Promise<ErrorHolder, Integer> promise = Promises.create();
         final AtomicInteger holder = new AtomicInteger(-1);
 
-        promise.resolve(Either.left(1));
-        promise.otherwise(value -> holder.set(value));
+        promise.resolve(Either.left(ErrorHolder.of(1)));
+        promise.otherwise(value -> holder.set(value.code()));
 
-        assertEquals(Integer.valueOf(1), holder.get());
+        assertEquals(1, holder.get());
     }
 
     @Test
     void anyResolvedPromiseResolvesResult1() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> anyPromise = Promises.any(promise1, promise2);
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> anyPromise = Promises.any(promise1, promise2);
 
         assertFalse(anyPromise.ready());
 
@@ -100,23 +101,23 @@ class PromisesTest {
 
     @Test
     void anyResolvedPromiseResolvesResult2() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> anyPromise = Promises.any(promise1, promise2);
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> anyPromise = Promises.any(promise1, promise2);
 
         assertFalse(anyPromise.ready());
 
-        promise2.resolve(Either.left(1));
+        promise2.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(anyPromise.ready());
         assertTrue(anyPromise.value().get().isLeft());
-        assertEquals(Integer.valueOf(1), anyPromise.value().get().left().get());
+        assertEquals(1, anyPromise.value().get().left().get().code());
     }
 
     @Test
     void allResolvesWhenAllPromisesAreResolved1() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Tuple1<Integer>> allPromise = Promises.all(promise1);
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Tuple1<Integer>> allPromise = Promises.all(promise1);
 
         assertFalse(allPromise.ready());
 
@@ -129,23 +130,23 @@ class PromisesTest {
 
     @Test
     void allResolvesWhenAnyPromiseResolvedWithLeft1() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Tuple1<Integer>> allPromise = Promises.all(promise1);
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Tuple1<Integer>> allPromise = Promises.all(promise1);
 
         assertFalse(allPromise.ready());
 
-        promise1.resolve(Either.left(1));
+        promise1.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void allResolvesWhenAllPromisesAreResolved2() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Tuple2<Integer, Integer>> allPromise = Promises.all(promise1, promise2);
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Tuple2<Integer, Integer>> allPromise = Promises.all(promise1, promise2);
 
         assertFalse(allPromise.ready());
 
@@ -162,25 +163,25 @@ class PromisesTest {
 
     @Test
     void allResolvesWhenAnyPromiseResolvedWithLeft2() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Tuple2<Integer, Integer>> allPromise = Promises.all(promise1, promise2);
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Tuple2<Integer, Integer>> allPromise = Promises.all(promise1, promise2);
 
         assertFalse(allPromise.ready());
 
-        promise1.resolve(Either.left(1));
+        promise1.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void allResolvesWhenAllPromisesAreResolved3() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Tuple3<Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Tuple3<Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3);
 
@@ -203,29 +204,29 @@ class PromisesTest {
 
     @Test
     void allResolvesWhenAnyPromiseResolvedWithLeft3() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Tuple3<Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Tuple3<Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3);
 
         assertFalse(allPromise.ready());
 
-        promise2.resolve(Either.left(1));
+        promise2.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void allResolvesWhenAllPromisesAreResolved4() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Tuple4<Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Tuple4<Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4);
 
@@ -252,31 +253,31 @@ class PromisesTest {
 
     @Test
     void allResolvesWhenAnyPromiseResolvedWithLeft4() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Tuple4<Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Tuple4<Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4);
 
         assertFalse(allPromise.ready());
 
-        promise3.resolve(Either.left(1));
+        promise3.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void allResolvesWhenAllPromisesAreResolved5() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Tuple5<Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Tuple5<Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5);
 
@@ -307,33 +308,33 @@ class PromisesTest {
 
     @Test
     void allResolvesWhenAnyPromiseResolvedWithLeft5() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Tuple5<Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Tuple5<Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5);
 
         assertFalse(allPromise.ready());
 
-        promise4.resolve(Either.left(1));
+        promise4.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void allResolvesWhenAllPromisesAreResolved6() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Integer> promise6 = Promises.create();
-        final Promise<Integer, Tuple6<Integer, Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise6 = Promises.create();
+        final Promise<ErrorHolder, Tuple6<Integer, Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5, promise6);
 
@@ -368,35 +369,35 @@ class PromisesTest {
 
     @Test
     void allResolvesWhenAnyPromiseResolvedWithLeft6() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Integer> promise6 = Promises.create();
-        final Promise<Integer, Tuple6<Integer, Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise6 = Promises.create();
+        final Promise<ErrorHolder, Tuple6<Integer, Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5, promise6);
 
         assertFalse(allPromise.ready());
 
-        promise5.resolve(Either.left(1));
+        promise5.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void allResolvesWhenAllPromisesAreResolved7() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Integer> promise6 = Promises.create();
-        final Promise<Integer, Integer> promise7 = Promises.create();
-        final Promise<Integer, Tuple7<Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise6 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise7 = Promises.create();
+        final Promise<ErrorHolder, Tuple7<Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5, promise6, promise7);
 
@@ -435,37 +436,37 @@ class PromisesTest {
 
     @Test
     void allResolvesWhenAnyPromiseResolvedWithLeft7() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Integer> promise6 = Promises.create();
-        final Promise<Integer, Integer> promise7 = Promises.create();
-        final Promise<Integer, Tuple7<Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise6 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise7 = Promises.create();
+        final Promise<ErrorHolder, Tuple7<Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5, promise6, promise7);
 
         assertFalse(allPromise.ready());
 
-        promise6.resolve(Either.left(1));
+        promise6.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void allResolvesWhenAllPromisesAreResolved8() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Integer> promise6 = Promises.create();
-        final Promise<Integer, Integer> promise7 = Promises.create();
-        final Promise<Integer, Integer> promise8 = Promises.create();
-        final Promise<Integer, Tuple8<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise6 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise7 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise8 = Promises.create();
+        final Promise<ErrorHolder, Tuple8<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5, promise6, promise7, promise8);
 
@@ -508,39 +509,39 @@ class PromisesTest {
 
     @Test
     void allResolvesWhenAnyPromiseResolvedWithLeft8() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Integer> promise6 = Promises.create();
-        final Promise<Integer, Integer> promise7 = Promises.create();
-        final Promise<Integer, Integer> promise8 = Promises.create();
-        final Promise<Integer, Tuple8<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise6 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise7 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise8 = Promises.create();
+        final Promise<ErrorHolder, Tuple8<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5, promise6, promise7, promise8);
 
         assertFalse(allPromise.ready());
 
-        promise7.resolve(Either.left(1));
+        promise7.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void allResolvesWhenAllPromisesAreResolved9() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Integer> promise6 = Promises.create();
-        final Promise<Integer, Integer> promise7 = Promises.create();
-        final Promise<Integer, Integer> promise8 = Promises.create();
-        final Promise<Integer, Integer> promise9 = Promises.create();
-        final Promise<Integer, Tuple9<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise6 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise7 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise8 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise9 = Promises.create();
+        final Promise<ErrorHolder, Tuple9<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5, promise6, promise7, promise8, promise9);
 
@@ -587,33 +588,33 @@ class PromisesTest {
 
     @Test
     void allResolvesWhenAnyPromiseResolvedWithLeft9() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Integer> promise3 = Promises.create();
-        final Promise<Integer, Integer> promise4 = Promises.create();
-        final Promise<Integer, Integer> promise5 = Promises.create();
-        final Promise<Integer, Integer> promise6 = Promises.create();
-        final Promise<Integer, Integer> promise7 = Promises.create();
-        final Promise<Integer, Integer> promise8 = Promises.create();
-        final Promise<Integer, Integer> promise9 = Promises.create();
-        final Promise<Integer, Tuple9<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise3 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise4 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise5 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise6 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise7 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise8 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise9 = Promises.create();
+        final Promise<ErrorHolder, Tuple9<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer>>
                 allPromise =
                 Promises.all(promise1, promise2, promise3, promise4, promise5, promise6, promise7, promise8, promise9);
 
         assertFalse(allPromise.ready());
 
-        promise8.resolve(Either.left(1));
+        promise8.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void subsequentResolutionsAreIgnoreByAll() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Tuple2<Integer, Integer>> allPromise = Promises.all(promise1, promise2);
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Tuple2<Integer, Integer>> allPromise = Promises.all(promise1, promise2);
 
         assertFalse(allPromise.ready());
 
@@ -630,25 +631,25 @@ class PromisesTest {
 
     @Test
     void subsequentSuccessResolutionsAreIgnoreIfErrorAlreadyResolvedByAll() {
-        final Promise<Integer, Integer> promise1 = Promises.create();
-        final Promise<Integer, Integer> promise2 = Promises.create();
-        final Promise<Integer, Tuple2<Integer, Integer>> allPromise = Promises.all(promise1, promise2);
+        final Promise<ErrorHolder, Integer> promise1 = Promises.create();
+        final Promise<ErrorHolder, Integer> promise2 = Promises.create();
+        final Promise<ErrorHolder, Tuple2<Integer, Integer>> allPromise = Promises.all(promise1, promise2);
 
         assertFalse(allPromise.ready());
 
-        promise1.resolve(Either.left(1));
+        promise1.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(allPromise.ready());
 
         promise1.resolve(Either.right(3));
         promise2.resolve(Either.right(4));
 
-        assertEquals(1, allPromise.value().get().left().get());
+        assertEquals(1, allPromise.value().get().left().get().code());
     }
 
     @Test
     void syncWaitIsWaitingForResolution() {
-        final Promise<Integer, Integer> promise = Promises.create();
+        final Promise<ErrorHolder, Integer> promise = Promises.create();
 
         assertFalse(promise.ready());
 
@@ -662,7 +663,7 @@ class PromisesTest {
 
     @Test
     void syncWaitDoesNotWaitForAlreadyResolved() {
-        final Promise<Integer, Integer> promise = Promises.create();
+        final Promise<ErrorHolder, Integer> promise = Promises.create();
 
         assertFalse(promise.ready());
 
@@ -679,6 +680,42 @@ class PromisesTest {
             Thread.sleep(delay);
         } catch (final InterruptedException e) {
             //Ignore
+        }
+    }
+
+    public static class ErrorHolder implements BaseError {
+        private final Integer code;
+
+        private ErrorHolder(final int i) {
+            code = i;
+        }
+
+        public static ErrorHolder of(final int i) {
+            return new ErrorHolder(i);
+        }
+
+        public Integer code() {
+            return code;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(code);
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final ErrorHolder other = (ErrorHolder) obj;
+            return Objects.equals(code, other.code);
         }
     }
 }

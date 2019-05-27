@@ -17,6 +17,9 @@
 package org.reactivetoolbox.core.functional;
 
 public interface Functions {
+    interface FN0<R> {
+        R apply();
+    }
 
     interface FN1<R, T1> {
         R apply(T1 param1);

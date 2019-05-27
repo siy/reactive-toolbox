@@ -8,7 +8,7 @@ import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class EitherTest {
+public class EitherTest {
 
 //    @Test
 //    void instanceCanBeDeserializedForRightValue() throws IOException {

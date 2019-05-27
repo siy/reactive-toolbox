@@ -1,5 +1,7 @@
 package org.reactivetoolbox.core.functional;
 
+import org.reactivetoolbox.core.functional.Functions.FN0;
+
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -27,6 +29,7 @@ import org.reactivetoolbox.core.functional.Functions.FN8;
 import org.reactivetoolbox.core.functional.Functions.FN9;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 /**
  * Tuple classes with various size and convenient static factories for tuples. All tuple classes are immutable. <br/>
@@ -35,6 +38,17 @@ import java.util.Arrays;
  */
 public final class Tuples {
     private Tuples() {
+    }
+
+    /**
+     * Factory method for tuple with single value.
+     *
+     * @param param1
+     *        Value to store in tuple.
+     * @return created tuple newInstance.
+     */
+    public static Tuple0 of() {
+        return new Tuple0();
     }
 
     /**
@@ -255,6 +269,32 @@ public final class Tuples {
         @Override
         public String toString() {
             return Arrays.toString(values);
+        }
+
+        /**
+         * Submit all values contained in tuple to provided consumer.
+         * <p>
+         * <b>WARNING: this method is inherently type-unsafe, because all information about types is lost. Use with
+         * extreme care!!!</b>
+         *
+         * @param consumer
+         *        The {@link Consumer} to which stored values will be passed.
+         */
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        public void forEach(final Consumer consumer) {
+            for (final Object value : values) {
+                consumer.accept(value);
+            }
+        }
+    }
+
+    public static class Tuple0 extends Tuple {
+        private Tuple0() {
+            super();
+        }
+
+        public <T> T map(final FN0<T> mapper) {
+            return mapper.apply();
         }
     }
 
