@@ -31,6 +31,9 @@
 	</licenses>
 
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
 		<!-- Dependencies versions -->
 		<vertx.version>3.6.3</vertx.version>
 		<ignite.version>2.7.0</ignite.version>
@@ -142,7 +145,10 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.0</version>
 				<configuration>
+					<showDeprecation>true</showDeprecation>
+					<showWarnings>true</showWarnings>
 					<release>12</release>
+<!--					<verbose>true</verbose>-->
 				</configuration>
 			</plugin>
 			<plugin>

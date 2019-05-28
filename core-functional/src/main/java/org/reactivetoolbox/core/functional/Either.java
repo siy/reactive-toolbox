@@ -16,8 +16,12 @@ package org.reactivetoolbox.core.functional;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Functions.FN2;
+
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Convenience type for use in cases when function may return different types. For example, when either execution result
@@ -107,8 +111,8 @@ public final class Either<L, R> {
      *        Function to apply
      * @return transformed instance
      */
-    public <L1, R1> Either<L1, R1> map(final Functions.FN2<Either<L1, R1>, L, R> mapper) {
-        return mapper.apply(left, right);
+    public <R1> Optional<R1> map(final FN2<R1, L, R> mapper) {
+        return Optional.ofNullable(mapper.apply(left, right));
     }
 
     /**
@@ -116,6 +120,30 @@ public final class Either<L, R> {
      */
     public Optional<L> left() {
         return Optional.ofNullable(left);
+    }
+
+    //TODO: Javadoc
+    public R otherwise(final R value) {
+        if (isLeft()) {
+            return value;
+        }
+        return right;
+    }
+
+    //TODO: Javadoc
+    public R otherwiseGet(final Supplier<R> supplier) {
+        if (isLeft()) {
+            return supplier.get();
+        }
+        return right;
+    }
+
+    //TODO: Javadoc
+    public R otherwiseThrow() {
+        if (isLeft()) {
+            throw new NoSuchElementException("'Either' does not contain right value");
+        }
+        return right;
     }
 
     /**

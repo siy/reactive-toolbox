@@ -4,24 +4,14 @@ import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Tuples;
-import org.reactivetoolbox.core.functional.Tuples.Tuple1;
-import org.reactivetoolbox.core.functional.Tuples.Tuple2;
-import org.reactivetoolbox.core.functional.Tuples.Tuple3;
-import org.reactivetoolbox.core.functional.Tuples.Tuple4;
-import org.reactivetoolbox.core.functional.Tuples.Tuple5;
-import org.reactivetoolbox.core.functional.Tuples.Tuple6;
-import org.reactivetoolbox.core.functional.Tuples.Tuple7;
-import org.reactivetoolbox.core.functional.Tuples.Tuple8;
-import org.reactivetoolbox.core.functional.Tuples.Tuple9;
+import org.reactivetoolbox.core.functional.Tuples.*;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class PromisesTest {
@@ -37,7 +27,10 @@ public class PromisesTest {
 
         assertTrue(promise.ready());
         assertTrue(promise.value().get().isRight());
-        assertEquals(Integer.valueOf(1), promise.value().get().right().get());
+
+        promise
+            .then(val -> assertEquals(1, val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -48,7 +41,7 @@ public class PromisesTest {
         promise.then(value -> holder.set(value));
         promise.resolve(Either.right(1));
 
-        assertEquals(Integer.valueOf(1), holder.get());
+        assertEquals(1, holder.get());
     }
 
     @Test
@@ -59,7 +52,7 @@ public class PromisesTest {
         promise.resolve(Either.right(1));
         promise.then(value -> holder.set(value));
 
-        assertEquals(Integer.valueOf(1), holder.get());
+        assertEquals(1, holder.get());
     }
 
     @Test
@@ -95,8 +88,10 @@ public class PromisesTest {
         promise1.resolve(Either.right(1));
 
         assertTrue(anyPromise.ready());
-        assertTrue(anyPromise.value().get().isRight());
-        assertEquals(Integer.valueOf(1), anyPromise.value().get().right().get());
+
+        anyPromise
+            .then(val -> assertEquals(1, val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -110,8 +105,10 @@ public class PromisesTest {
         promise2.resolve(Either.left(ErrorHolder.of(1)));
 
         assertTrue(anyPromise.ready());
-        assertTrue(anyPromise.value().get().isLeft());
-        assertEquals(1, anyPromise.value().get().left().get().code());
+
+        anyPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -125,7 +122,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -139,7 +138,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -158,7 +159,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1, 2), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -173,7 +176,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -199,7 +204,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1, 2, 3), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -217,7 +224,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -248,7 +257,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1, 2, 3, 4), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -267,7 +278,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -303,7 +316,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1, 2, 3, 4, 5), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -323,7 +338,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -364,7 +381,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1, 2, 3, 4, 5, 6), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -385,7 +404,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -431,7 +452,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -453,7 +476,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -504,7 +529,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -527,7 +554,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -583,7 +612,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8, 9), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8, 9), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -607,7 +638,9 @@ public class PromisesTest {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -626,7 +659,9 @@ public class PromisesTest {
         promise1.resolve(Either.right(3));
         promise2.resolve(Either.right(4));
 
-        assertEquals(Tuples.of(1, 2), allPromise.value().get().right().get());
+        allPromise
+            .then(val -> assertEquals(Tuples.of(1, 2), val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -644,7 +679,9 @@ public class PromisesTest {
         promise1.resolve(Either.right(3));
         promise2.resolve(Either.right(4));
 
-        assertEquals(1, allPromise.value().get().left().get().code());
+        allPromise
+            .otherwise(val -> assertEquals(ErrorHolder.of(1), val))
+            .then(val -> fail());
     }
 
     @Test
@@ -658,7 +695,10 @@ public class PromisesTest {
         promise.syncWait();
 
         assertTrue(promise.ready());
-        assertEquals(1, promise.value().get().right().get());
+
+        promise
+            .then(val -> assertEquals(1, val))
+            .otherwise(val -> fail());
     }
 
     @Test
@@ -672,7 +712,10 @@ public class PromisesTest {
         promise.syncWait();
 
         assertTrue(promise.ready());
-        assertEquals(1, promise.value().get().right().get());
+
+        promise
+            .then(val -> assertEquals(1, val))
+            .otherwise(val -> fail());
     }
 
     private static void safeSleep(final long delay) {

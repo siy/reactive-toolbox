@@ -1,16 +1,7 @@
 package org.reactivetoolbox.web.server.parameter;
 
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions.FN1;
-import org.reactivetoolbox.core.functional.Functions.FN2;
-import org.reactivetoolbox.core.functional.Functions.FN3;
-import org.reactivetoolbox.core.functional.Functions.FN4;
-import org.reactivetoolbox.core.functional.Functions.FN5;
-import org.reactivetoolbox.core.functional.Functions.FN6;
-import org.reactivetoolbox.core.functional.Functions.FN7;
-import org.reactivetoolbox.core.functional.Functions.FN8;
-import org.reactivetoolbox.core.functional.Functions.FN9;
-import org.reactivetoolbox.web.server.RequestContext;
+import org.reactivetoolbox.core.functional.Functions.*;
 import org.reactivetoolbox.web.server.parameter.conversion.Converter;
 import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
 
@@ -47,9 +38,9 @@ public class Parameters {
             this.converter = converter;
         }
 
-        public final Either<?, T> convert(final RequestContext context) {
-            return converter.convert(context).map(this::runValidators);
-        }
+//        public final Either<?, T> convert(final RequestContext context) {
+//            return converter.convert(context).map(this::runValidators);
+//        }
 
         private Either<?, T> runValidators(final Object leftValue, final T rightValue) {
             if (leftValue != null) {
