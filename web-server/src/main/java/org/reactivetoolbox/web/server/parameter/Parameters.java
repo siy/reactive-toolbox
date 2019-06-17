@@ -50,7 +50,7 @@ public class Parameters {
             for (final FN1<Either<?, T>, T> validator : validators) {
                 final Either<?, T> result = validator.apply(rightValue);
 
-                if (result.isLeft()) {
+                if (result.isFailure()) {
                     return result;
                 }
             }

@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-public class Promises2Test {
+public class PromisesTest {
     private final Executor executor = Executors.newSingleThreadExecutor();
 
     @Test
@@ -26,7 +26,7 @@ public class Promises2Test {
         promise.resolve(4);
 
         assertTrue(promise.ready());
-        assertEquals(1, promise.value());
+        assertEquals(1, promise.value().get());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class Promises2Test {
         promise1.resolve(1);
 
         assertTrue(anyPromise.ready());
-        assertEquals(1, anyPromise.value());
+        assertEquals(1, anyPromise.value().get());
     }
 
     @Test
@@ -76,7 +76,7 @@ public class Promises2Test {
         promise2.resolve(1);
 
         assertTrue(anyPromise.ready());
-        assertEquals(1, anyPromise.value());
+        assertEquals(1, anyPromise.value().get());
     }
 
     @Test
@@ -89,7 +89,7 @@ public class Promises2Test {
         promise1.resolve(1);
 
         assertTrue(allPromise.ready());
-        assertEquals(Tuples.of(1), allPromise.value());
+        assertEquals(Tuples.of(1), allPromise.value().get());
     }
 
 
@@ -108,7 +108,7 @@ public class Promises2Test {
         promise2.resolve(2);
 
         assertTrue(allPromise.ready());
-        assertEquals(Tuples.of(1, 2), allPromise.value());
+        assertEquals(Tuples.of(1, 2), allPromise.value().get());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class Promises2Test {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3), allPromise.value());
+        assertEquals(Tuples.of(1, 2, 3), allPromise.value().get());
     }
 
     @Test
@@ -161,7 +161,7 @@ public class Promises2Test {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4), allPromise.value());
+        assertEquals(Tuples.of(1, 2, 3, 4), allPromise.value().get());
     }
 
     @Test
@@ -195,7 +195,7 @@ public class Promises2Test {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5), allPromise.value());
+        assertEquals(Tuples.of(1, 2, 3, 4, 5), allPromise.value().get());
     }
 
     @Test
@@ -234,7 +234,7 @@ public class Promises2Test {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6), allPromise.value());
+        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6), allPromise.value().get());
     }
 
     @Test
@@ -278,7 +278,7 @@ public class Promises2Test {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7), allPromise.value());
+        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7), allPromise.value().get());
     }
 
     @Test
@@ -327,7 +327,7 @@ public class Promises2Test {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8), allPromise.value());
+        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8), allPromise.value().get());
     }
 
     @Test
@@ -381,7 +381,7 @@ public class Promises2Test {
 
         assertTrue(allPromise.ready());
 
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8, 9), allPromise.value());
+        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8, 9), allPromise.value().get());
     }
 
     @Test
@@ -400,7 +400,7 @@ public class Promises2Test {
         promise1.resolve(3);
         promise2.resolve(4);
 
-        assertEquals(Tuples.of(1, 2), allPromise.value());
+        assertEquals(Tuples.of(1, 2), allPromise.value().get());
     }
 
     @Test
@@ -415,7 +415,7 @@ public class Promises2Test {
 
         assertTrue(promise.ready());
 
-        assertEquals(1, promise.value());
+        assertEquals(1, promise.value().get());
     }
 
     @Test
@@ -430,7 +430,7 @@ public class Promises2Test {
 
         assertTrue(promise.ready());
 
-        assertEquals(1, promise.value());
+        assertEquals(1, promise.value().get());
     }
 
     private static void safeSleep(final long delay) {

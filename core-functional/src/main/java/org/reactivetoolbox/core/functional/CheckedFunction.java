@@ -39,7 +39,7 @@ public interface CheckedFunction<T, R> {
      *        the function argument
      * @return the function result
      */
-    R apply(T t) throws Exception;
+    R apply(T t) throws Throwable;
 
     /**
      * Returns a composed function that first applies the {@code before} function to its input, and then applies this

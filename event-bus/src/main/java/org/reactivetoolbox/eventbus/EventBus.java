@@ -1,7 +1,7 @@
 package org.reactivetoolbox.eventbus;
 
 import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.async.Promises.Promise;
+import org.reactivetoolbox.core.async.Promises2.Promise;
 import org.reactivetoolbox.core.functional.Either;
 
 public interface EventBus {

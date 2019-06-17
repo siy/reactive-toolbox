@@ -41,7 +41,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with single value.
+     * Factory method for tuple with single get.
      *
      * @param param1
      *        Value to store in tuple.
@@ -52,7 +52,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with single value.
+     * Factory method for tuple with single get.
      *
      * @param param1
      *        Value to store in tuple.

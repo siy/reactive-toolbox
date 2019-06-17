@@ -1,7 +1,7 @@
 package org.reactivetoolbox.web.server.undertow;
 
 import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.async.Promises.Promise;
+import org.reactivetoolbox.core.async.Promises2.Promise;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.web.server.Server;
 import org.reactivetoolbox.web.server.builder.Http;

@@ -35,17 +35,17 @@ import static org.reactivetoolbox.core.functional.Tuples.*;
  * Representation of the future result of asynchronous operation. The result of operation will be accepted only once.
  * Subsequent notifications do not change the result.
  */
-public class Promises {
+public class Promises2 {
     public static <E extends BaseError, T> Promise<E, T> create() {
         return new Promise<>();
     }
 
     public static <E extends BaseError, T> Promise<E, T> success(final T value) {
-        return new Promise<E, T>().resolve(Either.right(value));
+        return new Promise<E, T>().resolve(Either.success(value));
     }
 
     public static <E extends BaseError, T> Promise<E, T> failed(final E value) {
-        return new Promise<E, T>().resolve(Either.left(value));
+        return new Promise<E, T>().resolve(Either.failure(value));
     }
 
     @SafeVarargs
@@ -53,8 +53,8 @@ public class Promises {
         final Promise<E, T> result = create();
 
         for (final Promise<E, T> promise : promises) {
-            promise.then(value -> result.resolve(Either.right(value)))
-                   .otherwise(error -> result.resolve(Either.left(error)));
+            promise.then(value -> result.resolve(Either.success(value)))
+                   .otherwise(error -> result.resolve(Either.failure(error)));
         }
 
         return result;
@@ -139,12 +139,12 @@ public class Promises {
         final Promise<E, T> result = new Promise<>();
         final ThresholdAction thresholdAction =
                                               ThresholdAction.of(promises.length,
-                                                                 () -> result.resolve(Either.right(valueTransformer.apply(values))));
+                                                                 () -> result.resolve(Either.success(valueTransformer.apply(values))));
 
         int i = 0;
         for (final Promise<?, ?> promise : promises) {
             promise.then(nextAction(values, i, thresholdAction))
-                   .otherwise(error -> result.resolve(Either.left((E) error)));
+                   .otherwise(error -> result.resolve(Either.failure((E) error)));
             i++;
         }
         return result;
@@ -167,20 +167,20 @@ public class Promises {
         private Promise() {
         }
 
-        public Optional<Either<E, T>> value() {
+        public Optional<Either<E, T>> get() {
             return Optional.ofNullable(value.getReference());
         }
 
         public boolean ready() {
-            return value().isPresent();
+            return get().isPresent();
         }
 
         public Promise<E, T> resolve(final Either<E, T> result) {
             if (value.compareAndSet(null, result, false, true)) {
-                if (result.isRight()) {
-                    thenActions.forEach(action -> action.accept(value.getReference().right().get()));
+                if (result.isSuccess()) {
+                    thenActions.forEach(action -> action.accept(value.getReference().success().get()));
                 } else {
-                    otherwiseActions.forEach(action -> action.accept(value.getReference().left().get()));
+                    otherwiseActions.forEach(action -> action.accept(value.getReference().failure().get()));
                 }
 
             }
@@ -190,8 +190,8 @@ public class Promises {
         public Promise<E, T> then(final Consumer<T> action) {
             if (value.isMarked()) {
                 final Either<E, T> reference = value.getReference();
-                if (reference.isRight()) {
-                    action.accept(reference.right().get());
+                if (reference.isSuccess()) {
+                    action.accept(reference.success().get());
                 }
             } else {
                 thenActions.offer(action);
@@ -202,8 +202,8 @@ public class Promises {
         public Promise<E, T> otherwise(final Consumer<E> action) {
             if (value.isMarked()) {
                 final Either<E, T> reference = value.getReference();
-                if (reference.isLeft()) {
-                    action.accept(reference.left().get());
+                if (reference.isFailure()) {
+                    action.accept(reference.failure().get());
                 }
             } else {
                 otherwiseActions.offer(action);

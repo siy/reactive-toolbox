@@ -16,12 +16,12 @@ package org.reactivetoolbox.core.functional;
  */
 
 /**
- * General purpose container suitable for holding pair of linked values, like key and value in map.
+ * General purpose container suitable for holding pair of linked values, like key and get in map.
  *
  * @param <L>
- *        type of left value in pair
+ *        type of failure get in pair
  * @param <R>
- *        type of right value in pair
+ *        type of success get in pair
  */
 public final class Pair<L, R> {
     private final L left;
@@ -36,13 +36,13 @@ public final class Pair<L, R> {
      * Factory method for creation of instances of {@link Pair} with given values.
      *
      * @param left
-     *        left value
+     *        failure get
      * @param right
-     *        right value
+     *        success get
      * @param <L>
-     *        type of left value
+     *        type of failure get
      * @param <R>
-     *        type of right value
+     *        type of success get
      * @return created instance
      */
     public static <L, R> Pair<L, R> of(final L left, final R right) {

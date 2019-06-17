@@ -16,223 +16,250 @@ package org.reactivetoolbox.core.functional;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.core.functional.Functions.FN2;
+import org.reactivetoolbox.core.functional.Functions.FN1;
 
-import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Convenience type for use in cases when function may return different types. For example, when either execution result
- * or error value can be returned. By convention <code>right</code> value holds results of successful execution, while
- * <code>left</code> holds exception or error value.
+ * Convenience type for use in cases when function may return either result of successful execution or failure.
  *
- * @param <L>
- *        left value type
- * @param <R>
- *        right value type
+ * @param <F>
+ *        failure type
+ * @param <S>
+ *        success type
  */
-public final class Either<L, R> {
-    private final L left;
-    private final R right;
+public final class Either<F, S> {
+    private final F failure;
+    private final S success;
 
-    private Either(final L left, final R right) {
-        this.left = left;
-        this.right = right;
+    private Either(final F failure, final S success) {
+        this.failure = failure;
+        this.success = success;
     }
 
     /**
-     * Build an instance of {@link Either} for given <code>left</code> value.
+     * Return <code>true</code> if instance holds failure value.
+     */
+    public boolean isFailure() {
+        return failure != null;
+    }
+
+    /**
+     * Return <code>true</code> if instance holds success value.
+     */
+    public boolean isSuccess() {
+        return success != null;
+    }
+
+    /**
+     * Create instance which holds success.
      *
-     * @param value
-     *        left value
-     * @param <L>
-     *        type of left value
-     * @param <R>
-     *        type of right value
+     * @param success
+     *        success value
+     * @param <F>
+     *        failure type
+     * @param <S>
+     *        success type
      * @return built instance
      */
-    public static <L, R> Either<L, R> left(final L value) {
-        return new Either<>(value, null);
+    public static <F, S> Either<F, S> success(final S success) {
+        return new Either<>(null, success);
     }
 
     /**
-     * Build an instance of {@link Either} for given <code>right</code> value.
+     * Get access to success value wrapped into {@link Optional}.
+     */
+    public Optional<S> success() {
+        return Optional.ofNullable(success);
+    }
+
+    /**
+     * Create instance which holds failure.
      *
-     * @param value
-     *        right value
-     * @param <L>
-     *        type of left value
-     * @param <R>
-     *        type of right value
+     * @param failure
+     *        failure value
+     * @param <F>
+     *        failure type
+     * @param <S>
+     *        success type
      * @return built instance
      */
-    public static <L, R> Either<L, R> right(final R value) {
-        return new Either<>(null, value);
+    public static <F, S> Either<F, S> failure(final F failure) {
+        return new Either<>(failure, null);
     }
 
     /**
-     * Similar to {@link #left()}, but enforces convention and returns an instance of {@link Either} for given
-     * <code>left</code> value.
-     *
-     * @param value
-     *        right value
-     * @param <L>
-     *        type of left value
-     * @param <R>
-     *        type of right value
-     * @return built instance
+     * Get access to failure wrapped into {@link Optional}.
      */
-    public static <L, R> Either<L, R> failure(final L value) {
-        return left(value);
+    public Optional<F> failure() {
+        return Optional.ofNullable(failure);
     }
 
     /**
-     * Similar to {@link #right()}, but enforces convention and returns an instance of {@link Either} for given
-     * <code>right</code> value.
-     *
-     * @param value
-     *        right value
-     * @param <L>
-     *        type of left value
-     * @param <R>
-     *        type of right value
-     * @return built instance
-     */
-    public static <L, R> Either<L, R> success(final R value) {
-        return right(value);
-    }
-
-    /**
-     * Apply transformation and create new instance.
+     * Transform given instance into another, using provided mapper.
+     * Transformation takes place only if current instance contains success.
      *
      * @param mapper
-     *        Function to apply
+     *        Transformation to apply
+     * @param <NS>
+     *        New type for success
      * @return transformed instance
      */
-    public <R1> Optional<R1> map(final FN2<R1, L, R> mapper) {
-        return Optional.ofNullable(mapper.apply(left, right));
+    public <NS> Either<F, NS> map(final FN1<Either<F, NS>, S> mapper) {
+        return isSuccess() ? mapper.apply(success) : failure(failure);
     }
 
     /**
-     * Get access to left value wrapped into {@link Optional}.
+     * Transform given instance into another one which has same success type
+     * but new failure type. Convenient for transformation of instance containing
+     * {@link Throwable} into some more convenient type
+     *
+     * @param mapper
+     *        Transformation
+     * @param <NF>
+     *        New type for failure get
+     * @return transformed instance
      */
-    public Optional<L> left() {
-        return Optional.ofNullable(left);
+    public <NF> Either<NF, S> mapLeft(final FN1<NF, F> mapper) {
+        return isFailure() ? failure(mapper.apply(failure)) : success(success);
     }
 
-    //TODO: Javadoc
-    public R otherwise(final R value) {
-        if (isLeft()) {
-            return value;
+    /**
+     * Expose success value or a replacement provided by caller if instance
+     * contains failure
+     *
+     * @param replacement
+     *        Replacement value used in case of failure
+     * @return contained success value if there is one, otherwise replacement value
+     */
+    public S otherwise(final S replacement) {
+        if (isFailure()) {
+            return replacement;
         }
-        return right;
+        return success;
     }
 
-    //TODO: Javadoc
-    public R otherwiseGet(final Supplier<R> supplier) {
-        if (isLeft()) {
+    /**
+     * Expose success value or a replacement obtained from provided
+     * supplier if instance contains failure
+     *
+     * @param supplier
+     *        Supplier for replacement. Invoked only if instance contains a failure
+     * @return contained success get if there is one ond replacement get otherwise
+     */
+    public S otherwiseGet(final Supplier<S> supplier) {
+        if (isFailure()) {
             return supplier.get();
         }
-        return right;
+        return success;
     }
 
-    //TODO: Javadoc
-    public R otherwiseThrow() {
-        if (isLeft()) {
-            throw new NoSuchElementException("'Either' does not contain right value");
+    /**
+     * Expose success or throw an {@link IllegalStateException} if instance
+     * contains failure
+     *
+     * @return contained success value
+     * @throws IllegalStateException if current instance contains failure
+     */
+    @Deprecated
+    public S otherwiseThrow() {
+        if (isFailure()) {
+            throw (failure instanceof Throwable)
+                    ? new IllegalStateException((Throwable) failure)
+                    : new IllegalStateException("'Either' does not contain success get");
         }
-        return right;
+        return success;
     }
 
     /**
-     * Get access to right value wrapped into {@link Optional}.
+     * Expose success value or throw user-provided exception
+     *
+     * @param error
+     *        Exception supplier
+     * @param <E>
+     *        Type of thrown exception
+     * @return contained success get
      */
-    public Optional<R> right() {
-        return Optional.ofNullable(right);
+    @Deprecated
+    public <E extends RuntimeException> S otherwiseThrow(final Supplier<E> error) {
+        if (isFailure()) {
+            throw error.get();
+        }
+        return success;
     }
 
     /**
-     * Return <code>true</code> if instance holds left value.
+     * Convenience method to get access to success value without affecting current instance
+     *
+     * @param consumer
+     *        Receiver for successful result
+     * @return same instance
      */
-    public boolean isLeft() {
-        return left != null;
+    public Either<F, S> ifSuccess(Consumer<S> consumer) {
+        if (isSuccess()) {
+            consumer.accept(success);
+        }
+        return this;
     }
 
     /**
-     * Return <code>true</code> if instance holds right value.
+     * Convenience method to get access to failure value without changing current instance
+     *
+     * @param consumer
+     *        Receiver for failure result
+     * @return same instance
      */
-    public boolean isRight() {
-        return right != null;
+    public Either<F, S> ifFailure(Consumer<F> consumer) {
+        if (isFailure()) {
+            consumer.accept(failure);
+        }
+        return this;
     }
 
     /**
-     * Wrap checked function into {@link Function} which returns {@link Either}.
+     * Wrap function which throws checked exception into {@link Function} which returns {@link Either}.
      *
      * @param function
      *        function to wrap
      * @param <T>
-     *        input value type
+     *        input get type
      * @param <R>
-     *        result value type
+     *        result get type
      * @return {@link Function} which returns {@link Either}
      */
-    public static <T, R> Function<T, Either<Exception, R>> lift(final CheckedFunction<T, R> function) {
+    public static <T, R> Function<T, Either<Throwable, R>> lift(final CheckedFunction<T, R> function) {
         return t -> {
             try {
                 return Either.success(function.apply(t));
-            } catch (final Exception ex) {
+            } catch (final Throwable ex) {
                 return Either.failure(ex);
             }
         };
     }
 
     /**
-     * Wrap checked function into {@link Function} which returns {@link Either}. This method enables convenient
-     * transformation of the exception into user defined type.
-     *
-     * @param function
-     *        function to wrap
-     * @param errorMapper
-     *        function which transforms exception into user defined type
-     * @param <T>
-     *        input value type
-     * @param <R>
-     *        result value type
-     * @return {@link Function} which returns {@link Either}
-     */
-    public static <T, R, N> Function<T, Either<N, R>> lift(final CheckedFunction<T, R> function,
-                                                           final Function<Exception, N> errorMapper) {
-        return t -> {
-            try {
-                return Either.success(function.apply(t));
-            } catch (final Exception ex) {
-                return Either.failure(errorMapper.apply(ex));
-            }
-        };
-    }
-
-    /**
      * Wrap checked function into {@link Function} which returns {@link Either}. In contrast to
-     * {@link #lift(CheckedFunction)}, this function returns {@link Pair} which holds exception and initial input value
+     * {@link #lift(CheckedFunction)}, this function returns {@link Pair} which holds exception and initial input get
      * in case if exception was thrown. This is suitable for cases when operation might need to be retried with initial
-     * input value.
+     * input get.
      *
      * @param function
      *        function to wrap
      * @param <T>
-     *        input value type
+     *        input get type
      * @param <R>
-     *        output value type
+     *        output get type
      * @return {@link Function} which returns {@link Either}
      */
-    public static <T, R> Function<T, Either<Pair<Exception, T>, R>>
-           liftWithValue(final CheckedFunction<T, R> function) {
+    public static <T, R> Function<T, Either<Pair<Throwable, T>, R>> liftWithValue(final CheckedFunction<T, R> function) {
         return t -> {
             try {
                 return Either.success(function.apply(t));
-            } catch (final Exception ex) {
+            } catch (final Throwable ex) {
                 return Either.failure(Pair.of(ex, t));
             }
         };
@@ -240,9 +267,28 @@ public final class Either<L, R> {
 
     @Override
     public String toString() {
-        if (isLeft()) {
-            return "Left(" + left + ")";
+        if (isFailure()) {
+            return "Left(" + failure + ")";
         }
-        return "Right(" + right + ")";
+        return "Right(" + success + ")";
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final Either<?, ?> either = (Either<?, ?>) o;
+
+        return Objects.equals(failure, either.failure)
+            && Objects.equals(success, either.success);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(failure, success);
     }
 }
