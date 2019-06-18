@@ -16,16 +16,29 @@ import static org.reactivetoolbox.eventbus.RoutingError.NO_SUCH_ROUTE;
 public class SimpleEventBus implements EventBus {
     private final ConcurrentMap<Class<? extends Envelope>, Router> routers = new ConcurrentHashMap<>();
 
-//    @Override
-//    public <T> EventBus addRouter(final Class<Envelope<T>> key, final Router<T> router) {
-//        routers.put(key, router);
-//        return this;
-//    }
-
     @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public <E, R, T> Either<RoutingError, Promise<Either<E, R>>> send(final Envelope<T> event) {
         return Optional.ofNullable(routers.get(event.getClass()))
-                .map(router -> router.deliver(event))
-                .orElseGet(() -> RoutingError.create(NO_SUCH_ROUTE));
+                        .map(router -> router.deliver(event))
+                        .orElseGet(() -> RoutingError.create(NO_SUCH_ROUTE));
+    }
+
+    @Override
+    public <T> EventBus router(final Class<Envelope<T>> envelopeType, final Router<T> router) {
+        routers.putIfAbsent(envelopeType, router);
+        return this;
+    }
+
+    @Override
+    public <T> EventBus upsertRouter(final Class<Envelope<T>> envelopeType, final Router<T> router) {
+        routers.put(envelopeType, router);
+        return this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Optional<Router<T>> router(final Class<Envelope<T>> envelopeType) {
+        return Optional.ofNullable(routers.get(envelopeType));
     }
 }
