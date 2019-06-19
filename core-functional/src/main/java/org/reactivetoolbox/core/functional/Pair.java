@@ -15,6 +15,9 @@ package org.reactivetoolbox.core.functional;
  * limitations under the License.
  */
 
+import java.util.Objects;
+import java.util.StringJoiner;
+
 /**
  * General purpose container suitable for holding pair of linked values, like key and get in map.
  *
@@ -55,5 +58,26 @@ public final class Pair<L, R> {
 
     public R right() {
         return right;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+        final Pair<?, ?> pair = (Pair<?, ?>) o;
+        return Objects.equals(left, pair.left) && Objects.equals(right, pair.right);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(left, right);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", "<", ">")
+                .add(Objects.toString(left))
+                .add(Objects.toString(right))
+                .toString();
     }
 }

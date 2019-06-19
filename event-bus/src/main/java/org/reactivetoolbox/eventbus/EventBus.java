@@ -14,16 +14,14 @@ public interface EventBus {
      *
      * @param event
      *        Event to send
-     * @param <E>
-     *        Error type of the result of message delivering
      * @param <R>
-     *        Return type of the result of message delivering
+     *        The result {@link Promise} type
      * @param <T>
      *        Message type
      * @return {@link Either} containing {@link Promise} in case of success or {@link RoutingError}
      *         with the cause of the failure
      */
-    <E, R, T> Either<RoutingError, Promise<Either<E, R>>> send(final Envelope<T> event);
+    <R, T> Either<RoutingError, Promise<R>> send(final Envelope<T> event);
 
     /**
      * Add new {@link Router} to the {@link EventBus}. The router will be responsible for delivering

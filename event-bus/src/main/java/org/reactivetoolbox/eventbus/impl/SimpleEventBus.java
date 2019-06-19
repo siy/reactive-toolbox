@@ -17,11 +17,11 @@ public class SimpleEventBus implements EventBus {
     private final ConcurrentMap<Class<? extends Envelope>, Router> routers = new ConcurrentHashMap<>();
 
     @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public <E, R, T> Either<RoutingError, Promise<Either<E, R>>> send(final Envelope<T> event) {
+    @SuppressWarnings("unchecked")
+    public <R, T> Either<RoutingError, Promise<R>> send(final Envelope<T> event) {
         return Optional.ofNullable(routers.get(event.getClass()))
-                        .map(router -> router.deliver(event))
-                        .orElseGet(() -> RoutingError.create(NO_SUCH_ROUTE));
+                        .map(router -> router.<R>deliver(event))
+                        .orElseGet(() -> RoutingError.<Promise<R>>create(NO_SUCH_ROUTE));
     }
 
     @Override
