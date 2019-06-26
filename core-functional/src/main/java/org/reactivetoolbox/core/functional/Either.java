@@ -32,6 +32,7 @@ import java.util.function.Supplier;
  * @param <S>
  *        success type
  */
+//TODO: rework into interface + 2 implementations
 public final class Either<F, S> {
     private final F failure;
     private final S success;
@@ -109,6 +110,7 @@ public final class Either<F, S> {
      *        New type for success
      * @return transformed instance
      */
+    //TODO: this is flatMap, actually
     public <NS> Either<F, NS> map(final FN1<Either<F, NS>, S> mapper) {
         return isSuccess() ? mapper.apply(success) : failure(failure);
     }
@@ -124,6 +126,7 @@ public final class Either<F, S> {
      *        New type for failure get
      * @return transformed instance
      */
+    //TODO: rename method
     public <NF> Either<NF, S> mapLeft(final FN1<NF, F> mapper) {
         return isFailure() ? failure(mapper.apply(failure)) : success(success);
     }
@@ -199,6 +202,7 @@ public final class Either<F, S> {
      *        Receiver for successful result
      * @return same instance
      */
+    //TODO: use 'on' naming
     public Either<F, S> ifSuccess(Consumer<S> consumer) {
         if (isSuccess()) {
             consumer.accept(success);

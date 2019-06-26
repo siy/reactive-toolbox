@@ -36,6 +36,7 @@ import java.util.function.Consumer;
  * The Tuple is a container for variables. Tuples with size 1 to 9 are provided. Each variable may have different type
  * and all type information is preserved.
  */
+//TODO: rename 'map' -> 'to'
 public final class Tuples {
     private Tuples() {
     }

@@ -26,6 +26,7 @@ import java.util.StringJoiner;
  * @param <R>
  *        type of success get in pair
  */
+//TODO: add map, swap, flatMap
 public final class Pair<L, R> {
     private final L left;
     private final R right;
