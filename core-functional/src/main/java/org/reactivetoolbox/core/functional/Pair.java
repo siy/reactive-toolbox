@@ -15,7 +15,10 @@ package org.reactivetoolbox.core.functional;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Functions.FN1;
+
 import java.util.Objects;
+import java.util.Optional;
 import java.util.StringJoiner;
 
 /**
@@ -61,10 +64,34 @@ public final class Pair<L, R> {
         return right;
     }
 
+    //TODO: docs
+    public <L1, R1> Pair<L1, R1> map(final FN1<L1, L> leftMapper, final FN1<R1, R> rigthMapper) {
+        return of(leftMapper.apply(left), rigthMapper.apply(right));
+    }
+
+    //TODO: docs
+    public <L1, R1> Pair<L1, R1> flatMap(final Functions.FN2<Pair<L1, R1>, L, R> mapper) {
+        return mapper.apply(left, right);
+    }
+
+    //TODO: docs
+    public Optional<L> tryLeft() {
+        return Optional.ofNullable(left);
+    }
+
+    //TODO: docs
+    public Optional<R> tryRight() {
+        return Optional.ofNullable(right);
+    }
+
     @Override
     public boolean equals(final Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         final Pair<?, ?> pair = (Pair<?, ?>) o;
         return Objects.equals(left, pair.left) && Objects.equals(right, pair.right);
     }

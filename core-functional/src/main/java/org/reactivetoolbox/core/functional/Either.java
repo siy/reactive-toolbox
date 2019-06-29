@@ -20,6 +20,7 @@ import org.reactivetoolbox.core.functional.Functions.FN1;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -32,29 +33,116 @@ import java.util.function.Supplier;
  * @param <S>
  *        success type
  */
-//TODO: rework into interface + 2 implementations
-public final class Either<F, S> {
-    private final F failure;
-    private final S success;
-
-    private Either(final F failure, final S success) {
-        this.failure = failure;
-        this.success = success;
-    }
-
+public interface Either<F, S> {
     /**
      * Return <code>true</code> if instance holds failure value.
      */
-    public boolean isFailure() {
-        return failure != null;
-    }
+    boolean isFailure();
 
     /**
      * Return <code>true</code> if instance holds success value.
      */
-    public boolean isSuccess() {
-        return success != null;
-    }
+    boolean isSuccess();
+
+    /**
+     * Get access to success value wrapped into {@link Optional}.
+     */
+    Optional<S> success();
+
+    /**
+     * Get access to failure wrapped into {@link Optional}.
+     */
+    Optional<F> failure();
+
+    /**
+     * Transform given instance into another, using provided mapper.
+     * Transformation takes place only if current instance contains success.
+     *
+     * @param mapper
+     *        Transformation to apply
+     * @param <NS>
+     *        New type for success
+     * @return transformed instance
+     */
+    <NS> Either<F, NS> flatMap(final FN1<Either<F, NS>, S> mapper);
+
+    /**
+     * Transform given instance into another one which has same success type
+     * but new failure type. Convenient for transformation of instance containing
+     * {@link Throwable} into some more convenient type
+     *
+     * @param mapper
+     *        Transformation
+     * @param <NF>
+     *        New type for failure get
+     * @return transformed instance
+     */
+    <NF> Either<NF, S> mapFailure(final FN1<NF, F> mapper);
+
+    //TODO: docs
+    <NS> Either<F, NS> mapSuccess(final FN1<NS, S> mapper);
+
+    /**
+     * Expose success value or a replacement provided by caller if instance
+     * contains failure
+     *
+     * @param replacement
+     *        Replacement value used in case of failure
+     * @return contained success value if there is one, otherwise replacement value
+     */
+    S otherwise(final S replacement);
+
+    /**
+     * Expose success value or a replacement obtained from provided
+     * supplier if instance contains failure
+     *
+     * @param supplier
+     *        Supplier for replacement. Invoked only if instance contains a failure
+     * @return contained success get if there is one ond replacement get otherwise
+     */
+    S otherwiseGet(final Supplier<S> supplier);
+
+    /**
+     * Expose success or throw an {@link IllegalStateException} if instance
+     * contains failure
+     *
+     * @return contained success value
+     * @throws IllegalStateException if current instance contains failure
+     */
+    @Deprecated
+    S otherwiseThrow();
+
+    /**
+     * Expose success value or throw user-provided exception
+     *
+     * @param error
+     *        Exception supplier
+     * @param <E>
+     *        Type of thrown exception
+     * @return contained success get
+     */
+    @Deprecated
+    <E extends RuntimeException> S otherwiseThrow(final Supplier<E> error);
+
+    /**
+     * Convenience method to get access to success value without affecting current instance
+     *
+     * @param consumer
+     *        Receiver for successful result
+     * @return same instance
+     */
+    Either<F, S> onSuccess(Consumer<S> consumer);
+
+    /**
+     * Convenience method to get access to failure value without changing current instance
+     *
+     * @param consumer
+     *        Receiver for failure result
+     * @return same instance
+     */
+    Either<F, S> onFailure(Consumer<F> consumer);
+
+    //----------------------------------------------------------------------------------------------
 
     /**
      * Create instance which holds success.
@@ -67,15 +155,8 @@ public final class Either<F, S> {
      *        success type
      * @return built instance
      */
-    public static <F, S> Either<F, S> success(final S success) {
-        return new Either<>(null, success);
-    }
-
-    /**
-     * Get access to success value wrapped into {@link Optional}.
-     */
-    public Optional<S> success() {
-        return Optional.ofNullable(success);
+    static <F, S> Either<F, S> success(final S success) {
+        return new Success<>(success);
     }
 
     /**
@@ -89,139 +170,8 @@ public final class Either<F, S> {
      *        success type
      * @return built instance
      */
-    public static <F, S> Either<F, S> failure(final F failure) {
-        return new Either<>(failure, null);
-    }
-
-    /**
-     * Get access to failure wrapped into {@link Optional}.
-     */
-    public Optional<F> failure() {
-        return Optional.ofNullable(failure);
-    }
-
-    /**
-     * Transform given instance into another, using provided mapper.
-     * Transformation takes place only if current instance contains success.
-     *
-     * @param mapper
-     *        Transformation to apply
-     * @param <NS>
-     *        New type for success
-     * @return transformed instance
-     */
-    //TODO: this is flatMap, actually
-    public <NS> Either<F, NS> map(final FN1<Either<F, NS>, S> mapper) {
-        return isSuccess() ? mapper.apply(success) : failure(failure);
-    }
-
-    /**
-     * Transform given instance into another one which has same success type
-     * but new failure type. Convenient for transformation of instance containing
-     * {@link Throwable} into some more convenient type
-     *
-     * @param mapper
-     *        Transformation
-     * @param <NF>
-     *        New type for failure get
-     * @return transformed instance
-     */
-    //TODO: rename method
-    public <NF> Either<NF, S> mapLeft(final FN1<NF, F> mapper) {
-        return isFailure() ? failure(mapper.apply(failure)) : success(success);
-    }
-
-    /**
-     * Expose success value or a replacement provided by caller if instance
-     * contains failure
-     *
-     * @param replacement
-     *        Replacement value used in case of failure
-     * @return contained success value if there is one, otherwise replacement value
-     */
-    public S otherwise(final S replacement) {
-        if (isFailure()) {
-            return replacement;
-        }
-        return success;
-    }
-
-    /**
-     * Expose success value or a replacement obtained from provided
-     * supplier if instance contains failure
-     *
-     * @param supplier
-     *        Supplier for replacement. Invoked only if instance contains a failure
-     * @return contained success get if there is one ond replacement get otherwise
-     */
-    public S otherwiseGet(final Supplier<S> supplier) {
-        if (isFailure()) {
-            return supplier.get();
-        }
-        return success;
-    }
-
-    /**
-     * Expose success or throw an {@link IllegalStateException} if instance
-     * contains failure
-     *
-     * @return contained success value
-     * @throws IllegalStateException if current instance contains failure
-     */
-    @Deprecated
-    public S otherwiseThrow() {
-        if (isFailure()) {
-            throw (failure instanceof Throwable)
-                    ? new IllegalStateException((Throwable) failure)
-                    : new IllegalStateException("'Either' does not contain success get");
-        }
-        return success;
-    }
-
-    /**
-     * Expose success value or throw user-provided exception
-     *
-     * @param error
-     *        Exception supplier
-     * @param <E>
-     *        Type of thrown exception
-     * @return contained success get
-     */
-    @Deprecated
-    public <E extends RuntimeException> S otherwiseThrow(final Supplier<E> error) {
-        if (isFailure()) {
-            throw error.get();
-        }
-        return success;
-    }
-
-    /**
-     * Convenience method to get access to success value without affecting current instance
-     *
-     * @param consumer
-     *        Receiver for successful result
-     * @return same instance
-     */
-    //TODO: use 'on' naming
-    public Either<F, S> ifSuccess(Consumer<S> consumer) {
-        if (isSuccess()) {
-            consumer.accept(success);
-        }
-        return this;
-    }
-
-    /**
-     * Convenience method to get access to failure value without changing current instance
-     *
-     * @param consumer
-     *        Receiver for failure result
-     * @return same instance
-     */
-    public Either<F, S> ifFailure(Consumer<F> consumer) {
-        if (isFailure()) {
-            consumer.accept(failure);
-        }
-        return this;
+    static <F, S> Either<F, S> failure(final F failure) {
+        return new Failure<>(failure);
     }
 
     /**
@@ -235,12 +185,12 @@ public final class Either<F, S> {
      *        result get type
      * @return {@link Function} which returns {@link Either}
      */
-    public static <T, R> Function<T, Either<Throwable, R>> lift(final CheckedFunction<T, R> function) {
+    static <T, R> Function<T, Either<Throwable, R>> lift(final CheckedFunction<T, R> function) {
         return t -> {
             try {
-                return Either.success(function.apply(t));
+                return new Success<>(function.apply(t));
             } catch (final Throwable ex) {
-                return Either.failure(ex);
+                return new Failure<>(ex);
             }
         };
     }
@@ -259,40 +209,209 @@ public final class Either<F, S> {
      *        output get type
      * @return {@link Function} which returns {@link Either}
      */
-    public static <T, R> Function<T, Either<Pair<Throwable, T>, R>> liftWithValue(final CheckedFunction<T, R> function) {
+    static <T, R> Function<T, Either<Pair<Throwable, T>, R>> liftWithValue(final CheckedFunction<T, R> function) {
         return t -> {
             try {
-                return Either.success(function.apply(t));
+                return new Success<>(function.apply(t));
             } catch (final Throwable ex) {
-                return Either.failure(Pair.of(ex, t));
+                return new Failure<>(Pair.of(ex, t));
             }
         };
     }
 
-    @Override
-    public String toString() {
-        if (isFailure()) {
-            return "Left(" + failure + ")";
-        }
-        return "Right(" + success + ")";
-    }
+    final class Success<F, S> implements Either<F, S> {
+        private final S success;
 
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
+        private Success(final S success) {
+            this.success = success;
         }
-        if (o == null || getClass() != o.getClass()) {
+
+        @Override
+        public boolean isFailure() {
             return false;
         }
-        final Either<?, ?> either = (Either<?, ?>) o;
 
-        return Objects.equals(failure, either.failure)
-            && Objects.equals(success, either.success);
+        @Override
+        public boolean isSuccess() {
+            return true;
+        }
+
+        @Override
+        public Optional<S> success() {
+            return Optional.of(success);
+        }
+
+        @Override
+        public Optional<F> failure() {
+            return Optional.empty();
+        }
+
+        @Override
+        public <NS> Either<F, NS> flatMap(final FN1<Either<F, NS>, S> mapper) {
+            return mapper.apply(success);
+        }
+
+        @Override
+        public <NF> Either<NF, S> mapFailure(final FN1<NF, F> mapper) {
+            return new Success<>(success);
+        }
+
+        @Override
+        public <NS> Either<F, NS> mapSuccess(final FN1<NS, S> mapper) {
+            return new Success<>(mapper.apply(success));
+        }
+
+        @Override
+        public S otherwise(final S replacement) {
+            return success;
+        }
+
+        @Override
+        public S otherwiseGet(final Supplier<S> supplier) {
+            return success;
+        }
+
+        @Override
+        public S otherwiseThrow() {
+            return success;
+        }
+
+        @Override
+        public <E extends RuntimeException> S otherwiseThrow(final Supplier<E> error) {
+            return success;
+        }
+
+        @Override
+        public Either<F, S> onSuccess(Consumer<S> consumer) {
+            consumer.accept(success);
+            return this;
+        }
+
+        @Override
+        public Either<F, S> onFailure(Consumer<F> consumer) {
+            return this;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            return Objects.equals(success, ((Success<?, ?>) o).success);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(success);
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", Success.class.getSimpleName() + "[", "]")
+                    .add(success.toString())
+                    .toString();
+        }
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(failure, success);
+    final class Failure<F, S> implements Either<F, S> {
+        private final F failure;
+
+        private Failure(final F failure) {
+            this.failure = failure;
+        }
+
+        @Override
+        public boolean isFailure() {
+            return true;
+        }
+
+        @Override
+        public boolean isSuccess() {
+            return false;
+        }
+
+        @Override
+        public Optional<S> success() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<F> failure() {
+            return Optional.of(failure);
+        }
+
+        @Override
+        public <NS> Either<F, NS> flatMap(final FN1<Either<F, NS>, S> mapper) {
+            return new Failure<>(failure);
+        }
+
+        @Override
+        public <NF> Either<NF, S> mapFailure(final FN1<NF, F> mapper) {
+            return new Failure<>(mapper.apply(failure));
+        }
+
+        @Override
+        public <NS> Either<F, NS> mapSuccess(final FN1<NS, S> mapper) {
+            return new Failure<>(failure);
+        }
+
+        @Override
+        public S otherwise(final S replacement) {
+            return replacement;
+        }
+
+        @Override
+        public S otherwiseGet(final Supplier<S> supplier) {
+            return supplier.get();
+        }
+
+        @Override
+        public S otherwiseThrow() {
+            throw (failure instanceof Throwable)
+                    ? new IllegalStateException((Throwable) failure)
+                    : new IllegalStateException("'Either' does not contain success get");
+        }
+
+        @Override
+        public <E extends RuntimeException> S otherwiseThrow(final Supplier<E> error) {
+            throw error.get();
+        }
+
+        @Override
+        public Either<F, S> onSuccess(Consumer<S> consumer) {
+            return this;
+        }
+
+        @Override
+        public Either<F, S> onFailure(Consumer<F> consumer) {
+            consumer.accept(failure);
+            return this;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            return Objects.equals(failure, ((Failure<?, ?>) o).failure);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(failure);
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", Failure.class.getSimpleName() + "[", "]")
+                    .add(failure.toString())
+                    .toString();
+        }
     }
 }

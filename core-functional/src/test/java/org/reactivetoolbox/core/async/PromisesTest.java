@@ -2,15 +2,15 @@ package org.reactivetoolbox.core.async;
 
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.async.Promises.Promise;
-import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Tuples;
-import org.reactivetoolbox.core.functional.Tuples.*;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class PromisesTest {

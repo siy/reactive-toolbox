@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,28 +16,35 @@ public class EitherTest {
     void theInstanceCanBeMapperIntoOtherType() {
         var original = Either.<String, Integer>success(1);
 
-        assertEquals(Either.failure("1"), original.map((right) -> Either.failure(Objects.toString(right))));
+        assertEquals(Either.failure("1"), original.flatMap((right) -> Either.failure(Objects.toString(right))));
     }
 
     @Test
     void theFailureInstanceRemainsUnchanged() {
         var original = Either.<String, Integer>failure("1");
 
-        assertEquals(Either.failure("1"), original.map((right) -> Either.success(right + right)));
+        assertEquals(Either.failure("1"), original.flatMap((right) -> Either.success(right + right)));
     }
 
     @Test
-    void theLeftValueCanBeMapperIntoOtherType() {
+    void theFailureValueCanBeMapperIntoOtherType() {
         var original = Either.<Integer, String>failure(1);
 
-        assertEquals(Either.failure("1"), original.mapLeft(Objects::toString));
+        assertEquals(Either.failure("1"), original.mapFailure(Objects::toString));
+    }
+
+    @Test
+    void theSuccessValueCanBeMapperIntoOtherType() {
+        var original = Either.<String, Integer>success(1);
+
+        assertEquals(Either.success("1"), original.mapSuccess(Objects::toString));
     }
 
     @Test
     void theSuccessInstanceRemainsUnchangedWhenMappedLeft() {
         var original = Either.<String, Integer>success(1);
 
-        assertEquals(Either.success(1), original.mapLeft(Objects::toString));
+        assertEquals(Either.success(1), original.mapFailure(Objects::toString));
     }
 
     @Test
@@ -46,7 +52,7 @@ public class EitherTest {
         var original = Either.<String, Integer>success(1);
         var holder = new AtomicBoolean(false);
 
-        original.ifSuccess(val -> holder.set(true));
+        original.onSuccess(val -> holder.set(true));
 
         assertTrue(holder.get());
     }
@@ -56,7 +62,7 @@ public class EitherTest {
         var original = Either.<Integer, Integer>failure(1);
         var holder = new AtomicBoolean(false);
 
-        original.ifSuccess(val -> holder.set(true));
+        original.onSuccess(val -> holder.set(true));
 
         assertFalse(holder.get());
     }
@@ -66,7 +72,7 @@ public class EitherTest {
         var original = Either.<String, Integer>success(1);
         var holder = new AtomicBoolean(false);
 
-        original.ifFailure(val -> holder.set(true));
+        original.onFailure(val -> holder.set(true));
 
         assertFalse(holder.get());
     }
@@ -76,7 +82,7 @@ public class EitherTest {
         var original = Either.<Integer, Integer>failure(1);
         var holder = new AtomicBoolean(false);
 
-        original.ifFailure(val -> holder.set(true));
+        original.onFailure(val -> holder.set(true));
 
         assertTrue(holder.get());
     }
@@ -177,7 +183,7 @@ public class EitherTest {
     @Test
     void exceptionCanBeMappedIntoDifferentValue() {
         final Function<Integer, Either<String, String>> newFunction = Either.lift(this::throwingFunction)
-                .andThen(result -> result.mapLeft(Throwable::getMessage));
+                .andThen(result -> result.mapFailure(Throwable::getMessage));
 
         final Either<String, String> rightResult = newFunction.apply(3);
 
