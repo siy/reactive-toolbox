@@ -53,7 +53,11 @@ public interface Path {
         final var stringPath = stripped.startsWith("/") ? stripped : "/" + stripped;
         final var index = stringPath.lastIndexOf('/');
 
-        return index < stringPath.length() ? stringPath + "/" : stringPath;
+        if (index < (stringPath.length() - 1)) {
+            return stringPath + "/";
+        } else {
+            return stringPath;
+        }
     }
 
     private static boolean containsParameters(final String stringPath) {

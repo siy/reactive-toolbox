@@ -23,18 +23,18 @@ public class RouterImpl<T> implements Router<T> {
     @Override
     @SuppressWarnings("unchecked")
     public <R> Either<RoutingError, Promise<R>> deliver(final Envelope<T> event) {
-        var handler = exactRoutes.get(event.target());
+        var handler = exactRoutes.get(event.target().prefix());
 
         if (handler != null) {
             return event.onDelivery()
                     .flatMap(value -> Either.success((Promise<R>) handler.apply(value)));
         }
 
-        var entry = prefixedRoutes.floorEntry(event.target());
+        var entry = prefixedRoutes.floorEntry(event.target().prefix());
 
         if (entry != null) {
             return entry.getValue().stream()
-                    .filter(element -> element.left().matches(event.target()))
+                    .filter(element -> element.left().matches(event.target().prefix()))
                     .findFirst()
                     .map(element -> event.onDelivery().flatMap(value -> Either.success((Promise<R>) element.right().apply(value))))
                     .orElseGet(() -> Either.failure(RoutingError.NO_SUCH_ROUTE));

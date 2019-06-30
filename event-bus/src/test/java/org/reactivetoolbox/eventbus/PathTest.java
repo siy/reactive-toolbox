@@ -20,6 +20,15 @@ class PathTest {
     }
 
     @Test
+    void prefixIsNormalized() {
+        assertEquals("/", Path.of("/").prefix());
+        assertEquals("/one/", Path.of("/one").prefix());
+        assertEquals("/one/", Path.of("/one/").prefix());
+        assertEquals("/one/two/", Path.of("/one/two").prefix());
+        assertEquals("/one/two/", Path.of("/one/two/").prefix());
+    }
+
+    @Test
     void parametersAreCollectedProperlyAtTheEndOfPath() {
         final var path = Path.of("/one/{param1}");
 
