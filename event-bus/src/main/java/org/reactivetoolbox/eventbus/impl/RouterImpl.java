@@ -1,11 +1,14 @@
 package org.reactivetoolbox.eventbus.impl;
 
+import org.reactivetoolbox.core.async.Promises;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.core.functional.Functions;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Pair;
 import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Path;
+import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.eventbus.RoutingError;
 
@@ -16,6 +19,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+//TODO: use Route instead of Pair<>
 public class RouterImpl<T> implements Router<T> {
     private final ConcurrentMap<String, FN1<Promise, T>> exactRoutes = new ConcurrentHashMap<>();
     private final ConcurrentNavigableMap<String, List<Pair<Path, FN1<Promise, T>>>> prefixedRoutes = new ConcurrentSkipListMap<>();
@@ -44,10 +48,14 @@ public class RouterImpl<T> implements Router<T> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <R> Router<T> add(final Path path, final FN1<Promise<R>, T> handler) {
-        var castedHandler = (FN1) handler;
+        addSingle(path, handler);
 
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addSingle(final Path path, final FN1 castedHandler) {
         if (path.isExact()) {
             exactRoutes.putIfAbsent(path.prefix(), castedHandler);
         } else {
@@ -57,7 +65,13 @@ public class RouterImpl<T> implements Router<T> {
                 return list;
             });
         }
+    }
 
+    @Override
+    public Router<T> with(final Route<T>... routes) {
+        for(var route : routes) {
+            addSingle(route.path(), route.handler());
+        }
         return this;
     }
 }

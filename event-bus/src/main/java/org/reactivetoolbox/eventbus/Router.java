@@ -8,4 +8,6 @@ public interface Router<T> {
     <R> Either<RoutingError, Promise<R>> deliver(final Envelope<T> event);
 
     <R> Router<T> add(final Path path, final FN1<Promise<R>, T> handler);
+
+    Router<T> with(final Route<T>... routes);
 }
