@@ -12,6 +12,10 @@ public class Route<T> {
         this.handler = handler;
     }
 
+    public static <T> Route<T> of(final Path path, final FN1<Promise, T> handler) {
+        return new Route<>(path, handler);
+    }
+
     public Path path() {
         return path;
     }

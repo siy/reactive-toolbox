@@ -64,7 +64,7 @@ public interface Either<F, S> {
      *        New type for success
      * @return transformed instance
      */
-    <NS> Either<F, NS> flatMap(final FN1<Either<F, NS>, S> mapper);
+    <NF, NS> Either<NF, NS> flatMap(final FN1<Either<NF, NS>, S> mapper);
 
     /**
      * Transform given instance into another one which has same success type
@@ -247,7 +247,7 @@ public interface Either<F, S> {
         }
 
         @Override
-        public <NS> Either<F, NS> flatMap(final FN1<Either<F, NS>, S> mapper) {
+        public <NF, NS> Either<NF, NS> flatMap(final FN1<Either<NF, NS>, S> mapper) {
             return mapper.apply(success);
         }
 
@@ -343,9 +343,11 @@ public interface Either<F, S> {
             return Optional.of(failure);
         }
 
+        //TODO: does not look ok, what else can be done here?
         @Override
-        public <NS> Either<F, NS> flatMap(final FN1<Either<F, NS>, S> mapper) {
-            return new Failure<>(failure);
+        @SuppressWarnings("unckecked")
+        public <NF, NS> Either<NF, NS> flatMap(final FN1<Either<NF, NS>, S> mapper) {
+            return new Failure<>((NF) failure);
         }
 
         @Override

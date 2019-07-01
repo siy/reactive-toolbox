@@ -40,7 +40,7 @@ public class RouterImpl<T> implements Router<T> {
             return entry.getValue().stream()
                     .filter(element -> element.left().matches(event.target().prefix()))
                     .findFirst()
-                    .map(element -> event.onDelivery().flatMap(value -> Either.success((Promise<R>) element.right().apply(value))))
+                    .map(element -> event.onDelivery().flatMap(value -> Either.<RoutingError, Promise<R>>success((Promise<R>) element.right().apply(value))))
                     .orElseGet(() -> Either.failure(RoutingError.NO_SUCH_ROUTE));
         }
 
