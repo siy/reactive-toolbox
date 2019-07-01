@@ -2,6 +2,8 @@ package org.reactivetoolbox.build;
 
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.core.functional.Functions;
+import org.reactivetoolbox.core.functional.Functions.FN0;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Functions.FN2;
 import org.reactivetoolbox.core.functional.Functions.FN3;
@@ -12,12 +14,17 @@ import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.web.server.AuthenticationError;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.parameter.Parameters.Parameter;
+import org.reactivetoolbox.web.server.parameter.validation.ValidationError;
 
 public class ParameterBuilder {
     private final HttpRouteBuilder route;
 
     private ParameterBuilder(HttpRouteBuilder route) {
         this.route = route;
+    }
+
+    public static ParameterBuilder0 of(final HttpRouteBuilder routeBuilder) {
+        return new ParameterBuilder0(routeBuilder);
     }
 
     public static <T1> ParameterBuilder1<T1> of(final HttpRouteBuilder routeBuilder, final Parameter<T1> param1) {
@@ -32,12 +39,18 @@ public class ParameterBuilder {
         return new ParameterBuilder3<>(routeBuilder, param1, param2, param3);
     }
 
-    private void ensure(final FN1<Either<AuthenticationError, RequestContext>, RequestContext> authenticationVerifier) {
-        route.withAuthHandler(authenticationVerifier);
-    }
-
     protected HttpRouteBuilder route() {
         return route;
+    }
+
+    public static class ParameterBuilder0 extends ParameterBuilder {
+        private ParameterBuilder0(final HttpRouteBuilder routeBuilder) {
+            super(routeBuilder);
+        }
+
+        public <R> Route<RequestContext> invoke(final FN0<Promise<R>> handler) {
+            return route().withHandler(ignored -> handler.apply()).build();
+        }
     }
 
     public static class ParameterBuilder1<T1> extends ParameterBuilder {
@@ -45,12 +58,7 @@ public class ParameterBuilder {
             super(routeBuilder);
         }
 
-        public ParameterBuilder1<T1> ensure(final FN1<Either<AuthenticationError, RequestContext>, RequestContext> authenticationVerifier) {
-            super.ensure(authenticationVerifier);
-            return this;
-        }
-
-        public <R> Route<RequestContext> thenHandleWith(final FN1<Promise<R>, T1> handler) {
+        public <R> Route<RequestContext> invoke(final FN1<Promise<R>, T1> handler) {
             return route().withHandler((Tuple1<T1> parameters) -> parameters.map(handler)).build();
         }
     }
@@ -60,12 +68,7 @@ public class ParameterBuilder {
             super(routeBuilder);
         }
 
-        public ParameterBuilder2<T1, T2> ensure(final FN1<Either<AuthenticationError, RequestContext>, RequestContext> authenticationVerifier) {
-            super.ensure(authenticationVerifier);
-            return this;
-        }
-
-        public <R> Route<RequestContext> thenHandleWith(final FN2<Promise<R>, T1, T2> handler) {
+        public <R> Route<RequestContext> invoke(final FN2<Promise<R>, T1, T2> handler) {
             return route().withHandler((Tuple2<T1, T2> parameters) -> parameters.map(handler)).build();
         }
     }
@@ -75,13 +78,13 @@ public class ParameterBuilder {
             super(routeBuilder);
         }
 
-        public ParameterBuilder3<T1, T2, T3> ensure(final FN1<Either<AuthenticationError, RequestContext>, RequestContext> authenticationVerifier) {
-            super.ensure(authenticationVerifier);
-            return this;
+        public <R> Route<RequestContext> invoke(final FN3<Promise<R>, T1, T2, T3> handler) {
+            return route().withHandler((Tuple3<T1, T2, T3> parameters) -> parameters.map(handler)).build();
         }
 
-        public <R> Route<RequestContext> thenHandleWith(final FN3<Promise<R>, T1, T2, T3> handler) {
-            return route().withHandler((Tuple3<T1, T2, T3> parameters) -> parameters.map(handler)).build();
+        //TODO: support for custom cross-parameter validation
+        public ParameterBuilder3<T1, T2, T3> validate(final FN1<Either<ValidationError, Tuple3<T1, T2, T3>>, Tuple3<T1, T2, T3>> validator) {
+            return this;
         }
     }
 }

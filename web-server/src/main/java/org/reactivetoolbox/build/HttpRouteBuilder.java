@@ -1,5 +1,6 @@
 package org.reactivetoolbox.build;
 
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder0;
 import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder1;
 import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder2;
 import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder3;
@@ -32,26 +33,30 @@ public class HttpRouteBuilder {
         return this;
     }
 
-    public HttpRouteBuilder withAuthHandler(final FN1<Either<AuthenticationError, RequestContext>, RequestContext> authenticationVerifier) {
+    public HttpRouteBuilder ensure(final FN1<Either<AuthenticationError, RequestContext>, RequestContext> authenticationVerifier) {
         this.authHandler = authenticationVerifier;
         return this;
     }
 
-    public HttpRouteBuilder withPath(final String path) {
+    public HttpRouteBuilder to(final String path) {
         this.path = Path.of(path);
         return this;
     }
 
-    public <T1> ParameterBuilder1<T1> with(final Parameter<T1> param1) {
+    public <T1> ParameterBuilder1<T1> findParameters(final Parameter<T1> param1) {
         return ParameterBuilder.of(this, param1);
     }
 
-    public <T1, T2> ParameterBuilder2<T1, T2> with(final Parameter<T1> param1, final Parameter<T2> param2) {
+    public <T1, T2> ParameterBuilder2<T1, T2> findParameters(final Parameter<T1> param1, final Parameter<T2> param2) {
         return ParameterBuilder.of(this, param1, param2);
     }
 
-    public <T1, T2, T3> ParameterBuilder3<T1, T2, T3> with(final Parameter<T1> param1, final Parameter<T2> param2, final Parameter<T3> param3) {
+    public <T1, T2, T3> ParameterBuilder3<T1, T2, T3> findParameters(final Parameter<T1> param1, final Parameter<T2> param2, final Parameter<T3> param3) {
         return ParameterBuilder.of(this, param1, param2, param3);
+    }
+
+    public ParameterBuilder0 withoutParameters() {
+        return ParameterBuilder.of(this);
     }
 
     public Route<RequestContext> build() {
@@ -59,4 +64,5 @@ public class HttpRouteBuilder {
 
         return null;
     }
+
 }

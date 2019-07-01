@@ -2,6 +2,7 @@ package org.reactivetoolbox.web.server.parameter;
 
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.*;
+import org.reactivetoolbox.web.server.auth.AuthHeader;
 import org.reactivetoolbox.web.server.parameter.conversion.Converter;
 import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
 
@@ -28,6 +29,10 @@ public class Parameters {
 
     public static <T> Parameter<T> internal(final Class<T> type) {
         return new Parameter<>(FACTORY.get(type));
+    }
+
+    public static Parameter<AuthHeader> inAuthHeader(final AuthHeader header) {
+        return new Parameter<>(FACTORY.get(AuthHeader.class, header.name()));
     }
 
     public static class Parameter<T> {
