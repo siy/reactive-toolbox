@@ -1,5 +1,6 @@
 package org.reactivetoolbox.core.functional;
 
+import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Functions.FN0;
 
 /*
@@ -232,6 +233,114 @@ public final class Tuples {
         return new Tuple9<>(param1, param2, param3, param4, param5, param6, param7, param8, param9);
     }
 
+    public static <T1> Either<? extends BaseError, Tuple1<T1>> squeeze(final Either<? extends BaseError, T1> value) {
+        return value.flatMap(vv1 -> Either.success(of(vv1)));
+    }
+
+    public static <T1, T2> Either<? extends BaseError, Tuple2<T1, T2>> squeeze(final Either<? extends BaseError, T1> value1,
+                                                                               final Either<? extends BaseError, T2> value2) {
+        return value1.flatMap(vv1 ->
+                value2.flatMap(vv2 -> Either.success(of(vv1, vv2))));
+    }
+
+    public static <T1, T2, T3>  Either<? extends BaseError, Tuple3<T1, T2, T3>> squeeze(final Either<? extends BaseError, T1> value1,
+                                                                                        final Either<? extends BaseError, T2> value2,
+                                                                                        final Either<? extends BaseError, T3> value3) {
+        return value1.flatMap(vv1 ->
+                value2.flatMap(vv2 ->
+                 value3.flatMap(vv3 -> Either.success(of(vv1, vv2, vv3)))));
+    }
+
+    public static <T1, T2, T3, T4>  Either<? extends BaseError, Tuple4<T1, T2, T3, T4>> squeeze(final Either<? extends BaseError, T1> value1,
+                                                                                                final Either<? extends BaseError, T2> value2,
+                                                                                                final Either<? extends BaseError, T3> value3,
+                                                                                                final Either<? extends BaseError, T4> value4) {
+        return value1.flatMap(vv1 ->
+                value2.flatMap(vv2 ->
+                 value3.flatMap(vv3 ->
+                  value4.flatMap(vv4 -> Either.success(of(vv1, vv2, vv3, vv4))))));
+    }
+
+    public static <T1, T2, T3, T4, T5>  Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>> squeeze(final Either<? extends BaseError, T1> value1,
+                                                                                                        final Either<? extends BaseError, T2> value2,
+                                                                                                        final Either<? extends BaseError, T3> value3,
+                                                                                                        final Either<? extends BaseError, T4> value4,
+                                                                                                        final Either<? extends BaseError, T5> value5) {
+        return value1.flatMap(vv1 ->
+                value2.flatMap(vv2 ->
+                 value3.flatMap(vv3 ->
+                  value4.flatMap(vv4 ->
+                   value5.flatMap(vv5 -> Either.success(of(vv1, vv2, vv3, vv4, vv5)))))));
+    }
+
+    public static <T1, T2, T3, T4, T5, T6>  Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>> squeeze(final Either<? extends BaseError, T1> value1,
+                                                                                                                final Either<? extends BaseError, T2> value2,
+                                                                                                                final Either<? extends BaseError, T3> value3,
+                                                                                                                final Either<? extends BaseError, T4> value4,
+                                                                                                                final Either<? extends BaseError, T5> value5,
+                                                                                                                final Either<? extends BaseError, T6> value6) {
+        return value1.flatMap(vv1 ->
+                value2.flatMap(vv2 ->
+                 value3.flatMap(vv3 ->
+                  value4.flatMap(vv4 ->
+                   value5.flatMap(vv5 ->
+                    value6.flatMap(vv6 -> Either.success(of(vv1, vv2, vv3, vv4, vv5, vv6))))))));
+    }
+
+    public static <T1, T2, T3, T4, T5, T6, T7>  Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>> squeeze(final Either<? extends BaseError, T1> value1,
+                                                                                                                        final Either<? extends BaseError, T2> value2,
+                                                                                                                        final Either<? extends BaseError, T3> value3,
+                                                                                                                        final Either<? extends BaseError, T4> value4,
+                                                                                                                        final Either<? extends BaseError, T5> value5,
+                                                                                                                        final Either<? extends BaseError, T6> value6,
+                                                                                                                        final Either<? extends BaseError, T7> value7) {
+        return value1.flatMap(vv1 ->
+                value2.flatMap(vv2 ->
+                 value3.flatMap(vv3 ->
+                  value4.flatMap(vv4 ->
+                   value5.flatMap(vv5 ->
+                    value6.flatMap(vv6 ->
+                     value7.flatMap(vv7 -> Either.success(of(vv1, vv2, vv3, vv4, vv5, vv6, vv7)))))))));
+    }
+
+    public static <T1, T2, T3, T4, T5, T6, T7, T8>  Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>> squeeze(final Either<? extends BaseError, T1> value1,
+                                                                                                                                final Either<? extends BaseError, T2> value2,
+                                                                                                                                final Either<? extends BaseError, T3> value3,
+                                                                                                                                final Either<? extends BaseError, T4> value4,
+                                                                                                                                final Either<? extends BaseError, T5> value5,
+                                                                                                                                final Either<? extends BaseError, T6> value6,
+                                                                                                                                final Either<? extends BaseError, T7> value7,
+                                                                                                                                final Either<? extends BaseError, T8> value8) {
+        return value1.flatMap(vv1 ->
+                value2.flatMap(vv2 ->
+                 value3.flatMap(vv3 ->
+                  value4.flatMap(vv4 ->
+                   value5.flatMap(vv5 ->
+                    value6.flatMap(vv6 ->
+                     value7.flatMap(vv7 ->
+                      value8.flatMap(vv8 -> Either.success(of(vv1, vv2, vv3, vv4, vv5, vv6, vv7, vv8))))))))));
+    }
+
+    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9>  Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> squeeze(final Either<? extends BaseError, T1> value1,
+                                                                                                                                        final Either<? extends BaseError, T2> value2,
+                                                                                                                                        final Either<? extends BaseError, T3> value3,
+                                                                                                                                        final Either<? extends BaseError, T4> value4,
+                                                                                                                                        final Either<? extends BaseError, T5> value5,
+                                                                                                                                        final Either<? extends BaseError, T6> value6,
+                                                                                                                                        final Either<? extends BaseError, T7> value7,
+                                                                                                                                        final Either<? extends BaseError, T8> value8,
+                                                                                                                                        final Either<? extends BaseError, T9> value9) {
+        return value1.flatMap(vv1 ->
+                value2.flatMap(vv2 ->
+                 value3.flatMap(vv3 ->
+                  value4.flatMap(vv4 ->
+                   value5.flatMap(vv5 ->
+                    value6.flatMap(vv6 ->
+                     value7.flatMap(vv7 ->
+                      value8.flatMap(vv8 ->
+                       value9.flatMap(vv9 -> Either.success(of(vv1, vv2, vv3, vv4, vv5, vv6, vv7, vv8, vv9)))))))))));
+    }
+
     /**
      * Base class for all tuples.
      */
@@ -297,6 +406,10 @@ public final class Tuples {
         public <T> T map(final FN0<T> mapper) {
             return mapper.apply();
         }
+
+        public <T1> Tuple1<T1> append(final T1 value) {
+            return new Tuple1<>(value);
+        }
     }
 
     public static class Tuple1<T1> extends Tuple {
@@ -311,6 +424,16 @@ public final class Tuples {
 
         public <T> T map(final FN1<T, T1> mapper) {
             return mapper.apply(get1());
+        }
+
+        @SuppressWarnings("unchecked")
+        //TODO: convert it to zip?
+        protected <TT1> Tuple1<TT1> compose(Object... values) {
+            return new Tuple1<>((TT1) values[0]);
+        }
+
+        public <T2> Tuple2<T1, T2> append(final T2 value) {
+            return new Tuple2<>(get1(), value);
         }
     }
 
@@ -331,6 +454,10 @@ public final class Tuples {
 
         public <T> T map(final FN2<T, T1, T2> mapper) {
             return mapper.apply(get1(), get2());
+        }
+
+        public <T3> Tuple3<T1, T2, T3> append(final T3 value) {
+            return new Tuple3<>(get1(), get2(), value);
         }
     }
 
@@ -356,6 +483,10 @@ public final class Tuples {
 
         public <T> T map(final FN3<T, T1, T2, T3> mapper) {
             return mapper.apply(get1(), get2(), get3());
+        }
+
+        public <T4> Tuple4<T1, T2, T3, T4> append(final T4 value) {
+            return new Tuple4<>(get1(), get2(), get3(), value);
         }
     }
 
@@ -386,6 +517,10 @@ public final class Tuples {
 
         public <T> T map(final FN4<T, T1, T2, T3, T4> mapper) {
             return mapper.apply(get1(), get2(), get3(), get4());
+        }
+
+        public <T5> Tuple5<T1, T2, T3, T4, T5> append(final T5 value) {
+            return new Tuple5<>(get1(), get2(), get3(), get4(), value);
         }
     }
 
@@ -421,6 +556,10 @@ public final class Tuples {
 
         public <T> T map(final FN5<T, T1, T2, T3, T4, T5> mapper) {
             return mapper.apply(get1(), get2(), get3(), get4(), get5());
+        }
+
+        public <T6> Tuple6<T1, T2, T3, T4, T5, T6> append(final T6 value) {
+            return new Tuple6<>(get1(), get2(), get3(), get4(), get5(), value);
         }
     }
 
@@ -462,6 +601,10 @@ public final class Tuples {
 
         public <T> T map(final FN6<T, T1, T2, T3, T4, T5, T6> mapper) {
             return mapper.apply(get1(), get2(), get3(), get4(), get5(), get6());
+        }
+
+        public <T7> Tuple7<T1, T2, T3, T4, T5, T6, T7> append(final T7 value) {
+            return new Tuple7<>(get1(), get2(), get3(), get4(), get5(), get6(), value);
         }
     }
 
@@ -508,6 +651,10 @@ public final class Tuples {
 
         public <T> T map(final FN7<T, T1, T2, T3, T4, T5, T6, T7> mapper) {
             return mapper.apply(get1(), get2(), get3(), get4(), get5(), get6(), get7());
+        }
+
+        public <T8> Tuple8<T1, T2, T3, T4, T5, T6, T7, T8> append(final T8 value) {
+            return new Tuple8<>(get1(), get2(), get3(), get4(), get5(), get6(), get7(), value);
         }
     }
 
@@ -559,6 +706,10 @@ public final class Tuples {
 
         public <T> T map(final FN8<T, T1, T2, T3, T4, T5, T6, T7, T8> mapper) {
             return mapper.apply(get1(), get2(), get3(), get4(), get5(), get6(), get7(), get8());
+        }
+
+        public <T9> Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9> append(final T9 value) {
+            return new Tuple9<>(get1(), get2(), get3(), get4(), get5(), get6(), get7(), get8(), value);
         }
     }
 

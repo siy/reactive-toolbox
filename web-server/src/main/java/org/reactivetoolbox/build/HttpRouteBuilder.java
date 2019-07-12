@@ -1,6 +1,15 @@
 package org.reactivetoolbox.build;
 
-import org.reactivetoolbox.build.ParameterBuilder.*;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder0;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder1;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder2;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder3;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder4;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder5;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder6;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder7;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder8;
+import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder9;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises;
 import org.reactivetoolbox.core.async.Promises.Promise;
@@ -8,18 +17,17 @@ import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Route;
-import org.reactivetoolbox.web.server.AuthenticationError;
 import org.reactivetoolbox.web.server.HttpMethod;
 import org.reactivetoolbox.web.server.RequestContext;
-import org.reactivetoolbox.web.server.RequestProcessingError;
-import org.reactivetoolbox.web.server.ResultProcessor;
 import org.reactivetoolbox.web.server.parameter.Parameters.Parameter;
 
 public class HttpRouteBuilder {
     private final HttpMethod method;
     private Path path;
-    private FN1<Either<RequestProcessingError, Promise>, RequestContext> handler = (context) -> Either.success(Promises.fulfilled("{}"));
-    private FN1<Either<AuthenticationError, RequestContext>, RequestContext> authHandler = Either::success;
+    private FN1<Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>>, RequestContext>
+            handler = (context) -> Either.success(Promises.fulfilled(Either.success("{}")));
+    private FN1<Either<? extends BaseError, RequestContext>, RequestContext> authHandler =
+            Either::success;
 
     private HttpRouteBuilder(final HttpMethod method) {
         this.method = method;
@@ -29,14 +37,12 @@ public class HttpRouteBuilder {
         return new HttpRouteBuilder(method);
     }
 
-    @SuppressWarnings("unchecked")
-    public <R> HttpRouteBuilder withHandler(FN1<Either<RequestProcessingError, Promise<R>>, RequestContext> handler) {
-        final FN1 casterHandler = handler;
-        this.handler = (FN1<Either<RequestProcessingError, Promise>, RequestContext>) casterHandler;
+    public HttpRouteBuilder withHandler(FN1<Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>>, RequestContext> handler) {
+        this.handler = handler;
         return this;
     }
 
-    public HttpRouteBuilder ensure(final FN1<Either<AuthenticationError, RequestContext>, RequestContext> authenticationVerifier) {
+    public HttpRouteBuilder ensure(final FN1<Either<? extends BaseError, RequestContext>, RequestContext> authenticationVerifier) {
         this.authHandler = authenticationVerifier;
         return this;
     }
@@ -128,16 +134,6 @@ public class HttpRouteBuilder {
     }
 
     public Route<RequestContext> build() {
-        var fullHandler = (RequestContext context) -> {
-            var authResult = authHandler.apply(context)
-                    .flatMap(ctx -> handler.apply(ctx))
-                    .mapSuccess(promise -> promise.then(ResultProcessor::processSuccess))
-                    .mapFailure(ResultProcessor::processFailure)
-                    //TODO: finish processing of request
-                    ;
-        };
-
-        return Route.of(path, fullHandler);
+        return Route.of(path, handler);
     }
-
 }

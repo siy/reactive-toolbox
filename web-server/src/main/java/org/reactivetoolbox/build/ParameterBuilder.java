@@ -1,23 +1,31 @@
 package org.reactivetoolbox.build;
 
+import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions;
-import org.reactivetoolbox.core.functional.Functions.*;
+import org.reactivetoolbox.core.functional.Functions.FN0;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Functions.FN2;
 import org.reactivetoolbox.core.functional.Functions.FN3;
+import org.reactivetoolbox.core.functional.Functions.FN4;
+import org.reactivetoolbox.core.functional.Functions.FN5;
+import org.reactivetoolbox.core.functional.Functions.FN6;
+import org.reactivetoolbox.core.functional.Functions.FN7;
+import org.reactivetoolbox.core.functional.Functions.FN8;
 import org.reactivetoolbox.core.functional.Functions.FN9;
 import org.reactivetoolbox.core.functional.Tuples;
-import org.reactivetoolbox.core.functional.Tuples.*;
+import org.reactivetoolbox.core.functional.Tuples.Tuple1;
 import org.reactivetoolbox.core.functional.Tuples.Tuple2;
 import org.reactivetoolbox.core.functional.Tuples.Tuple3;
+import org.reactivetoolbox.core.functional.Tuples.Tuple4;
+import org.reactivetoolbox.core.functional.Tuples.Tuple5;
+import org.reactivetoolbox.core.functional.Tuples.Tuple6;
+import org.reactivetoolbox.core.functional.Tuples.Tuple7;
+import org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import org.reactivetoolbox.core.functional.Tuples.Tuple9;
 import org.reactivetoolbox.eventbus.Route;
-import org.reactivetoolbox.web.server.AuthenticationError;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.parameter.Parameters.Parameter;
-import org.reactivetoolbox.web.server.parameter.validation.ValidationError;
 
 public class ParameterBuilder {
     private final HttpRouteBuilder route;
@@ -30,15 +38,21 @@ public class ParameterBuilder {
         return new ParameterBuilder0(routeBuilder);
     }
 
-    public static <T1> ParameterBuilder1<T1> of(final HttpRouteBuilder routeBuilder, final Parameter<T1> param1) {
+    public static <T1> ParameterBuilder1<T1> of(final HttpRouteBuilder routeBuilder,
+                                                final Parameter<T1> param1) {
         return new ParameterBuilder1<>(routeBuilder, param1);
     }
 
-    public static <T1, T2> ParameterBuilder2<T1, T2> of(final HttpRouteBuilder routeBuilder, final Parameter<T1> param1, final Parameter<T2> param2) {
+    public static <T1, T2> ParameterBuilder2<T1, T2> of(final HttpRouteBuilder routeBuilder,
+                                                        final Parameter<T1> param1,
+                                                        final Parameter<T2> param2) {
         return new ParameterBuilder2<>(routeBuilder, param1, param2);
     }
 
-    public static <T1, T2, T3> ParameterBuilder3<T1, T2, T3> of(final HttpRouteBuilder routeBuilder, final Parameter<T1> param1, final Parameter<T2> param2, final Parameter<T3> param3) {
+    public static <T1, T2, T3> ParameterBuilder3<T1, T2, T3> of(final HttpRouteBuilder routeBuilder,
+                                                                final Parameter<T1> param1,
+                                                                final Parameter<T2> param2,
+                                                                final Parameter<T3> param3) {
         return new ParameterBuilder3<>(routeBuilder, param1, param2, param3);
     }
 
@@ -66,43 +80,50 @@ public class ParameterBuilder {
                                                                                         final Parameter<T4> param4,
                                                                                         final Parameter<T5> param5,
                                                                                         final Parameter<T6> param6) {
-        return new ParameterBuilder6<>(routeBuilder, param1, param2, param3, param4, param5, param6);
+        return new ParameterBuilder6<>(routeBuilder, param1, param2, param3, param4, param5,
+                                       param6);
     }
 
-    public static <T1, T2, T3, T4, T5, T6, T7> ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> of(final HttpRouteBuilder routeBuilder,
-                                                                                                final Parameter<T1> param1,
-                                                                                                final Parameter<T2> param2,
-                                                                                                final Parameter<T3> param3,
-                                                                                                final Parameter<T4> param4,
-                                                                                                final Parameter<T5> param5,
-                                                                                                final Parameter<T6> param6,
-                                                                                                final Parameter<T7> param7) {
-        return new ParameterBuilder7<>(routeBuilder, param1, param2, param3, param4, param5, param6, param7);
+    public static <T1, T2, T3, T4, T5, T6, T7> ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> of(
+            final HttpRouteBuilder routeBuilder,
+            final Parameter<T1> param1,
+            final Parameter<T2> param2,
+            final Parameter<T3> param3,
+            final Parameter<T4> param4,
+            final Parameter<T5> param5,
+            final Parameter<T6> param6,
+            final Parameter<T7> param7) {
+        return new ParameterBuilder7<>(routeBuilder, param1, param2, param3, param4, param5, param6,
+                                       param7);
     }
 
-    public static <T1, T2, T3, T4, T5, T6, T7, T8> ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> of(final HttpRouteBuilder routeBuilder,
-                                                                                                        final Parameter<T1> param1,
-                                                                                                        final Parameter<T2> param2,
-                                                                                                        final Parameter<T3> param3,
-                                                                                                        final Parameter<T4> param4,
-                                                                                                        final Parameter<T5> param5,
-                                                                                                        final Parameter<T6> param6,
-                                                                                                        final Parameter<T7> param7,
-                                                                                                        final Parameter<T8> param8) {
-        return new ParameterBuilder8<>(routeBuilder, param1, param2, param3, param4, param5, param6, param7, param8);
+    public static <T1, T2, T3, T4, T5, T6, T7, T8> ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> of(
+            final HttpRouteBuilder routeBuilder,
+            final Parameter<T1> param1,
+            final Parameter<T2> param2,
+            final Parameter<T3> param3,
+            final Parameter<T4> param4,
+            final Parameter<T5> param5,
+            final Parameter<T6> param6,
+            final Parameter<T7> param7,
+            final Parameter<T8> param8) {
+        return new ParameterBuilder8<>(routeBuilder, param1, param2, param3, param4, param5, param6,
+                                       param7, param8);
     }
 
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9> ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> of(final HttpRouteBuilder routeBuilder,
-                                                                                                                final Parameter<T1> param1,
-                                                                                                                final Parameter<T2> param2,
-                                                                                                                final Parameter<T3> param3,
-                                                                                                                final Parameter<T4> param4,
-                                                                                                                final Parameter<T5> param5,
-                                                                                                                final Parameter<T6> param6,
-                                                                                                                final Parameter<T7> param7,
-                                                                                                                final Parameter<T8> param8,
-                                                                                                                final Parameter<T9> param9) {
-        return new ParameterBuilder9<>(routeBuilder, param1, param2, param3, param4, param5, param6, param7, param8, param9);
+    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9> ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> of(
+            final HttpRouteBuilder routeBuilder,
+            final Parameter<T1> param1,
+            final Parameter<T2> param2,
+            final Parameter<T3> param3,
+            final Parameter<T4> param4,
+            final Parameter<T5> param5,
+            final Parameter<T6> param6,
+            final Parameter<T7> param7,
+            final Parameter<T8> param8,
+            final Parameter<T9> param9) {
+        return new ParameterBuilder9<>(routeBuilder, param1, param2, param3, param4, param5, param6,
+                                       param7, param8, param9);
     }
 
     protected HttpRouteBuilder route() {
@@ -114,75 +135,134 @@ public class ParameterBuilder {
             super(routeBuilder);
         }
 
-        public <R> Route<RequestContext> invoke(final FN0<Promise<R>> handler) {
-            return route().withHandler(ignored -> handler.apply()).build();
+        public Route<RequestContext> invoke(final FN0<Promise<Either<? extends BaseError, ?>>> handler) {
+            return route().withHandler(ignored -> Either.success(handler.apply())).build();
         }
     }
 
     public static class ParameterBuilder1<T1> extends ParameterBuilder {
-        private final Tuple1<Parameter<T1>> parameters;
+        private final Parameter<T1> param1;
 
         private ParameterBuilder1(final HttpRouteBuilder routeBuilder, final Parameter<T1> param1) {
             super(routeBuilder);
+            this.param1 = param1;
         }
 
-        public <R> Route<RequestContext> invoke(final FN1<Promise<R>, T1> handler) {
-            return route().withHandler((Tuple1<T1> parameters) -> parameters.map(handler)).build();
+        public Route<RequestContext> invoke(final FN1<Promise<Either<? extends BaseError, ?>>, T1> handler) {
+            return route().withHandler(
+                    context -> Tuples.of(param1.extract(context))
+                            .map(Tuples::squeeze)
+                            .mapSuccess(params -> params.map(handler))).build();
         }
     }
 
     public static class ParameterBuilder2<T1, T2> extends ParameterBuilder {
+        private final Parameter<T1> param1;
+        private final Parameter<T2> param2;
+        private FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> validator =
+                (param1, param2) -> Either.success(Tuples.of(param1, param2));
+
         private ParameterBuilder2(final HttpRouteBuilder routeBuilder,
                                   final Parameter<T1> param1,
                                   final Parameter<T2> param2) {
             super(routeBuilder);
+            this.param1 = param1;
+            this.param2 = param2;
         }
 
-        public <R> Route<RequestContext> invoke(final FN2<Promise<R>, T1, T2> handler) {
-            return route().withHandler((Tuple2<T1, T2> parameters) -> parameters.map(handler)).build();
+        public Route<RequestContext> invoke(final FN2<Promise<Either<? extends BaseError, ?>>, T1, T2> handler) {
+            return route().withHandler(
+                    context -> Tuples.of(param1.extract(context), param2.extract(context))
+                            .map(Tuples::squeeze)
+                            .flatMap(tuple -> tuple.map(validator))
+                            .mapSuccess(params -> params.map(handler))).build();
         }
 
-        public ParameterBuilder2<T1, T2> validate(final FN2<Either<ValidationError, Tuple2<T1, T2>>, T1, T2> validator) {
+        public ParameterBuilder2<T1, T2> validate(final FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> validator) {
+            this.validator = validator;
             return this;
         }
     }
 
     public static class ParameterBuilder3<T1, T2, T3> extends ParameterBuilder {
+        private final Parameter<T1> param1;
+        private final Parameter<T2> param2;
+        private final Parameter<T3> param3;
+        private FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> validator =
+                (param1, param2, param3) -> Either.success(Tuples.of(param1, param2, param3));
+
         private ParameterBuilder3(final HttpRouteBuilder routeBuilder,
                                   final Parameter<T1> param1,
                                   final Parameter<T2> param2,
                                   final Parameter<T3> param3) {
             super(routeBuilder);
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
         }
 
-        public <R> Route<RequestContext> invoke(final FN3<Promise<R>, T1, T2, T3> handler) {
-            return route().withHandler((Tuple3<T1, T2, T3> parameters) -> parameters.map(handler)).build();
+        public Route<RequestContext> invoke(final FN3<Promise<Either<? extends BaseError, ?>>, T1, T2, T3> handler) {
+            return route().withHandler(
+                    context -> Tuples.of(param1.extract(context), param2.extract(context),
+                                         param3.extract(context))
+                            .map(Tuples::squeeze)
+                            .flatMap(tuple -> tuple.map(validator))
+                            .mapSuccess(params -> params.map(handler))).build();
         }
 
-        public ParameterBuilder3<T1, T2, T3> validate(final FN3<Either<ValidationError, Tuple3<T1, T2, T3>>, T1, T2, T3> validator) {
+        public ParameterBuilder3<T1, T2, T3> validate(final FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> validator) {
+            this.validator = validator;
             return this;
         }
     }
 
     public static class ParameterBuilder4<T1, T2, T3, T4> extends ParameterBuilder {
+        private final Parameter<T1> param1;
+        private final Parameter<T2> param2;
+        private final Parameter<T3> param3;
+        private final Parameter<T4> param4;
+        private FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> validator =
+                (param1, param2, param3, param4) -> Either.success(
+                        Tuples.of(param1, param2, param3, param4));
+
         private ParameterBuilder4(final HttpRouteBuilder routeBuilder,
                                   final Parameter<T1> param1,
                                   final Parameter<T2> param2,
                                   final Parameter<T3> param3,
                                   final Parameter<T4> param4) {
             super(routeBuilder);
+
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
+            this.param4 = param4;
         }
 
-        public <R> Route<RequestContext> invoke(final FN4<Promise<R>, T1, T2, T3, T4> handler) {
-            return route().withHandler((Tuple4<T1, T2, T3, T4> parameters) -> parameters.map(handler)).build();
+        public Route<RequestContext> invoke(final FN4<Promise<Either<? extends BaseError, ?>>, T1, T2, T3, T4> handler) {
+            return route().withHandler(
+                    context -> Tuples.of(param1.extract(context), param2.extract(context),
+                                         param3.extract(context), param4.extract(context))
+                            .map(Tuples::squeeze)
+                            .flatMap(tuple -> tuple.map(validator))
+                            .mapSuccess(params -> params.map(handler))).build();
         }
 
-        public ParameterBuilder4<T1, T2, T3, T4> validate(final FN4<Either<ValidationError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> validator) {
+        public ParameterBuilder4<T1, T2, T3, T4> validate(final FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> validator) {
+            this.validator = validator;
             return this;
         }
     }
 
     public static class ParameterBuilder5<T1, T2, T3, T4, T5> extends ParameterBuilder {
+        private final Parameter<T1> param1;
+        private final Parameter<T2> param2;
+        private final Parameter<T3> param3;
+        private final Parameter<T4> param4;
+        private final Parameter<T5> param5;
+        private FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5>
+                validator = (param1, param2, param3, param4, param5) -> Either.success(
+                Tuples.of(param1, param2, param3, param4, param5));
+
         private ParameterBuilder5(final HttpRouteBuilder routeBuilder,
                                   final Parameter<T1> param1,
                                   final Parameter<T2> param2,
@@ -190,18 +270,40 @@ public class ParameterBuilder {
                                   final Parameter<T4> param4,
                                   final Parameter<T5> param5) {
             super(routeBuilder);
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
+            this.param4 = param4;
+            this.param5 = param5;
         }
 
-        public <R> Route<RequestContext> invoke(final FN5<Promise<R>, T1, T2, T3, T4, T5> handler) {
-            return route().withHandler((Tuple5<T1, T2, T3, T4, T5> parameters) -> parameters.map(handler)).build();
+        public Route<RequestContext> invoke(final FN5<Promise<Either<? extends BaseError, ?>>, T1, T2, T3, T4, T5> handler) {
+            return route().withHandler(
+                    context -> Tuples.of(param1.extract(context), param2.extract(context),
+                                         param3.extract(context), param4.extract(context),
+                                         param5.extract(context))
+                            .map(Tuples::squeeze)
+                            .flatMap(tuple -> tuple.map(validator))
+                            .mapSuccess(params -> params.map(handler))).build();
         }
 
-        public ParameterBuilder5<T1, T2, T3, T4, T5> validate(final FN5<Either<ValidationError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> validator) {
+        public ParameterBuilder5<T1, T2, T3, T4, T5> validate(final FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> validator) {
+            this.validator = validator;
             return this;
         }
     }
 
     public static class ParameterBuilder6<T1, T2, T3, T4, T5, T6> extends ParameterBuilder {
+        private final Parameter<T1> param1;
+        private final Parameter<T2> param2;
+        private final Parameter<T3> param3;
+        private final Parameter<T4> param4;
+        private final Parameter<T5> param5;
+        private final Parameter<T6> param6;
+        private FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6>
+                validator = (param1, param2, param3, param4, param5, param6) -> Either.success(
+                Tuples.of(param1, param2, param3, param4, param5, param6));
+
         private ParameterBuilder6(final HttpRouteBuilder routeBuilder,
                                   final Parameter<T1> param1,
                                   final Parameter<T2> param2,
@@ -210,18 +312,43 @@ public class ParameterBuilder {
                                   final Parameter<T5> param5,
                                   final Parameter<T6> param6) {
             super(routeBuilder);
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
+            this.param4 = param4;
+            this.param5 = param5;
+            this.param6 = param6;
         }
 
-        public <R> Route<RequestContext> invoke(final FN6<Promise<R>, T1, T2, T3, T4, T5, T6> handler) {
-            return route().withHandler((Tuple6<T1, T2, T3, T4, T5, T6> parameters) -> parameters.map(handler)).build();
+        public Route<RequestContext> invoke(final FN6<Promise<Either<? extends BaseError, ?>>, T1, T2, T3, T4, T5, T6> handler) {
+            return route().withHandler(
+                    context -> Tuples.of(param1.extract(context), param2.extract(context),
+                                         param3.extract(context), param4.extract(context),
+                                         param5.extract(context), param6.extract(context))
+                            .map(Tuples::squeeze)
+                            .flatMap(tuple -> tuple.map(validator))
+                            .mapSuccess(params -> params.map(handler))).build();
         }
 
-        public ParameterBuilder6<T1, T2, T3, T4, T5, T6> validate(final FN6<Either<ValidationError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> validator) {
+        public ParameterBuilder6<T1, T2, T3, T4, T5, T6> validate(final FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> validator) {
+            this.validator = validator;
             return this;
         }
     }
 
     public static class ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> extends ParameterBuilder {
+        private final Parameter<T1> param1;
+        private final Parameter<T2> param2;
+        private final Parameter<T3> param3;
+        private final Parameter<T4> param4;
+        private final Parameter<T5> param5;
+        private final Parameter<T6> param6;
+        private final Parameter<T7> param7;
+        private FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7>
+                validator =
+                (param1, param2, param3, param4, param5, param6, param7) -> Either.success(
+                        Tuples.of(param1, param2, param3, param4, param5, param6, param7));
+
         private ParameterBuilder7(final HttpRouteBuilder routeBuilder,
                                   final Parameter<T1> param1,
                                   final Parameter<T2> param2,
@@ -231,18 +358,46 @@ public class ParameterBuilder {
                                   final Parameter<T6> param6,
                                   final Parameter<T7> param7) {
             super(routeBuilder);
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
+            this.param4 = param4;
+            this.param5 = param5;
+            this.param6 = param6;
+            this.param7 = param7;
         }
 
-        public <R> Route<RequestContext> invoke(final FN7<Promise<R>, T1, T2, T3, T4, T5, T6, T7> handler) {
-            return route().withHandler((Tuple7<T1, T2, T3, T4, T5, T6, T7> parameters) -> parameters.map(handler)).build();
+        public Route<RequestContext> invoke(final FN7<Promise<Either<? extends BaseError, ?>>, T1, T2, T3, T4, T5, T6, T7> handler) {
+            return route().withHandler(
+                    context -> Tuples.of(param1.extract(context), param2.extract(context),
+                                         param3.extract(context), param4.extract(context),
+                                         param5.extract(context), param6.extract(context),
+                                         param7.extract(context))
+                            .map(Tuples::squeeze)
+                            .flatMap(tuple -> tuple.map(validator))
+                            .mapSuccess(params -> params.map(handler))).build();
         }
 
-        public ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> validate(final FN7<Either<ValidationError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator) {
+        public ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> validate(final FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator) {
+            this.validator = validator;
             return this;
         }
     }
 
     public static class ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> extends ParameterBuilder {
+        private final Parameter<T1> param1;
+        private final Parameter<T2> param2;
+        private final Parameter<T3> param3;
+        private final Parameter<T4> param4;
+        private final Parameter<T5> param5;
+        private final Parameter<T6> param6;
+        private final Parameter<T7> param7;
+        private final Parameter<T8> param8;
+        private FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8>
+                validator =
+                (param1, param2, param3, param4, param5, param6, param7, param8) -> Either.success(
+                        Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8));
+
         private ParameterBuilder8(final HttpRouteBuilder routeBuilder,
                                   final Parameter<T1> param1,
                                   final Parameter<T2> param2,
@@ -253,18 +408,50 @@ public class ParameterBuilder {
                                   final Parameter<T7> param7,
                                   final Parameter<T8> param8) {
             super(routeBuilder);
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
+            this.param4 = param4;
+            this.param5 = param5;
+            this.param6 = param6;
+            this.param7 = param7;
+            this.param8 = param8;
         }
 
-        public <R> Route<RequestContext> invoke(final FN8<Promise<R>, T1, T2, T3, T4, T5, T6, T7, T8> handler) {
-            return route().withHandler((Tuple8<T1, T2, T3, T4, T5, T6, T7, T8> parameters) -> parameters.map(handler)).build();
+        public Route<RequestContext> invoke(final FN8<Promise<Either<? extends BaseError, ?>>, T1, T2, T3, T4, T5, T6, T7, T8> handler) {
+            return route().withHandler(
+                    context -> Tuples.of(param1.extract(context), param2.extract(context),
+                                         param3.extract(context), param4.extract(context),
+                                         param5.extract(context), param6.extract(context),
+                                         param7.extract(context), param8.extract(context))
+                            .map(Tuples::squeeze)
+                            .flatMap(tuple -> tuple.map(validator))
+                            .mapSuccess(params -> params.map(handler))).build();
         }
 
-        public ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> validate(final FN8<Either<ValidationError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> validator) {
+        public ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> validate(final FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> validator) {
+            this.validator = validator;
             return this;
         }
     }
 
-    public static class ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> extends ParameterBuilder {
+    public static class ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9>
+            extends ParameterBuilder {
+        private final Parameter<T1> param1;
+        private final Parameter<T2> param2;
+        private final Parameter<T3> param3;
+        private final Parameter<T4> param4;
+        private final Parameter<T5> param5;
+        private final Parameter<T6> param6;
+        private final Parameter<T7> param7;
+        private final Parameter<T8> param8;
+        private final Parameter<T9> param9;
+        private FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9>
+                validator =
+                (param1, param2, param3, param4, param5, param6, param7, param8, param9) -> Either.success(
+                        Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8,
+                                  param9));
+
         private ParameterBuilder9(final HttpRouteBuilder routeBuilder,
                                   final Parameter<T1> param1,
                                   final Parameter<T2> param2,
@@ -276,13 +463,31 @@ public class ParameterBuilder {
                                   final Parameter<T8> param8,
                                   final Parameter<T9> param9) {
             super(routeBuilder);
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
+            this.param4 = param4;
+            this.param5 = param5;
+            this.param6 = param6;
+            this.param7 = param7;
+            this.param8 = param8;
+            this.param9 = param9;
         }
 
-        public <R> Route<RequestContext> invoke(final FN9<Promise<R>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
-            return route().withHandler((Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9> parameters) -> parameters.map(handler)).build();
+        public Route<RequestContext> invoke(final FN9<Promise<Either<? extends BaseError, ?>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
+            return route().withHandler(
+                    context -> Tuples.of(param1.extract(context), param2.extract(context),
+                                         param3.extract(context), param4.extract(context),
+                                         param5.extract(context), param6.extract(context),
+                                         param7.extract(context), param8.extract(context),
+                                         param9.extract(context))
+                            .map(Tuples::squeeze)
+                            .flatMap(tuple -> tuple.map(validator))
+                            .mapSuccess(params -> params.map(handler))).build();
         }
 
-        public ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> validate(final FN9<Either<ValidationError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> validator) {
+        public ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> validate(final FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> validator) {
+            this.validator = validator;
             return this;
         }
     }

@@ -1,10 +1,13 @@
 package org.reactivetoolbox.web.server.parameter;
 
+import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.*;
+import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.auth.AuthHeader;
 import org.reactivetoolbox.web.server.parameter.conversion.Converter;
 import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
+import org.reactivetoolbox.web.server.parameter.validation.ValidationError;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +44,10 @@ public class Parameters {
 
         private Parameter(final Converter<T> converter) {
             this.converter = converter;
+        }
+
+        public Either<? extends BaseError, T> extract(final RequestContext context) {
+            return Either.failure(ValidationError.INVALID_PARAMETERS);
         }
 
 //        public final Either<?, T> convert(final RequestContext context) {
