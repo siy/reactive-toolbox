@@ -1,5 +1,6 @@
 package org.reactivetoolbox.core.async;
 
+import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Tuples.Tuple1;
 
 import java.util.Arrays;
@@ -31,6 +32,14 @@ public class Promises {
 
     public static <T> Promise<T> fulfilled(final T value) {
         return Promises.<T>give().resolve(value);
+    }
+
+    public static <T> PromiseEither<T> giveEither() {
+        return new PromiseEither<T>();
+    }
+
+    public static <T> PromiseEither<T> fulfilledEither(final T value) {
+        return (PromiseEither<T>) Promises.<T>giveEither().resolve(Either.success(value));
     }
 
     @SafeVarargs
@@ -135,6 +144,11 @@ public class Promises {
                                    (T5) values[4], (T6) values[5], (T7) values[6], (T8) values[7],
                                    (T9) values[8]), promise1, promise2, promise3, promise4,
                       promise5, promise6, promise7, promise8, promise9);
+    }
+
+    public static class PromiseEither<T> extends Promise<Either<? extends BaseError, T>> {
+        private PromiseEither() {
+        }
     }
 
     public static class Promise<T> {

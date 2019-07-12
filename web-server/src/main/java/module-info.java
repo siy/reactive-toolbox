@@ -6,4 +6,5 @@ module org.reactivetoolbox.web {
     exports org.reactivetoolbox.web.server.parameter;
     requires org.reactivetoolbox.core;
     requires org.reactivetoolbox.eventbus;
+    //uses java.util;
 }

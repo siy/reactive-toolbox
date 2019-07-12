@@ -1,9 +1,10 @@
 package org.reactivetoolbox.eventbus;
 
+import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 
 public interface Envelope<T> {
-    Either<RoutingError, T> onDelivery();
+    Either<? extends BaseError, T> onDelivery();
 
     Path target();
 }

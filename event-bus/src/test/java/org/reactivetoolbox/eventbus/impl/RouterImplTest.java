@@ -5,6 +5,7 @@ import org.reactivetoolbox.core.async.Promises;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Path;
+import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.eventbus.RoutingError;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,7 +17,7 @@ class RouterImplTest {
     void exactPathCanBeMatched() {
         var router = new RouterImpl<String>();
 
-        router.add(Path.of("/one/two"), msg -> Promises.fulfilled(msg + msg));
+        router.with(Route.of("/one/two", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg)))));
 
         router.deliver(StringEnvelope.of("/one/two", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
@@ -31,8 +32,8 @@ class RouterImplTest {
     void parametrizedPathCanBeMatched() {
         var router = new RouterImpl<String>();
 
-        router.add(Path.of("/one/{two}"), msg -> Promises.fulfilled(msg + msg + 2));
-        router.add(Path.of("/one/two/{three}"), msg -> Promises.fulfilled(msg + msg + 3));
+        router.with(Route.of("/one/{two}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 2)))),
+                    Route.of("/one/two/{three}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 3)))));
 
         router.deliver(StringEnvelope.of("/one/param1", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
@@ -47,7 +48,7 @@ class RouterImplTest {
     void parametrizedPathCantBeMatchedIfParameterIsMissing() {
         var router = new RouterImpl<String>();
 
-        router.add(Path.of("/one/two/{three}"), msg -> Promises.fulfilled(msg + msg + 3));
+        router.with(Route.of("/one/two/{three}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 3)))));
 
         router.deliver(StringEnvelope.of("/one/two", "Value"))
                 .onSuccess(success -> fail("Received unexpected " + success))
@@ -58,9 +59,9 @@ class RouterImplTest {
     void mixedPathsCanBeMatched() {
         var router = new RouterImpl<String>();
 
-        router.add(Path.of("/one/two"), msg -> Promises.fulfilled(msg + msg + 1));
-        router.add(Path.of("/one/{two}"), msg -> Promises.fulfilled(msg + msg + 2));
-        router.add(Path.of("/one/two/{three}"), msg -> Promises.fulfilled(msg + msg + 3));
+        router.with(Route.of("/one/two", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 1)))),
+                    Route.of("/one/{two}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 2)))),
+                    Route.of("/one/two/{three}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 3)))));
 
         router.deliver(StringEnvelope.of("/one/two", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))

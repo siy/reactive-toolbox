@@ -1,5 +1,7 @@
 package org.reactivetoolbox.web.server;
 
+import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises;
@@ -8,6 +10,7 @@ import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Tuples;
 import org.reactivetoolbox.web.server.auth.AuthHeader;
 import org.reactivetoolbox.web.server.parameter.Parameters;
+import org.reactivetoolbox.web.server.parameter.validation.ValidationError;
 import org.reactivetoolbox.web.server.parameter.validation.Validations;
 
 import java.util.UUID;
@@ -29,6 +32,7 @@ class ServerTest {
         }
     }
 
+    @Disabled
     @Test
     void serverCanBeCreated() {
         var userService = new UserService();
@@ -51,9 +55,9 @@ class ServerTest {
                 on(HttpMethod.PUT)
                         .to("/user")
                         .ensure(Authentication::userLoggedIn)
-                        .findParameters(Parameters.inAuthHeader(AuthHeader.JWT))
+                        .findParameters(inAuthHeader(AuthHeader.JWT))
                         //TODO: try to fix type deduction for case of returning explicit type of promise
-                        .invoke(param1 -> userService.getProfile(param1)),
+                        .invoke(userService::getProfile),
 
                 on(HttpMethod.GET)
                         .to("/")

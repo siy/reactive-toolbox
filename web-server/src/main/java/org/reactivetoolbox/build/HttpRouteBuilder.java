@@ -48,7 +48,7 @@ public class HttpRouteBuilder {
     }
 
     public HttpRouteBuilder to(final String path) {
-        this.path = Path.of(path);
+        this.path = Path.of(path, method);
         return this;
     }
 

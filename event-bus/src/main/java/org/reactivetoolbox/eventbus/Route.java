@@ -14,6 +14,10 @@ public class Route<T> {
         this.handler = handler;
     }
 
+    public static <R> Route<R> of(final String path, final FN1<Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>>, R> handler) {
+        return of(Path.of(path), handler);
+    }
+
     public static <R> Route<R> of(final Path path, final FN1<Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>>, R> handler) {
         return new Route<>(path, handler);
     }

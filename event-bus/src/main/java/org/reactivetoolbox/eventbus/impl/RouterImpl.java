@@ -1,5 +1,6 @@
 package org.reactivetoolbox.eventbus.impl;
 
+import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
@@ -14,63 +15,59 @@ import org.reactivetoolbox.eventbus.RoutingError;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-//TODO: use Route instead of Pair<>
-public class RouterImpl<T> implements Router<T> {
-    private final ConcurrentMap<String, FN1<Promise, T>> exactRoutes = new ConcurrentHashMap<>();
-    private final ConcurrentNavigableMap<String, List<Pair<Path, FN1<Promise, T>>>> prefixedRoutes = new ConcurrentSkipListMap<>();
+public final class RouterImpl<T> implements Router<T> {
+    private final ConcurrentMap<String, Route<T>> exactRoutes = new ConcurrentHashMap<>();
+    private final ConcurrentNavigableMap<String, List<Route<T>>> prefixedRoutes = new ConcurrentSkipListMap<>();
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <R> Either<RoutingError, Promise<R>> deliver(final Envelope<T> event) {
-        var handler = exactRoutes.get(event.target().prefix());
+    public Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>> deliver(final Envelope<T> event) {
+        var route = exactRoutes.get(event.target().prefix());
 
-        if (handler != null) {
+        if (route != null) {
             return event.onDelivery()
-                    .flatMap(value -> Either.success((Promise<R>) handler.apply(value)));
+                    .flatMap(value -> event.onDelivery().flatMap(val -> route.handler().apply(val)));
         }
 
         var entry = prefixedRoutes.floorEntry(event.target().prefix());
 
         if (entry != null) {
-            return entry.getValue().stream()
-                    .filter(element -> element.left().matches(event.target().prefix()))
-                    .findFirst()
-                    .map(element -> event.onDelivery().flatMap(value -> Either.<RoutingError, Promise<R>>success((Promise<R>) element.right().apply(value))))
-                    .orElseGet(() -> Either.failure(RoutingError.NO_SUCH_ROUTE));
+            final Optional<Route<T>> routeOptional = entry.getValue()
+                    .stream()
+                    .filter(element -> element.path().matches(event.target().prefix()))
+                    .findFirst();
+
+            if (routeOptional.isPresent()) {
+                return event.onDelivery().flatMap(value -> routeOptional.get().handler().apply(value));
+            }
         }
 
         return Either.failure(RoutingError.NO_SUCH_ROUTE);
     }
 
-    @Override
-    public <R> Router<T> add(final Path path, final FN1<Promise<R>, T> handler) {
-        addSingle(path, handler);
-
-        return this;
-    }
-
     @SuppressWarnings("unchecked")
-    private void addSingle(final Path path, final FN1 castedHandler) {
-        if (path.isExact()) {
-            exactRoutes.putIfAbsent(path.prefix(), castedHandler);
+    private void addSingle(final Route<T> route) {
+        if (route.path().isExact()) {
+            exactRoutes.putIfAbsent(route.path().prefix(), route);
         } else {
-            prefixedRoutes.compute(path.prefix(), (key, value) -> {
-                var list = value == null ? new ArrayList<Pair<Path, FN1<Promise, T>>>() : value;
-                list.add(Pair.of(path, castedHandler));
+            prefixedRoutes.compute(route.path().prefix(), (key, value) -> {
+                var list = value == null ? new ArrayList<Route<T>>() : value;
+                list.add(route);
                 return list;
             });
         }
     }
 
+    @SafeVarargs
     @Override
-    public Router<T> with(final Route<T>... routes) {
+    public final Router<T> with(final Route<T>... routes) {
         for(var route : routes) {
-            addSingle(route.path(), route.handler());
+            addSingle(route);
         }
         return this;
     }

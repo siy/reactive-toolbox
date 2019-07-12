@@ -34,6 +34,10 @@ public interface Path {
 
     boolean matches(final String input);
 
+    static Path of(final String stringPath, PathKey key) {
+        return of("/" + key.key() + normalize(stringPath));
+    }
+
     static Path of(final String stringPath) {
         final var normalizedPath = normalize(stringPath);
 

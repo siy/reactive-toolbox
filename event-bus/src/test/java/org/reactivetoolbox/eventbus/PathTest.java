@@ -29,6 +29,15 @@ class PathTest {
     }
 
     @Test
+    void prefixIsNormalizedIfKeyIsPresent() {
+        assertEquals("/PUT/", Path.of("/", () -> "PUT").prefix());
+        assertEquals("/GET/one/", Path.of("/one", () -> "GET").prefix());
+        assertEquals("/GET/one/", Path.of("/one/", () -> "GET").prefix());
+        assertEquals("/POST/one/two/", Path.of("/one/two", () -> "POST").prefix());
+        assertEquals("/POST/one/two/", Path.of("/one/two/", () -> "POST").prefix());
+    }
+
+    @Test
     void parametersAreCollectedProperlyAtTheEndOfPath() {
         final var path = Path.of("/one/{param1}");
 

@@ -1,5 +1,12 @@
 package org.reactivetoolbox.web.server;
 
-public enum HttpMethod {
-    GET, PUT, PATCH, POST, HEADER
+import org.reactivetoolbox.eventbus.PathKey;
+
+public enum HttpMethod implements PathKey {
+    GET, PUT, PATCH, POST, HEADER;
+
+    @Override
+    public String key() {
+        return name();
+    }
 }

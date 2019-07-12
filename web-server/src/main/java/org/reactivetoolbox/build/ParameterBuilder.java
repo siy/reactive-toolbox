@@ -152,7 +152,9 @@ public class ParameterBuilder {
             return route().withHandler(
                     context -> Tuples.of(param1.extract(context))
                             .map(Tuples::squeeze)
-                            .mapSuccess(params -> params.map(handler))).build();
+                            .flatMap(Either::<BaseError, Tuple1<T1>>success)
+                            .mapSuccess(params -> params.map(handler)))
+                    .build();
         }
     }
 
@@ -175,7 +177,8 @@ public class ParameterBuilder {
                     context -> Tuples.of(param1.extract(context), param2.extract(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler))).build();
+                            .mapSuccess(params -> params.map(handler)))
+                    .build();
         }
 
         public ParameterBuilder2<T1, T2> validate(final FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> validator) {
@@ -207,7 +210,8 @@ public class ParameterBuilder {
                                          param3.extract(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler))).build();
+                            .mapSuccess(params -> params.map(handler)))
+                    .build();
         }
 
         public ParameterBuilder3<T1, T2, T3> validate(final FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> validator) {
@@ -244,7 +248,8 @@ public class ParameterBuilder {
                                          param3.extract(context), param4.extract(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler))).build();
+                            .mapSuccess(params -> params.map(handler)))
+                    .build();
         }
 
         public ParameterBuilder4<T1, T2, T3, T4> validate(final FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> validator) {
@@ -284,7 +289,8 @@ public class ParameterBuilder {
                                          param5.extract(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler))).build();
+                            .mapSuccess(params -> params.map(handler)))
+                    .build();
         }
 
         public ParameterBuilder5<T1, T2, T3, T4, T5> validate(final FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> validator) {
@@ -327,7 +333,8 @@ public class ParameterBuilder {
                                          param5.extract(context), param6.extract(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler))).build();
+                            .mapSuccess(params -> params.map(handler)))
+                    .build();
         }
 
         public ParameterBuilder6<T1, T2, T3, T4, T5, T6> validate(final FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> validator) {
@@ -375,7 +382,8 @@ public class ParameterBuilder {
                                          param7.extract(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler))).build();
+                            .mapSuccess(params -> params.map(handler)))
+                    .build();
         }
 
         public ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> validate(final FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator) {
@@ -426,7 +434,8 @@ public class ParameterBuilder {
                                          param7.extract(context), param8.extract(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler))).build();
+                            .mapSuccess(params -> params.map(handler)))
+                    .build();
         }
 
         public ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> validate(final FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> validator) {
@@ -483,7 +492,8 @@ public class ParameterBuilder {
                                          param9.extract(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler))).build();
+                            .mapSuccess(params -> params.map(handler)))
+                    .build();
         }
 
         public ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> validate(final FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> validator) {
