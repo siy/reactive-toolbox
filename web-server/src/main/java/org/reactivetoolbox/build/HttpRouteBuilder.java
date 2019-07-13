@@ -26,8 +26,6 @@ public class HttpRouteBuilder {
     private Path path;
     private FN1<Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>>, RequestContext>
             handler = (context) -> Either.success(Promises.fulfilled(Either.success("{}")));
-    private FN1<Either<? extends BaseError, RequestContext>, RequestContext> authHandler =
-            Either::success;
 
     private HttpRouteBuilder(final HttpMethod method) {
         this.method = method;
@@ -39,11 +37,6 @@ public class HttpRouteBuilder {
 
     public HttpRouteBuilder withHandler(FN1<Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>>, RequestContext> handler) {
         this.handler = handler;
-        return this;
-    }
-
-    public HttpRouteBuilder ensure(final FN1<Either<? extends BaseError, RequestContext>, RequestContext> authenticationVerifier) {
-        this.authHandler = authenticationVerifier;
         return this;
     }
 

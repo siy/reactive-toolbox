@@ -13,7 +13,8 @@ public class ServerBuilder {
         return this;
     }
 
-    public ServerBuilder withRoutes(final Route<RequestContext>... routes) {
+    @SafeVarargs
+    public final ServerBuilder withRoutes(final Route<RequestContext>... routes) {
         this.router = Router.of(routes);
         return this;
     }

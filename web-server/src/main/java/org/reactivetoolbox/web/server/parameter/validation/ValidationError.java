@@ -3,5 +3,9 @@ package org.reactivetoolbox.web.server.parameter.validation;
 import org.reactivetoolbox.core.async.BaseError;
 
 public enum ValidationError implements BaseError {
-    INVALID_PARAMETERS
+    STRING_IS_NULL, STRING_IS_EMPTY,
+    STRING_TOO_SHORT,
+    STRING_TOO_LONG,
+    NUMBER_IS_BELOW_LOWER_BOUND,
+    NUMBER_IS_ABOVE_UPPER_BOUND,
 }
