@@ -6,6 +6,7 @@ import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Route;
+import org.reactivetoolbox.eventbus.RouteBase;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.eventbus.RoutingError;
 
@@ -52,7 +53,6 @@ public final class RouterImpl<T> implements Router<T> {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private void addSingle(final Route<T> route) {
         if (route.path().isExact()) {
             exactRoutes.putIfAbsent(route.path().prefix(), route);
@@ -67,9 +67,9 @@ public final class RouterImpl<T> implements Router<T> {
 
     @SafeVarargs
     @Override
-    public final Router<T> with(final Route<T>... routes) {
+    public final Router<T> with(final RouteBase<T>... routes) {
         for(var route : routes) {
-            addSingle(route);
+            addSingle(route.asRoute());
         }
         return this;
     }

@@ -26,7 +26,6 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple9;
 import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.parameter.Parameters.Parameter;
-import org.reactivetoolbox.web.server.parameter.conversion.Converter;
 
 public class ParameterBuilder {
     private final HttpRouteBuilder route;
@@ -127,7 +126,7 @@ public class ParameterBuilder {
                                        param7, param8, param9);
     }
 
-    protected HttpRouteBuilder route() {
+    protected HttpRouteBuilder routeBuilder() {
         return route;
     }
 
@@ -136,9 +135,8 @@ public class ParameterBuilder {
             super(routeBuilder);
         }
 
-        public <R> Route<RequestContext> invoke(final FN0<Promise<Either<? extends BaseError, R>>> handler) {
-            return route().withHandler(ignored -> Either.success(handler.apply()))
-                    .build();
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN0<Promise<Either<? extends BaseError, R>>> handler) {
+            return routeBuilder().withHandler(ignored -> Either.success(handler.apply()));
         }
     }
 
@@ -150,15 +148,14 @@ public class ParameterBuilder {
             this.param1 = param1;
         }
 
-        public <R> Route<RequestContext> invoke(final FN1<Promise<Either<? extends BaseError, R>>, T1> handler) {
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN1<Promise<Either<? extends BaseError, R>>, T1> handler) {
             final var converter = param1.converter();
 
-            return route().withHandler(
+            return routeBuilder().withHandler(
                     context -> Tuples.of(converter.apply(context))
                             .map(Tuples::squeeze)
                             .flatMap(Either::<BaseError, Tuple1<T1>>success)
-                            .mapSuccess(params -> params.map(handler)))
-                    .build();
+                            .mapSuccess(params -> params.map(handler)));
         }
     }
 
@@ -176,17 +173,16 @@ public class ParameterBuilder {
             this.param2 = param2;
         }
 
-        public <R> Route<RequestContext> invoke(final FN2<Promise<Either<? extends BaseError, R>>, T1, T2> handler) {
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN2<Promise<Either<? extends BaseError, R>>, T1, T2> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
 
-            return route().withHandler(
+            return routeBuilder().withHandler(
                     context -> Tuples.of(converter1.apply(context),
                                          converter2.apply(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)))
-                    .build();
+                            .mapSuccess(params -> params.map(handler)));
         }
 
         public ParameterBuilder2<T1, T2> validate(final FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> validator) {
@@ -212,19 +208,18 @@ public class ParameterBuilder {
             this.param3 = param3;
         }
 
-        public <R> Route<RequestContext> invoke(final FN3<Promise<Either<? extends BaseError, R>>, T1, T2, T3> handler) {
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN3<Promise<Either<? extends BaseError, R>>, T1, T2, T3> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
 
-            return route().withHandler(
+            return routeBuilder().withHandler(
                     context -> Tuples.of(converter1.apply(context),
                                          converter2.apply(context),
                                          converter3.apply(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)))
-                    .build();
+                            .mapSuccess(params -> params.map(handler)));
         }
 
         public ParameterBuilder3<T1, T2, T3> validate(final FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> validator) {
@@ -255,21 +250,20 @@ public class ParameterBuilder {
             this.param4 = param4;
         }
 
-        public <R> Route<RequestContext> invoke(final FN4<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4> handler) {
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN4<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
             final var converter4 = param4.converter();
 
-            return route().withHandler(
+            return routeBuilder().withHandler(
                     context -> Tuples.of(converter1.apply(context),
                                          converter2.apply(context),
                                          converter3.apply(context),
                                          converter4.apply(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)))
-                    .build();
+                            .mapSuccess(params -> params.map(handler)));
         }
 
         public ParameterBuilder4<T1, T2, T3, T4> validate(final FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> validator) {
@@ -302,14 +296,14 @@ public class ParameterBuilder {
             this.param5 = param5;
         }
 
-        public <R> Route<RequestContext> invoke(final FN5<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5> handler) {
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN5<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
             final var converter4 = param4.converter();
             final var converter5 = param5.converter();
 
-            return route().withHandler(
+            return routeBuilder().withHandler(
                     context -> Tuples.of(converter1.apply(context),
                                          converter2.apply(context),
                                          converter3.apply(context),
@@ -317,8 +311,7 @@ public class ParameterBuilder {
                                          converter5.apply(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)))
-                    .build();
+                            .mapSuccess(params -> params.map(handler)));
         }
 
         public ParameterBuilder5<T1, T2, T3, T4, T5> validate(final FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> validator) {
@@ -354,7 +347,7 @@ public class ParameterBuilder {
             this.param6 = param6;
         }
 
-        public <R> Route<RequestContext> invoke(final FN6<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6> handler) {
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN6<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -362,7 +355,7 @@ public class ParameterBuilder {
             final var converter5 = param5.converter();
             final var converter6 = param6.converter();
 
-            return route().withHandler(
+            return routeBuilder().withHandler(
                     context -> Tuples.of(converter1.apply(context),
                                          converter2.apply(context),
                                          converter3.apply(context),
@@ -371,8 +364,7 @@ public class ParameterBuilder {
                                          converter6.apply(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)))
-                    .build();
+                            .mapSuccess(params -> params.map(handler)));
         }
 
         public ParameterBuilder6<T1, T2, T3, T4, T5, T6> validate(final FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> validator) {
@@ -412,7 +404,7 @@ public class ParameterBuilder {
             this.param7 = param7;
         }
 
-        public <R> Route<RequestContext> invoke(final FN7<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7> handler) {
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN7<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -421,7 +413,7 @@ public class ParameterBuilder {
             final var converter6 = param6.converter();
             final var converter7 = param7.converter();
 
-            return route().withHandler(
+            return routeBuilder().withHandler(
                     context -> Tuples.of(converter1.apply(context),
                                          converter2.apply(context),
                                          converter3.apply(context),
@@ -431,8 +423,7 @@ public class ParameterBuilder {
                                          converter7.apply(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)))
-                    .build();
+                            .mapSuccess(params -> params.map(handler)));
         }
 
         public ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> validate(final FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator) {
@@ -475,7 +466,7 @@ public class ParameterBuilder {
             this.param8 = param8;
         }
 
-        public <R> Route<RequestContext> invoke(final FN8<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8> handler) {
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN8<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -485,7 +476,7 @@ public class ParameterBuilder {
             final var converter7 = param7.converter();
             final var converter8 = param8.converter();
 
-            return route().withHandler(
+            return routeBuilder().withHandler(
                     context -> Tuples.of(converter1.apply(context),
                                          converter2.apply(context),
                                          converter3.apply(context),
@@ -496,8 +487,7 @@ public class ParameterBuilder {
                                          converter8.apply(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)))
-                    .build();
+                            .mapSuccess(params -> params.map(handler)));
         }
 
         public ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> validate(final FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> validator) {
@@ -545,7 +535,7 @@ public class ParameterBuilder {
             this.param9 = param9;
         }
 
-        public <R> Route<RequestContext> invoke(final FN9<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
+        public <R> RouteEnricher<RequestContext, R> invoke(final FN9<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -556,7 +546,7 @@ public class ParameterBuilder {
             final var converter8 = param8.converter();
             final var converter9 = param9.converter();
 
-            return route().withHandler(
+            return routeBuilder().withHandler(
                     context -> Tuples.of(converter1.apply(context),
                                          converter2.apply(context),
                                          converter3.apply(context),
@@ -568,8 +558,7 @@ public class ParameterBuilder {
                                          converter9.apply(context))
                             .map(Tuples::squeeze)
                             .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)))
-                    .build();
+                            .mapSuccess(params -> params.map(handler)));
         }
 
         public ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> validate(final FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> validator) {

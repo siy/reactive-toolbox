@@ -25,7 +25,6 @@ import org.reactivetoolbox.web.server.parameter.Parameters.Parameter;
 public class HttpRouteBuilder {
     private final HttpMethod method;
     private Path path;
-    private Handler<?, RequestContext> handler = (context) -> Either.success(Promises.fulfilled(Either.success("{}")));
 
     private HttpRouteBuilder(final HttpMethod method) {
         this.method = method;
@@ -36,9 +35,8 @@ public class HttpRouteBuilder {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <R> HttpRouteBuilder withHandler(Handler<R, RequestContext> handler) {
-        this.handler = (Handler<?, RequestContext>) (Handler) handler;
-        return this;
+    public <R> RouteEnricher<RequestContext, R> withHandler(Handler<R, RequestContext> handler) {
+        return RouteEnricher.of(path, handler);
     }
 
     public HttpRouteBuilder to(final String path) {
@@ -125,10 +123,5 @@ public class HttpRouteBuilder {
 
     public ParameterBuilder0 withoutParameters() {
         return ParameterBuilder.of(this);
-    }
-
-    //TODO: use RouteBuider or something like that (with type preservation?) to enable further customization
-    public Route<RequestContext> build() {
-        return Route.of(path, handler);
     }
 }

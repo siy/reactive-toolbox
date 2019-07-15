@@ -1,6 +1,6 @@
 package org.reactivetoolbox.eventbus;
 
-public class Route<T> {
+public class Route<T> implements RouteBase<T> {
     private final Path path;
     private final Handler<?, T> handler;
 
@@ -23,5 +23,10 @@ public class Route<T> {
 
     public Handler<?, T> handler() {
         return handler;
+    }
+
+    @Override
+    public Route<T> asRoute() {
+        return this;
     }
 }
