@@ -74,9 +74,11 @@ class ServerTest {
                 on(HttpMethod.POST)
                         .to("/user/register")
                         .withParameters(inBody(String.class, "login")
-                                                .validate(Validators::stringLenRange, 4, 128),
+                                                .validate(Validators::notNull)
+                                                .validate(Validators::stringLen, 4, 128),
                                         inBody(String.class, "password")
-                                                .validate(Validators::stringLenRange, 4, 128)
+                                                .validate(Validators::notNull)
+                                                .validate(Validators::stringLen, 4, 128)
                                                 .validate(AuthValidators::validatePassword))
                         .invoke(userService::login),
 

@@ -1,18 +1,25 @@
 package org.reactivetoolbox.web.server.parameter.validation;
 
+import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.core.functional.Functions.FN1;
+
+import java.util.Optional;
 
 public interface Validators {
-    static <T> Either<ValidationError, T> notNull(final T input) {
-        return input == null ? Either.failure(ValidationError.STRING_IS_NULL) : Either.success(input);
+    interface Validator<R, T> extends FN1<Either<? extends BaseError, R>, T> {
     }
 
-    static Either<ValidationError, String> notNullOrEmpty(final String input) {
-        return input == null
-                ? Either.failure(ValidationError.STRING_IS_NULL)
-                : input.isBlank()
-                        ? Either.failure(ValidationError.STRING_IS_EMPTY)
-                        : Either.success(input);
+    static <T> Either<ValidationError, T> notNull(final Optional<T> input) {
+        return input.map(Either::<ValidationError, T>success)
+                .orElseGet(() -> Either.failure(ValidationError.STRING_IS_NULL));
+    }
+
+    static Either<ValidationError, String> notNullOrEmpty(final Optional<String> input) {
+        return input.map(val -> val.isBlank()
+                ? Either.<ValidationError, String>failure(ValidationError.STRING_IS_EMPTY)
+                : Either.<ValidationError, String>success(val))
+                .orElseGet(() -> Either.failure(ValidationError.STRING_IS_NULL));
     }
 
     static <T extends Number> Either<ValidationError, T> range(final T input, final int min, final int max) {
@@ -31,12 +38,11 @@ public interface Validators {
                         : Either.success(input);
     }
 
-    static Either<ValidationError, String> stringLenRange(final String input, final int minLen, final int maxLen) {
-        return notNullOrEmpty(input).flatMap(string ->
-                string.length() < minLen
+    static Either<ValidationError, String> stringLen(final String input, final int minLen, final int maxLen) {
+        return input.length() < minLen
                         ? Either.failure(ValidationError.STRING_TOO_SHORT)
-                        : string.length() < maxLen
+                        : input.length() < maxLen
                                 ? Either.failure(ValidationError.STRING_TOO_LONG)
-                                : Either.success(string));
+                                : Either.success(input);
     }
 }
