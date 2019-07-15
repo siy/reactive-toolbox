@@ -46,29 +46,29 @@ public class HttpRouteBuilder {
         return this;
     }
 
-    public <T1> ParameterBuilder1<T1> findParameters(final Parameter<T1> param1) {
+    public <T1> ParameterBuilder1<T1> withParameters(final Parameter<T1> param1) {
         return ParameterBuilder.of(this, param1);
     }
 
-    public <T1, T2> ParameterBuilder2<T1, T2> findParameters(final Parameter<T1> param1,
+    public <T1, T2> ParameterBuilder2<T1, T2> withParameters(final Parameter<T1> param1,
                                                              final Parameter<T2> param2) {
         return ParameterBuilder.of(this, param1, param2);
     }
 
-    public <T1, T2, T3> ParameterBuilder3<T1, T2, T3> findParameters(final Parameter<T1> param1,
+    public <T1, T2, T3> ParameterBuilder3<T1, T2, T3> withParameters(final Parameter<T1> param1,
                                                                      final Parameter<T2> param2,
                                                                      final Parameter<T3> param3) {
         return ParameterBuilder.of(this, param1, param2, param3);
     }
 
-    public <T1, T2, T3, T4> ParameterBuilder4<T1, T2, T3, T4> findParameters(final Parameter<T1> param1,
+    public <T1, T2, T3, T4> ParameterBuilder4<T1, T2, T3, T4> withParameters(final Parameter<T1> param1,
                                                                              final Parameter<T2> param2,
                                                                              final Parameter<T3> param3,
                                                                              final Parameter<T4> param4) {
         return ParameterBuilder.of(this, param1, param2, param3, param4);
     }
 
-    public <T1, T2, T3, T4, T5> ParameterBuilder5<T1, T2, T3, T4, T5> findParameters(final Parameter<T1> param1,
+    public <T1, T2, T3, T4, T5> ParameterBuilder5<T1, T2, T3, T4, T5> withParameters(final Parameter<T1> param1,
                                                                                      final Parameter<T2> param2,
                                                                                      final Parameter<T3> param3,
                                                                                      final Parameter<T4> param4,
@@ -76,7 +76,7 @@ public class HttpRouteBuilder {
         return ParameterBuilder.of(this, param1, param2, param3, param4, param5);
     }
 
-    public <T1, T2, T3, T4, T5, T6> ParameterBuilder6<T1, T2, T3, T4, T5, T6> findParameters(final Parameter<T1> param1,
+    public <T1, T2, T3, T4, T5, T6> ParameterBuilder6<T1, T2, T3, T4, T5, T6> withParameters(final Parameter<T1> param1,
                                                                                              final Parameter<T2> param2,
                                                                                              final Parameter<T3> param3,
                                                                                              final Parameter<T4> param4,
@@ -85,7 +85,7 @@ public class HttpRouteBuilder {
         return ParameterBuilder.of(this, param1, param2, param3, param4, param5, param6);
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7> ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> findParameters(
+    public <T1, T2, T3, T4, T5, T6, T7> ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> withParameters(
             final Parameter<T1> param1,
             final Parameter<T2> param2,
             final Parameter<T3> param3,
@@ -96,7 +96,7 @@ public class HttpRouteBuilder {
         return ParameterBuilder.of(this, param1, param2, param3, param4, param5, param6, param7);
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7, T8> ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> findParameters(
+    public <T1, T2, T3, T4, T5, T6, T7, T8> ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> withParameters(
             final Parameter<T1> param1,
             final Parameter<T2> param2,
             final Parameter<T3> param3,
@@ -109,7 +109,7 @@ public class HttpRouteBuilder {
                                    param8);
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9> ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> findParameters(
+    public <T1, T2, T3, T4, T5, T6, T7, T8, T9> ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> withParameters(
             final Parameter<T1> param1,
             final Parameter<T2> param2,
             final Parameter<T3> param3,
@@ -127,6 +127,7 @@ public class HttpRouteBuilder {
         return ParameterBuilder.of(this);
     }
 
+    //TODO: use RouteBuider or something like that (with type preservation?) to enable further customization
     public Route<RequestContext> build() {
         return Route.of(path, handler);
     }

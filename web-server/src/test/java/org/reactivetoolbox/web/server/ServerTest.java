@@ -47,14 +47,14 @@ class ServerTest {
         var server = server().withRoutes(
                 on(HttpMethod.GET)
                         .to("/one/two/{param1}/{param2}")
-                        .findParameters(inPath(String.class, "param1").validate(Validators::notNull),
+                        .withParameters(inPath(String.class, "param1").validate(Validators::notNull),
                                         inPath(String.class, "param2").validate(Validators::notNull),
                                         inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn))
                         .invoke((param1, param2, user) -> fulfilled(success("Received: " + param1 + ", " + param2))),
 
                 on(HttpMethod.POST)
                         .to("/two/three/{param1}/{param2}/{param3}")
-                        .findParameters(inPath(String.class, "param1").validate(Validators::notNull),
+                        .withParameters(inPath(String.class, "param1").validate(Validators::notNull),
                                         inPath(UUID.class, "param2").validate(Validators::notNull),
                                         inPath(Integer.class, "param3").validate(Validators::notNull))
                         .validate((param1, param2, param3) -> success(Tuples.of(param1, param2, param3)))
@@ -62,18 +62,18 @@ class ServerTest {
 
                 on(HttpMethod.PUT)
                         .to("/user")
-                        .findParameters(inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn))
+                        .withParameters(inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn))
                         .invoke(userService::getProfile),
 
                 on(HttpMethod.POST)
                         .to("/user/login")
-                        .findParameters(inBody(String.class, "login").validate(Validators::notNullOrEmpty),
+                        .withParameters(inBody(String.class, "login").validate(Validators::notNullOrEmpty),
                                         inBody(String.class, "password").validate(Validators::notNullOrEmpty))
                         .invoke(userService::login),
 
                 on(HttpMethod.POST)
                         .to("/user/register")
-                        .findParameters(inBody(String.class, "login")
+                        .withParameters(inBody(String.class, "login")
                                                 .validate(Validators::stringLenRange, 4, 128),
                                         inBody(String.class, "password")
                                                 .validate(Validators::stringLenRange, 4, 128)
