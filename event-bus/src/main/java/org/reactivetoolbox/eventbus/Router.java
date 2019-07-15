@@ -6,7 +6,7 @@ import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.eventbus.impl.RouterImpl;
 
 public interface Router<T> {
-    Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>> deliver(Envelope<T> event);
+    <R> Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> deliver(Envelope<T> event);
 
     Router<T> with(final Route<T>... routes);
 

@@ -15,6 +15,7 @@ import org.reactivetoolbox.core.async.Promises;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
+import org.reactivetoolbox.eventbus.Handler;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.web.server.HttpMethod;
@@ -24,8 +25,7 @@ import org.reactivetoolbox.web.server.parameter.Parameters.Parameter;
 public class HttpRouteBuilder {
     private final HttpMethod method;
     private Path path;
-    private FN1<Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>>, RequestContext>
-            handler = (context) -> Either.success(Promises.fulfilled(Either.success("{}")));
+    private Handler<?, RequestContext> handler = (context) -> Either.success(Promises.fulfilled(Either.success("{}")));
 
     private HttpRouteBuilder(final HttpMethod method) {
         this.method = method;
@@ -35,8 +35,9 @@ public class HttpRouteBuilder {
         return new HttpRouteBuilder(method);
     }
 
-    public HttpRouteBuilder withHandler(FN1<Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>>, RequestContext> handler) {
-        this.handler = handler;
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <R> HttpRouteBuilder withHandler(Handler<R, RequestContext> handler) {
+        this.handler = (Handler<?, RequestContext>) (Handler) handler;
         return this;
     }
 

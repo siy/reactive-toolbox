@@ -1,14 +1,10 @@
 package org.reactivetoolbox.eventbus.impl;
 
 import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.async.Promises;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions;
 import org.reactivetoolbox.core.functional.Functions.FN1;
-import org.reactivetoolbox.core.functional.Pair;
 import org.reactivetoolbox.eventbus.Envelope;
-import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.eventbus.RoutingError;
@@ -26,12 +22,11 @@ public final class RouterImpl<T> implements Router<T> {
     private final ConcurrentNavigableMap<String, List<Route<T>>> prefixedRoutes = new ConcurrentSkipListMap<>();
 
     @Override
-    public Either<? extends BaseError, Promise<Either<? extends BaseError, ?>>> deliver(final Envelope<T> event) {
+    public <R> Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> deliver(final Envelope<T> event) {
         var route = exactRoutes.get(event.target().prefix());
 
         if (route != null) {
-            return event.onDelivery()
-                    .flatMap(value -> event.onDelivery().flatMap(val -> route.handler().apply(val)));
+            return apply(event, route);
         }
 
         var entry = prefixedRoutes.floorEntry(event.target().prefix());
@@ -43,11 +38,18 @@ public final class RouterImpl<T> implements Router<T> {
                     .findFirst();
 
             if (routeOptional.isPresent()) {
-                return event.onDelivery().flatMap(value -> routeOptional.get().handler().apply(value));
+                return apply(event, routeOptional.get());
             }
         }
 
         return Either.failure(RoutingError.NO_SUCH_ROUTE);
+    }
+
+    private <R> Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> apply(final Envelope<T> event,
+                                                                                           final Route<T> route) {
+        final var res = event.onDelivery().flatMap(route.handler()::apply);
+        final Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> result = (Either<? extends BaseError, Promise<Either<? extends BaseError, R>>>)(Either) res;
+        return result;
     }
 
     @SuppressWarnings("unchecked")
