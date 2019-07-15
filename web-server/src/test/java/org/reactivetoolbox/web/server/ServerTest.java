@@ -8,8 +8,9 @@ import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Tuples;
 import org.reactivetoolbox.web.server.auth.AuthHeader;
 import org.reactivetoolbox.web.server.auth.Authentication;
+import org.reactivetoolbox.web.server.auth.Role;
 import org.reactivetoolbox.web.server.auth.UserId;
-import org.reactivetoolbox.web.server.parameter.validation.AuthValidators;
+import org.reactivetoolbox.web.server.auth.AuthValidators;
 import org.reactivetoolbox.web.server.parameter.validation.Validators;
 
 import java.util.UUID;
@@ -56,13 +57,14 @@ class ServerTest {
                         .to("/two/three/{param1}/{param2}/{param3}")
                         .withParameters(inPath(String.class, "param1").validate(Validators::notNull),
                                         inPath(UUID.class, "param2").validate(Validators::notNull),
-                                        inPath(Integer.class, "param3").validate(Validators::notNull))
-                        .validate((param1, param2, param3) -> success(Tuples.of(param1, param2, param3)))
-                        .invoke((param1, param2, param3) -> fulfilled(success(">>>" + param1 + " " + param2 + " " + param3))),
+                                        inPath(Integer.class, "param3").validate(Validators::notNull),
+                                        inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn).validate(AuthValidators::hasAny, TestRoles.REGULAR, TestRoles.ADMIN))
+                        .validate((param1, param2, param3, user) -> success(Tuples.of(param1, param2, param3, user)))
+                        .invoke((param1, param2, param3, user) -> fulfilled(success("[" + user.userId() + "]:" + param1 + " " + param2 + " " + param3))),
 
                 on(HttpMethod.PUT)
                         .to("/user")
-                        .withParameters(inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn))
+                        .withParameters(inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn).validate(AuthValidators::hasAll, TestRoles.REGULAR))
                         .invoke(userService::getProfile),
 
                 on(HttpMethod.POST)
