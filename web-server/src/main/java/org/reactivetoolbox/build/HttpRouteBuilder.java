@@ -10,14 +10,8 @@ import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder6;
 import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder7;
 import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder8;
 import org.reactivetoolbox.build.ParameterBuilder.ParameterBuilder9;
-import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.async.Promises;
-import org.reactivetoolbox.core.async.Promises.Promise;
-import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.eventbus.Handler;
 import org.reactivetoolbox.eventbus.Path;
-import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.web.server.HttpMethod;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.parameter.Parameters.Parameter;
@@ -35,7 +29,7 @@ public class HttpRouteBuilder {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <R> RouteEnricher<RequestContext, R> withHandler(Handler<R, RequestContext> handler) {
+    public <R> RouteEnricher<R, RequestContext> withHandler(Handler<R, RequestContext> handler) {
         return RouteEnricher.of(path, handler);
     }
 

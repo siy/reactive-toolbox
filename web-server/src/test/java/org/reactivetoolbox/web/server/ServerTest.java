@@ -51,7 +51,8 @@ class ServerTest {
                         .withParameters(inPath(String.class, "param1").validate(Validators::notNull),
                                         inPath(String.class, "param2").validate(Validators::notNull),
                                         inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn))
-                        .invoke((param1, param2, user) -> fulfilled(success("Received: " + param1 + ", " + param2))),
+                        .invoke((param1, param2, user) -> fulfilled(success("Received: " + param1 + ", " + param2)))
+                        .then((context, result) -> {context.response().setHeader("X-User-Defined", "processed"); return result;}),
 
                 on(HttpMethod.POST)
                         .to("/two/three/{param1}/{param2}/{param3}")

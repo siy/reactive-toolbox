@@ -23,7 +23,6 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple6;
 import org.reactivetoolbox.core.functional.Tuples.Tuple7;
 import org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import org.reactivetoolbox.core.functional.Tuples.Tuple9;
-import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.parameter.Parameters.Parameter;
 
@@ -135,7 +134,7 @@ public class ParameterBuilder {
             super(routeBuilder);
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN0<Promise<Either<? extends BaseError, R>>> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN0<Promise<Either<? extends BaseError, R>>> handler) {
             return routeBuilder().withHandler(ignored -> Either.success(handler.apply()));
         }
     }
@@ -148,7 +147,7 @@ public class ParameterBuilder {
             this.param1 = param1;
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN1<Promise<Either<? extends BaseError, R>>, T1> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN1<Promise<Either<? extends BaseError, R>>, T1> handler) {
             final var converter = param1.converter();
 
             return routeBuilder().withHandler(
@@ -173,7 +172,7 @@ public class ParameterBuilder {
             this.param2 = param2;
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN2<Promise<Either<? extends BaseError, R>>, T1, T2> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN2<Promise<Either<? extends BaseError, R>>, T1, T2> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
 
@@ -208,7 +207,7 @@ public class ParameterBuilder {
             this.param3 = param3;
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN3<Promise<Either<? extends BaseError, R>>, T1, T2, T3> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN3<Promise<Either<? extends BaseError, R>>, T1, T2, T3> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -250,7 +249,7 @@ public class ParameterBuilder {
             this.param4 = param4;
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN4<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN4<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -296,7 +295,7 @@ public class ParameterBuilder {
             this.param5 = param5;
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN5<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN5<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -347,7 +346,7 @@ public class ParameterBuilder {
             this.param6 = param6;
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN6<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN6<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -404,7 +403,7 @@ public class ParameterBuilder {
             this.param7 = param7;
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN7<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN7<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -466,7 +465,7 @@ public class ParameterBuilder {
             this.param8 = param8;
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN8<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN8<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -535,7 +534,7 @@ public class ParameterBuilder {
             this.param9 = param9;
         }
 
-        public <R> RouteEnricher<RequestContext, R> invoke(final FN9<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
+        public <R> RouteEnricher<R, RequestContext> invoke(final FN9<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
