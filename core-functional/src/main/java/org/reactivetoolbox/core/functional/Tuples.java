@@ -1,8 +1,5 @@
 package org.reactivetoolbox.core.functional;
 
-import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.functional.Functions.FN0;
-
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -19,6 +16,8 @@ import org.reactivetoolbox.core.functional.Functions.FN0;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.async.BaseError;
+import org.reactivetoolbox.core.functional.Functions.FN0;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Functions.FN2;
 import org.reactivetoolbox.core.functional.Functions.FN3;

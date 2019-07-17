@@ -1,3 +1,5 @@
+package org.reactivetoolbox.core.functional;
+
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -14,8 +16,7 @@
  * limitations under the License.
  */
 
-package org.reactivetoolbox.core.functional;
-
+//TODO: Javadoc
 public interface Functions {
     interface FN0<R> {
         R apply();

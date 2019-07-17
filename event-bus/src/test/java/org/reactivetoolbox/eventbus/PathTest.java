@@ -5,7 +5,8 @@ import org.reactivetoolbox.core.functional.Pair;
 
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PathTest {
 

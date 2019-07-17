@@ -13,11 +13,18 @@ import org.reactivetoolbox.web.server.parameter.validation.Is;
 
 import java.util.UUID;
 
-import static org.reactivetoolbox.build.Build.*;
-import static org.reactivetoolbox.core.async.Promises.*;
-import static org.reactivetoolbox.core.functional.Either.*;
-import static org.reactivetoolbox.web.server.HttpMethod.*;
-import static org.reactivetoolbox.web.server.parameter.Parameters.*;
+import static org.reactivetoolbox.build.Build.server;
+import static org.reactivetoolbox.build.Build.when;
+import static org.reactivetoolbox.core.async.Promises.fulfilled;
+import static org.reactivetoolbox.core.functional.Either.success;
+import static org.reactivetoolbox.web.server.HttpMethod.GET;
+import static org.reactivetoolbox.web.server.HttpMethod.POST;
+import static org.reactivetoolbox.web.server.HttpMethod.PUT;
+import static org.reactivetoolbox.web.server.parameter.Parameters.P;
+import static org.reactivetoolbox.web.server.parameter.Parameters.inAuthHeader;
+import static org.reactivetoolbox.web.server.parameter.Parameters.inBody;
+import static org.reactivetoolbox.web.server.parameter.Parameters.inPath;
+import static org.reactivetoolbox.web.server.parameter.Parameters.inQuery;
 
 class ServerTest {
 
