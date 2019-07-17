@@ -1,5 +1,10 @@
 package org.reactivetoolbox.eventbus;
 
+import org.reactivetoolbox.core.functional.Option;
+
+import java.util.Collections;
+import java.util.List;
+
 public class Route<T> implements RouteBase<T> {
     private final Path path;
     private final Handler<?, T> handler;
@@ -29,5 +34,15 @@ public class Route<T> implements RouteBase<T> {
     @Override
     public Route<T> asRoute() {
         return this;
+    }
+
+    @Override
+    public Option<String> routeDescription() {
+        return Option.empty();
+    }
+
+    @Override
+    public List<String> parameterDescription() {
+        return Collections.emptyList();
     }
 }

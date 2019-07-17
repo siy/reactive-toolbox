@@ -46,6 +46,7 @@ public class Parameters {
 
     public static class P<T> {
         private final Converter<T> converter;
+        private String description;
 
         private P(final Converter<T> converter) {
             this.converter = converter;
@@ -92,7 +93,13 @@ public class Parameters {
         }
 
         public P<T> description(final String description) {
+            this.description = description;
             return this;
+        }
+
+        public String description() {
+            //TODO: add obtainable information, such as type (name?)
+            return description;
         }
     }
 }
