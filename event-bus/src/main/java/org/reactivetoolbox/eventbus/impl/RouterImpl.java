@@ -3,7 +3,7 @@ package org.reactivetoolbox.eventbus.impl;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions.FN1;
+import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.eventbus.RouteBase;
@@ -12,7 +12,6 @@ import org.reactivetoolbox.eventbus.RoutingError;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -24,33 +23,22 @@ public final class RouterImpl<T> implements Router<T> {
 
     @Override
     public <R> Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> deliver(final Envelope<T> event) {
-        var route = exactRoutes.get(event.target().prefix());
+        final Option<Route<T>> routeOption = findRoute(event);
 
-        if (route != null) {
-            return apply(event, route);
-        }
-
-        var entry = prefixedRoutes.floorEntry(event.target().prefix());
-
-        if (entry != null) {
-            final Optional<Route<T>> routeOptional = entry.getValue()
-                    .stream()
-                    .filter(element -> element.path().matches(event.target().prefix()))
-                    .findFirst();
-
-            if (routeOptional.isPresent()) {
-                return apply(event, routeOptional.get());
-            }
-        }
-
-        return Either.failure(RoutingError.NO_SUCH_ROUTE);
+        return routeOption.<Either<? extends BaseError, Promise<Either<? extends BaseError, R>>>>map(route -> event.onDelivery().flatMap(request -> route.<R>handler().apply(request)))
+                .otherwise(() -> Either.failure(RoutingError.NO_SUCH_ROUTE));
     }
 
-    private <R> Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> apply(final Envelope<T> event,
-                                                                                           final Route<T> route) {
-        final var res = event.onDelivery().flatMap(route.handler()::apply);
-        final Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> result = (Either<? extends BaseError, Promise<Either<? extends BaseError, R>>>)(Either) res;
-        return result;
+    private Option<Route<T>> findRoute(final Envelope<T> event) {
+        return Option.of(exactRoutes.get(event.target().prefix()))
+                    .or(() -> Option.of(prefixedRoutes.floorEntry(event.target().prefix()))
+                            .map(entry -> entry.getValue()
+                                    .stream()
+                                    .filter(element -> element.path().matches(event.target().prefix()))
+                                    .findFirst()
+                                    .map(Option::of)
+                                    .orElseGet(Option::empty))
+                            .otherwise(Option::empty));
     }
 
     private void addSingle(final Route<T> route) {

@@ -1,10 +1,10 @@
 package org.reactivetoolbox.core.async;
 
 import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.functional.Tuples.Tuple1;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -32,14 +32,6 @@ public class Promises {
 
     public static <T> Promise<T> fulfilled(final T value) {
         return Promises.<T>give().resolve(value);
-    }
-
-    public static <T> PromiseEither<T> giveEither() {
-        return new PromiseEither<T>();
-    }
-
-    public static <T> PromiseEither<T> fulfilledEither(final T value) {
-        return (PromiseEither<T>) Promises.<T>giveEither().resolve(Either.success(value));
     }
 
     @SafeVarargs
@@ -146,11 +138,6 @@ public class Promises {
                       promise5, promise6, promise7, promise8, promise9);
     }
 
-    public static class PromiseEither<T> extends Promise<Either<? extends BaseError, T>> {
-        private PromiseEither() {
-        }
-    }
-
     public static class Promise<T> {
         private final AtomicMarkableReference<T> value = new AtomicMarkableReference<>(null, false);
         private final BlockingQueue<Consumer<T>> thenActions = new LinkedBlockingQueue<>();
@@ -158,8 +145,8 @@ public class Promises {
         private Promise() {
         }
 
-        public Optional<T> value() {
-            return Optional.ofNullable(value.getReference());
+        public Option<T> value() {
+            return Option.of(value.getReference());
         }
 
         public boolean ready() {

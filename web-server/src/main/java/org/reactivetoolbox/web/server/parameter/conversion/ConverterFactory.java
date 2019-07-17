@@ -1,12 +1,14 @@
 package org.reactivetoolbox.web.server.parameter.conversion;
 
-import java.util.Optional;
+import org.reactivetoolbox.core.functional.Option;
 
 public interface ConverterFactory {
 
-    <T> Converter<Optional<T>> get(Class<T> type, String name);
+    <T> Converter<Option<T>> getParameterConverter(Class<T> type, String name);
 
-    default <T> Converter<Optional<T>> get(final Class<T> type) {
-        return get(type, null);
-    }
+    <T> Converter<Option<T>> getHeaderConverter(Class<T> type, String name);
+
+    <T> Converter<Option<T>> getBodyValueConverter(final Class<T> type);
+
+    <T> Converter<Option<T>> getContextConverter(final Class<T> type);
 }

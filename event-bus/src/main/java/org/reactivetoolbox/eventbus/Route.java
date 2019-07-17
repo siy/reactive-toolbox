@@ -21,8 +21,9 @@ public class Route<T> implements RouteBase<T> {
         return path;
     }
 
-    public Handler<?, T> handler() {
-        return handler;
+    @SuppressWarnings("unchecked")
+    public <R> Handler<R, T> handler() {
+        return (Handler<R, T>) handler;
     }
 
     @Override

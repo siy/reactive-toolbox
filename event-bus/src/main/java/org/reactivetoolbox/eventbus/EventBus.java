@@ -2,8 +2,7 @@ package org.reactivetoolbox.eventbus;
 
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
-
-import java.util.Optional;
+import org.reactivetoolbox.core.functional.Option;
 
 public interface EventBus {
     /**
@@ -62,8 +61,8 @@ public interface EventBus {
      *        The type of the {@link Envelope}
      * @param <T>
      *        The type of the {@link Envelope} content
-     * @return {@link Optional} which contains corresponding {@link Router} or is empty if no such
+     * @return {@link Option} which contains corresponding {@link Router} or is empty if no such
      * assignment is configured in this instance of {@link EventBus}
      */
-    <T> Optional<Router<T>> router(final Class<Envelope<T>> envelopeType);
+    <T> Option<Router<T>> router(final Class<Envelope<T>> envelopeType);
 }

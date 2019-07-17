@@ -2,12 +2,12 @@ package org.reactivetoolbox.eventbus.impl;
 
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.EventBus;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.eventbus.RoutingError;
 
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -19,9 +19,9 @@ public class SimpleEventBus implements EventBus {
     @Override
     @SuppressWarnings("unchecked")
     public <R, T> Either<RoutingError, Promise<R>> send(final Envelope<T> event) {
-        return Optional.ofNullable(routers.get(event.getClass()))
-                        .map(router -> router.<R>deliver(event))
-                        .orElseGet(() -> RoutingError.<Promise<R>>create(NO_SUCH_ROUTE));
+        return Option.of(routers.get(event.getClass()))
+                    .map(router -> router.<R>deliver(event))
+                    .otherwise(() -> RoutingError.<Promise<R>>create(NO_SUCH_ROUTE));
     }
 
     @Override
@@ -38,7 +38,7 @@ public class SimpleEventBus implements EventBus {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> Optional<Router<T>> router(final Class<Envelope<T>> envelopeType) {
-        return Optional.ofNullable(routers.get(envelopeType));
+    public <T> Option<Router<T>> router(final Class<Envelope<T>> envelopeType) {
+        return Option.of(routers.get(envelopeType));
     }
 }

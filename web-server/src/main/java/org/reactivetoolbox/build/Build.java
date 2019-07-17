@@ -10,7 +10,7 @@ public final class Build {
         return new ServerBuilder();
     }
 
-    public static HttpRouteBuilder on(final HttpMethod method) {
-        return HttpRouteBuilder.routeFor(method);
+    public static HttpRouteBuilder when(final HttpMethod method, final String path) {
+        return HttpRouteBuilder.create(method, path);
     }
 }

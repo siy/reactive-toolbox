@@ -16,9 +16,9 @@ package org.reactivetoolbox.core.functional;
  */
 
 import org.reactivetoolbox.core.functional.Functions.FN1;
+import org.reactivetoolbox.core.functional.Functions.FN2;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.StringJoiner;
 
 /**
@@ -29,7 +29,8 @@ import java.util.StringJoiner;
  * @param <R>
  *        type of success get in pair
  */
-//TODO: add map, swap, flatMap
+//TODO: docs
+//TODO: add swap, flatMap
 public final class Pair<L, R> {
     private final L left;
     private final R right;
@@ -64,24 +65,28 @@ public final class Pair<L, R> {
         return right;
     }
 
-    //TODO: docs
     public <L1, R1> Pair<L1, R1> map(final FN1<L1, L> leftMapper, final FN1<R1, R> rigthMapper) {
         return of(leftMapper.apply(left), rigthMapper.apply(right));
     }
 
-    //TODO: docs
-    public <L1, R1> Pair<L1, R1> flatMap(final Functions.FN2<Pair<L1, R1>, L, R> mapper) {
+    public <V> V map(final FN2<V, L, R> mapper) {
         return mapper.apply(left, right);
     }
 
-    //TODO: docs
-    public Optional<L> tryLeft() {
-        return Optional.ofNullable(left);
+    public <L1, R1> Pair<L1, R1> flatMap(final FN2<Pair<L1, R1>, L, R> mapper) {
+        return mapper.apply(left, right);
     }
 
-    //TODO: docs
-    public Optional<R> tryRight() {
-        return Optional.ofNullable(right);
+    public Pair<R, L> swap() {
+        return of(right, left);
+    }
+
+    public Option<L> tryLeft() {
+        return Option.of(left);
+    }
+
+    public Option<R> tryRight() {
+        return Option.of(right);
     }
 
     @Override

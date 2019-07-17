@@ -18,66 +18,61 @@ import org.reactivetoolbox.web.server.parameter.Parameters.Parameter;
 
 public class HttpRouteBuilder {
     private final HttpMethod method;
-    private Path path;
+    private final Path path;
 
-    private HttpRouteBuilder(final HttpMethod method) {
+    private HttpRouteBuilder(final HttpMethod method, final String path) {
         this.method = method;
+        this.path = Path.of(path, method);
     }
 
-    public static HttpRouteBuilder routeFor(final HttpMethod method) {
-        return new HttpRouteBuilder(method);
+    public static HttpRouteBuilder create(final HttpMethod method, final String path) {
+        return new HttpRouteBuilder(method, path);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public <R> RouteEnricher<R, RequestContext> withHandler(Handler<R, RequestContext> handler) {
         return RouteEnricher.of(path, handler);
     }
 
-    public HttpRouteBuilder to(final String path) {
-        this.path = Path.of(path, method);
-        return this;
-    }
-
-    public <T1> ParameterBuilder1<T1> withParameters(final Parameter<T1> param1) {
+    public <T1> ParameterBuilder1<T1> with(final Parameter<T1> param1) {
         return ParameterBuilder.of(this, param1);
     }
 
-    public <T1, T2> ParameterBuilder2<T1, T2> withParameters(final Parameter<T1> param1,
-                                                             final Parameter<T2> param2) {
+    public <T1, T2> ParameterBuilder2<T1, T2> with(final Parameter<T1> param1,
+                                                   final Parameter<T2> param2) {
         return ParameterBuilder.of(this, param1, param2);
     }
 
-    public <T1, T2, T3> ParameterBuilder3<T1, T2, T3> withParameters(final Parameter<T1> param1,
-                                                                     final Parameter<T2> param2,
-                                                                     final Parameter<T3> param3) {
+    public <T1, T2, T3> ParameterBuilder3<T1, T2, T3> with(final Parameter<T1> param1,
+                                                           final Parameter<T2> param2,
+                                                           final Parameter<T3> param3) {
         return ParameterBuilder.of(this, param1, param2, param3);
     }
 
-    public <T1, T2, T3, T4> ParameterBuilder4<T1, T2, T3, T4> withParameters(final Parameter<T1> param1,
-                                                                             final Parameter<T2> param2,
-                                                                             final Parameter<T3> param3,
-                                                                             final Parameter<T4> param4) {
+    public <T1, T2, T3, T4> ParameterBuilder4<T1, T2, T3, T4> with(final Parameter<T1> param1,
+                                                                   final Parameter<T2> param2,
+                                                                   final Parameter<T3> param3,
+                                                                   final Parameter<T4> param4) {
         return ParameterBuilder.of(this, param1, param2, param3, param4);
     }
 
-    public <T1, T2, T3, T4, T5> ParameterBuilder5<T1, T2, T3, T4, T5> withParameters(final Parameter<T1> param1,
-                                                                                     final Parameter<T2> param2,
-                                                                                     final Parameter<T3> param3,
-                                                                                     final Parameter<T4> param4,
-                                                                                     final Parameter<T5> param5) {
+    public <T1, T2, T3, T4, T5> ParameterBuilder5<T1, T2, T3, T4, T5> with(final Parameter<T1> param1,
+                                                                           final Parameter<T2> param2,
+                                                                           final Parameter<T3> param3,
+                                                                           final Parameter<T4> param4,
+                                                                           final Parameter<T5> param5) {
         return ParameterBuilder.of(this, param1, param2, param3, param4, param5);
     }
 
-    public <T1, T2, T3, T4, T5, T6> ParameterBuilder6<T1, T2, T3, T4, T5, T6> withParameters(final Parameter<T1> param1,
-                                                                                             final Parameter<T2> param2,
-                                                                                             final Parameter<T3> param3,
-                                                                                             final Parameter<T4> param4,
-                                                                                             final Parameter<T5> param5,
-                                                                                             final Parameter<T6> param6) {
+    public <T1, T2, T3, T4, T5, T6> ParameterBuilder6<T1, T2, T3, T4, T5, T6> with(final Parameter<T1> param1,
+                                                                                   final Parameter<T2> param2,
+                                                                                   final Parameter<T3> param3,
+                                                                                   final Parameter<T4> param4,
+                                                                                   final Parameter<T5> param5,
+                                                                                   final Parameter<T6> param6) {
         return ParameterBuilder.of(this, param1, param2, param3, param4, param5, param6);
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7> ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> withParameters(
+    public <T1, T2, T3, T4, T5, T6, T7> ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> with(
             final Parameter<T1> param1,
             final Parameter<T2> param2,
             final Parameter<T3> param3,
@@ -88,7 +83,7 @@ public class HttpRouteBuilder {
         return ParameterBuilder.of(this, param1, param2, param3, param4, param5, param6, param7);
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7, T8> ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> withParameters(
+    public <T1, T2, T3, T4, T5, T6, T7, T8> ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> with(
             final Parameter<T1> param1,
             final Parameter<T2> param2,
             final Parameter<T3> param3,
@@ -101,7 +96,7 @@ public class HttpRouteBuilder {
                                    param8);
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9> ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> withParameters(
+    public <T1, T2, T3, T4, T5, T6, T7, T8, T9> ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> with(
             final Parameter<T1> param1,
             final Parameter<T2> param2,
             final Parameter<T3> param3,

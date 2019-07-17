@@ -134,7 +134,7 @@ public class ParameterBuilder {
             super(routeBuilder);
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN0<Promise<Either<? extends BaseError, R>>> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN0<Promise<Either<? extends BaseError, R>>> handler) {
             return routeBuilder().withHandler(ignored -> Either.success(handler.apply()));
         }
     }
@@ -147,7 +147,7 @@ public class ParameterBuilder {
             this.param1 = param1;
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN1<Promise<Either<? extends BaseError, R>>, T1> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN1<Promise<Either<? extends BaseError, R>>, T1> handler) {
             final var converter = param1.converter();
 
             return routeBuilder().withHandler(
@@ -172,7 +172,7 @@ public class ParameterBuilder {
             this.param2 = param2;
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN2<Promise<Either<? extends BaseError, R>>, T1, T2> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN2<Promise<Either<? extends BaseError, R>>, T1, T2> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
 
@@ -184,7 +184,7 @@ public class ParameterBuilder {
                             .mapSuccess(params -> params.map(handler)));
         }
 
-        public ParameterBuilder2<T1, T2> validate(final FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> validator) {
+        public ParameterBuilder2<T1, T2> and(final FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> validator) {
             this.validator = validator;
             return this;
         }
@@ -207,7 +207,7 @@ public class ParameterBuilder {
             this.param3 = param3;
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN3<Promise<Either<? extends BaseError, R>>, T1, T2, T3> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN3<Promise<Either<? extends BaseError, R>>, T1, T2, T3> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -221,7 +221,7 @@ public class ParameterBuilder {
                             .mapSuccess(params -> params.map(handler)));
         }
 
-        public ParameterBuilder3<T1, T2, T3> validate(final FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> validator) {
+        public ParameterBuilder3<T1, T2, T3> and(final FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> validator) {
             this.validator = validator;
             return this;
         }
@@ -249,7 +249,7 @@ public class ParameterBuilder {
             this.param4 = param4;
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN4<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN4<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -265,7 +265,7 @@ public class ParameterBuilder {
                             .mapSuccess(params -> params.map(handler)));
         }
 
-        public ParameterBuilder4<T1, T2, T3, T4> validate(final FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> validator) {
+        public ParameterBuilder4<T1, T2, T3, T4> and(final FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> validator) {
             this.validator = validator;
             return this;
         }
@@ -295,7 +295,7 @@ public class ParameterBuilder {
             this.param5 = param5;
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN5<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN5<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -313,7 +313,7 @@ public class ParameterBuilder {
                             .mapSuccess(params -> params.map(handler)));
         }
 
-        public ParameterBuilder5<T1, T2, T3, T4, T5> validate(final FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> validator) {
+        public ParameterBuilder5<T1, T2, T3, T4, T5> and(final FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> validator) {
             this.validator = validator;
             return this;
         }
@@ -346,7 +346,7 @@ public class ParameterBuilder {
             this.param6 = param6;
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN6<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN6<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -366,7 +366,7 @@ public class ParameterBuilder {
                             .mapSuccess(params -> params.map(handler)));
         }
 
-        public ParameterBuilder6<T1, T2, T3, T4, T5, T6> validate(final FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> validator) {
+        public ParameterBuilder6<T1, T2, T3, T4, T5, T6> and(final FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> validator) {
             this.validator = validator;
             return this;
         }
@@ -403,7 +403,7 @@ public class ParameterBuilder {
             this.param7 = param7;
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN7<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN7<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -425,7 +425,7 @@ public class ParameterBuilder {
                             .mapSuccess(params -> params.map(handler)));
         }
 
-        public ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> validate(final FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator) {
+        public ParameterBuilder7<T1, T2, T3, T4, T5, T6, T7> and(final FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator) {
             this.validator = validator;
             return this;
         }
@@ -465,7 +465,7 @@ public class ParameterBuilder {
             this.param8 = param8;
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN8<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN8<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -489,7 +489,7 @@ public class ParameterBuilder {
                             .mapSuccess(params -> params.map(handler)));
         }
 
-        public ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> validate(final FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> validator) {
+        public ParameterBuilder8<T1, T2, T3, T4, T5, T6, T7, T8> and(final FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> validator) {
             this.validator = validator;
             return this;
         }
@@ -534,7 +534,7 @@ public class ParameterBuilder {
             this.param9 = param9;
         }
 
-        public <R> RouteEnricher<R, RequestContext> invoke(final FN9<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
+        public <R> RouteEnricher<R, RequestContext> then(final FN9<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
             final var converter1 = param1.converter();
             final var converter2 = param2.converter();
             final var converter3 = param3.converter();
@@ -560,7 +560,7 @@ public class ParameterBuilder {
                             .mapSuccess(params -> params.map(handler)));
         }
 
-        public ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> validate(final FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> validator) {
+        public ParameterBuilder9<T1, T2, T3, T4, T5, T6, T7, T8, T9> and(final FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> validator) {
             this.validator = validator;
             return this;
         }

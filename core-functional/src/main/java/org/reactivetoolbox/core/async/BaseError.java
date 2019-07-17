@@ -6,4 +6,12 @@ package org.reactivetoolbox.core.async;
  * @author Sergiy Yevtushenko
  */
 public interface BaseError {
+    //TODO: perhaps we need to move these methods up in the hierarchy
+    default int code() {
+        return 200;
+    }
+
+    default String message() {
+        return "Success";
+    }
 }

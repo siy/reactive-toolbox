@@ -6,18 +6,17 @@ import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Tuples;
-import org.reactivetoolbox.web.server.auth.AuthHeader;
-import org.reactivetoolbox.web.server.auth.Authentication;
-import org.reactivetoolbox.web.server.auth.Role;
-import org.reactivetoolbox.web.server.auth.UserId;
-import org.reactivetoolbox.web.server.auth.AuthValidators;
-import org.reactivetoolbox.web.server.parameter.validation.Validators;
+import org.reactivetoolbox.web.server.parameter.auth.AuthHeader;
+import org.reactivetoolbox.web.server.parameter.auth.Authentication;
+import org.reactivetoolbox.web.server.parameter.auth.UserId;
+import org.reactivetoolbox.web.server.parameter.validation.Is;
 
 import java.util.UUID;
 
 import static org.reactivetoolbox.build.Build.*;
 import static org.reactivetoolbox.core.async.Promises.*;
 import static org.reactivetoolbox.core.functional.Either.*;
+import static org.reactivetoolbox.web.server.HttpMethod.*;
 import static org.reactivetoolbox.web.server.parameter.Parameters.*;
 
 class ServerTest {
@@ -45,52 +44,52 @@ class ServerTest {
     @Test
     void serverCanBeCreated() {
         var userService = new UserService();
-        var server = server().withRoutes(
-                on(HttpMethod.GET)
-                        .to("/one/two/{param1}/{param2}")
-                        .withParameters(inPath(String.class, "param1").validate(Validators::notNull),
-                                        inPath(String.class, "param2").validate(Validators::notNull),
-                                        inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn))
-                        .invoke((param1, param2, user) -> fulfilled(success("Received: " + param1 + ", " + param2)))
-                        .then((context, result) -> {
-                            return result.then(value -> context.response().setHeader("X-User-Defined", "processed"));
-                        }),
+        var server = server().with(
+                when(GET, "/one/two/{param1}/{param2}")
+                        .with(inPath(String.class, "param1").and(Is::notNull),
+                              inPath(String.class, "param2").and(Is::notNull),
+                              inAuthHeader(AuthHeader.JWT).and(Is::loggedIn))
+                        .then((param1, param2, user) -> fulfilled(success("Received: " + param1 + ", " + param2)))
+                        //Simple example of request postprocessing, in this case - setting of user-defined headers to response
+                        .then((context, result) -> result.then(value -> context.response().setHeader("X-User-Defined", "processed"))),
 
-                on(HttpMethod.POST)
-                        .to("/two/three/{param1}/{param2}/{param3}")
-                        .withParameters(inPath(String.class, "param1").validate(Validators::notNull),
-                                        inPath(UUID.class, "param2").validate(Validators::notNull),
-                                        inPath(Integer.class, "param3").validate(Validators::notNull),
-                                        inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn).validate(AuthValidators::hasAny, TestRoles.REGULAR, TestRoles.ADMIN))
-                        .validate((param1, param2, param3, user) -> success(Tuples.of(param1, param2, param3, user)))
-                        .invoke((param1, param2, param3, user) -> fulfilled(success("[" + user.userId() + "]:" + param1 + " " + param2 + " " + param3))),
+                when(POST, "/two/three/{param1}/{param2}/{param3}")
+                        .with(inPath(String.class, "param1").and(Is::notNull),
+                              inPath(UUID.class, "param2").and(Is::notNull),
+                              inPath(Integer.class, "param3").and(Is::notNull),
+                              inAuthHeader(AuthHeader.JWT).and(Is::loggedIn).and(Is::belongsToAny, TestRoles.REGULAR, TestRoles.ADMIN))
+                        // Cross-parameter validation, here does nothing, but can be used to check if overall combination of parameters is valid
+                        .and((param1, param2, param3, user) -> success(Tuples.of(param1, param2, param3, user)))
+                        .then((param1, param2, param3, user) -> fulfilled(success("[" + user.userId() + "]:" + param1 + " " + param2 + " " + param3))),
 
-                on(HttpMethod.PUT)
-                        .to("/user")
-                        .withParameters(inAuthHeader(AuthHeader.JWT).validate(AuthValidators::loggedIn).validate(AuthValidators::hasAll, TestRoles.REGULAR))
-                        .invoke(userService::getProfile),
+                when(PUT, "/user")
+                        .with(inAuthHeader(AuthHeader.JWT)
+                                                .and(Is::loggedIn)
+                                                .and(Is::belongsToAll, TestRoles.REGULAR))
+                        .then(userService::getProfile),
 
-                on(HttpMethod.POST)
-                        .to("/user/login")
-                        .withParameters(inBody(String.class, "login").validate(Validators::notNullOrEmpty),
-                                        inBody(String.class, "password").validate(Validators::notNullOrEmpty))
-                        .invoke(userService::login),
+                //User login request
+                when(POST, "/user/login")
+                        .with(inBody(String.class, "login")
+                                                .and(Is::notNullOrEmpty),
+                              inBody(String.class, "password")
+                                                .and(Is::notNullOrEmpty))
+                        .then(userService::login),
 
-                on(HttpMethod.POST)
-                        .to("/user/register")
-                        .withParameters(inBody(String.class, "login")
-                                                .validate(Validators::notNull)
-                                                .validate(Validators::stringLen, 4, 128),
-                                        inBody(String.class, "password")
-                                                .validate(Validators::notNull)
-                                                .validate(Validators::stringLen, 4, 128)
-                                                .validate(AuthValidators::validatePassword))
-                        .invoke(userService::login),
+                //More or less traditional user registration request validation
+                when(POST, "/user/register")
+                        .with(inBody(String.class, "login")
+                                                .and(Is::lenBetween, 3, 128)
+                                                .and(Is::email),
+                              inBody(String.class, "password")
+                                                .and(Is::lenBetween, 6, 128)
+                                                .and(Is::validatePassword))
+                        .then(userService::login),
 
-                on(HttpMethod.GET)
-                        .to("/")
+                //Simplest entrypoint description
+                when(GET, "/")
                         .withoutParameters()
-                        .invoke(() -> fulfilled(success("Hello world!")))
+                        .then(() -> fulfilled(success("Hello world!")))
         ).build();
     }
 }

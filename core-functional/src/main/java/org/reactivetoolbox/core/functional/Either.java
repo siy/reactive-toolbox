@@ -20,7 +20,6 @@ import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Functions.FN2;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -46,14 +45,14 @@ public interface Either<F, S> {
     boolean isSuccess();
 
     /**
-     * Get access to success value wrapped into {@link Optional}.
+     * Get access to success value wrapped into {@link Option}.
      */
-    Optional<S> success();
+    Option<S> success();
 
     /**
-     * Get access to failure wrapped into {@link Optional}.
+     * Get access to failure wrapped into {@link Option}.
      */
-    Optional<F> failure();
+    Option<F> failure();
 
     /**
      * This is a convenience method, which can be used to perform final transformation
@@ -116,7 +115,7 @@ public interface Either<F, S> {
      *        Supplier for replacement. Invoked only if instance contains a failure
      * @return contained success get if there is one ond replacement get otherwise
      */
-    S otherwiseGet(final Supplier<S> supplier);
+    S otherwise(final Supplier<S> supplier);
 
     /**
      * Expose success or throw an {@link IllegalStateException} if instance
@@ -253,13 +252,13 @@ public interface Either<F, S> {
         }
 
         @Override
-        public Optional<S> success() {
-            return Optional.of(success);
+        public Option<S> success() {
+            return Option.of(success);
         }
 
         @Override
-        public Optional<F> failure() {
-            return Optional.empty();
+        public Option<F> failure() {
+            return Option.empty();
         }
 
         @Override
@@ -283,7 +282,7 @@ public interface Either<F, S> {
         }
 
         @Override
-        public S otherwiseGet(final Supplier<S> supplier) {
+        public S otherwise(final Supplier<S> supplier) {
             return success;
         }
 
@@ -355,13 +354,13 @@ public interface Either<F, S> {
         }
 
         @Override
-        public Optional<S> success() {
-            return Optional.empty();
+        public Option<S> success() {
+            return Option.empty();
         }
 
         @Override
-        public Optional<F> failure() {
-            return Optional.of(failure);
+        public Option<F> failure() {
+            return Option.of(failure);
         }
 
         //TODO: does not look ok, what else can be done here?
@@ -387,7 +386,7 @@ public interface Either<F, S> {
         }
 
         @Override
-        public S otherwiseGet(final Supplier<S> supplier) {
+        public S otherwise(final Supplier<S> supplier) {
             return supplier.get();
         }
 

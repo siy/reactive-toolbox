@@ -8,5 +8,7 @@ public enum ValidationError implements BaseError {
     STRING_TOO_LONG,
     NUMBER_IS_BELOW_LOWER_BOUND,
     NUMBER_IS_ABOVE_UPPER_BOUND,
+    USER_NOT_LOGGED_IN,
+    USER_HAS_NOT_ENOUGH_PRIVILEGES,
     ;
 }

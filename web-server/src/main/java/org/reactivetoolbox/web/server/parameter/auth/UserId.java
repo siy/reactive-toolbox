@@ -1,4 +1,4 @@
-package org.reactivetoolbox.web.server.auth;
+package org.reactivetoolbox.web.server.parameter.auth;
 
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;

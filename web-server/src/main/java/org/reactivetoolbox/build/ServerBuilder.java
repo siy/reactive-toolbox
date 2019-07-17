@@ -18,12 +18,13 @@ public class ServerBuilder {
     }
 
     @SafeVarargs
-    public final ServerBuilder withRoutes(final RouteBase<RequestContext>... routes) {
+    public final ServerBuilder with(final RouteBase<RequestContext>... routes) {
         this.router = Router.of(routes);
         return this;
     }
 
     public Server build() {
+        //TODO: implement
         return null;
     }
 }

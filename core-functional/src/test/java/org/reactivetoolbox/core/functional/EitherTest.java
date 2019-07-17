@@ -106,7 +106,7 @@ public class EitherTest {
         var original = Either.<Integer, Integer>success(1);
         var holder = new AtomicBoolean(false);
 
-        assertEquals(1, original.otherwiseGet(() -> {
+        assertEquals(1, original.otherwise(() -> {
             holder.set(true);
             return 2;
         }));
@@ -118,7 +118,7 @@ public class EitherTest {
     void ifFailureThenReplacementValueIsReturnedAndSupplierIsInvoked() {
         var original = Either.<Integer, Integer>failure(1);
 
-        assertEquals(2, original.otherwiseGet(() -> 2));
+        assertEquals(2, original.otherwise(() -> 2));
     }
 
     //    @Test
