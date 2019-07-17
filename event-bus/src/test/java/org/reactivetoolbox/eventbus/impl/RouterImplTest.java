@@ -10,6 +10,7 @@ import org.reactivetoolbox.eventbus.RoutingError;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.reactivetoolbox.core.functional.Either.*;
 
 class RouterImplTest {
 
@@ -17,38 +18,39 @@ class RouterImplTest {
     void exactPathCanBeMatched() {
         var router = new RouterImpl<String>();
 
-        router.with(Route.of("/one/two", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg)))));
+        router.with(Route.of("/one/two", msg -> success(Promises.fulfilled(success(msg + msg)))));
 
         router.deliver(StringEnvelope.of("/one/two", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
-                .onSuccess(success -> success.then(value -> assertEquals("ValueValue", value)));
+                .onSuccess(success -> success.then(value -> assertEquals(success("ValueValue"), value)));
 
         router.deliver(StringEnvelope.of("/one/two/", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
-                .onSuccess(success -> success.then(value -> assertEquals("ValueValue", value)));
+                .onSuccess(success -> success.then(value -> assertEquals(success("ValueValue"), value)));
     }
 
     @Test
     void parametrizedPathCanBeMatched() {
         var router = new RouterImpl<String>();
 
-        router.with(Route.of("/one/{two}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 2)))),
-                    Route.of("/one/two/{three}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 3)))));
+        router.with(Route.of("/one/{two}", msg -> success(Promises.fulfilled(success(msg + msg + 2)))),
+                    Route.of("/one/two/{three}", msg -> success(Promises.fulfilled(success(msg + msg + 3)))));
 
         router.deliver(StringEnvelope.of("/one/param1", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
-                .onSuccess(success -> success.then(value -> assertEquals("ValueValue2", value)));
+                .onSuccess(success -> success.then(value -> assertEquals(success("ValueValue2"), value)));
 
         router.deliver(StringEnvelope.of("/one/two/param1", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
-                .onSuccess(success -> success.then(value -> assertEquals("ValueValue3", value)));
+                .onSuccess(success -> success.then(value -> assertEquals(success("ValueValue3"), value)));
     }
 
     @Test
     void parametrizedPathCantBeMatchedIfParameterIsMissing() {
         var router = new RouterImpl<String>();
 
-        router.with(Route.of("/one/two/{three}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 3)))));
+        router.with(Route.of("/one/two/{three}", msg -> success(Promises.fulfilled(
+                success(msg + msg + 3)))));
 
         router.deliver(StringEnvelope.of("/one/two", "Value"))
                 .onSuccess(success -> fail("Received unexpected " + success))
@@ -59,25 +61,26 @@ class RouterImplTest {
     void mixedPathsCanBeMatched() {
         var router = new RouterImpl<String>();
 
-        router.with(Route.of("/one/two", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 1)))),
-                    Route.of("/one/{two}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 2)))),
-                    Route.of("/one/two/{three}", msg -> Either.success(Promises.fulfilled(Either.success(msg + msg + 3)))));
+        router.with(Route.of("/one/two", msg -> success(Promises.fulfilled(success(msg + msg + 1)))),
+                    Route.of("/one/{two}", msg -> success(Promises.fulfilled(success(msg + msg + 2)))),
+                    Route.of("/one/two/{three}", msg -> success(Promises.fulfilled(
+                            success(msg + msg + 3)))));
 
         router.deliver(StringEnvelope.of("/one/two", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
-                .onSuccess(success -> success.then(value -> assertEquals("ValueValue1", value)));
+                .onSuccess(success -> success.then(value -> assertEquals(success("ValueValue1"), value)));
 
         router.deliver(StringEnvelope.of("/one/two/", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
-                .onSuccess(success -> success.then(value -> assertEquals("ValueValue1", value)));
+                .onSuccess(success -> success.then(value -> assertEquals(success("ValueValue1"), value)));
 
         router.deliver(StringEnvelope.of("/one/param1", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
-                .onSuccess(success -> success.then(value -> assertEquals("ValueValue2", value)));
+                .onSuccess(success -> success.then(value -> assertEquals(success("ValueValue2"), value)));
 
         router.deliver(StringEnvelope.of("/one/two/param1", "Value"))
                 .onFailure(failure -> fail("Received unexpected " + failure))
-                .onSuccess(success -> success.then(value -> assertEquals("ValueValue3", value)));
+                .onSuccess(success -> success.then(value -> assertEquals(success("ValueValue3"), value)));
     }
 
     private static final class StringEnvelope implements Envelope<String> {
@@ -95,7 +98,7 @@ class RouterImplTest {
 
         @Override
         public Either<RoutingError, String> onDelivery() {
-            return Either.success(payload);
+            return success(payload);
         }
 
         @Override
