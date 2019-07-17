@@ -24,30 +24,30 @@ public class Parameters {
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("Unable to find suitable ConverterFactory"));
 
-    public static <T> Parameter<Option<T>> inPath(final Class<T> type, final String name) {
-        return new Parameter<>(FACTORY.getParameterConverter(type, name));
+    public static <T> P<Option<T>> inPath(final Class<T> type, final String name) {
+        return new P<>(FACTORY.getParameterConverter(type, name));
     }
 
-    public static <T> Parameter<Option<T>> inQuery(final Class<T> type, final String name) {
-        return new Parameter<>(FACTORY.getParameterConverter(type, name));
+    public static <T> P<Option<T>> inQuery(final Class<T> type, final String name) {
+        return new P<>(FACTORY.getParameterConverter(type, name));
     }
 
-    public static <T> Parameter<Option<T>> inBody(final Class<T> type, final String name) {
-        return new Parameter<>(FACTORY.getBodyValueConverter(type));
+    public static <T> P<Option<T>> inBody(final Class<T> type, final String name) {
+        return new P<>(FACTORY.getBodyValueConverter(type));
     }
 
-    public static <T> Parameter<Option<T>> inContext(final Class<T> type) {
-        return new Parameter<>(FACTORY.getContextConverter(type));
+    public static <T> P<Option<T>> inContext(final Class<T> type) {
+        return new P<>(FACTORY.getContextConverter(type));
     }
 
-    public static Parameter<Option<Authentication>> inAuthHeader(final AuthHeader header) {
-        return new Parameter<>(FACTORY.getHeaderConverter(Authentication.class, header.name()));
+    public static P<Option<Authentication>> inAuthHeader(final AuthHeader header) {
+        return new P<>(FACTORY.getHeaderConverter(Authentication.class, "Authorization", header));
     }
 
-    public static class Parameter<T> {
+    public static class P<T> {
         private final Converter<T> converter;
 
-        private Parameter(final Converter<T> converter) {
+        private P(final Converter<T> converter) {
             this.converter = converter;
         }
 
@@ -55,40 +55,44 @@ public class Parameters {
             return converter;
         }
 
-        public <R> Parameter<R> and(final Validator<R, T> validator) {
-            return new Parameter<>((context) -> converter.apply(context).flatMap(validator::apply));
+        public <R> P<R> and(final Validator<R, T> validator) {
+            return new P<>((context) -> converter.apply(context).flatMap(validator::apply));
         }
 
-        public <R, T1> Parameter<R> and(final FN2<Either<? extends BaseError, R>, T, T1> validator, final T1 param1) {
+        public <R, T1> P<R> and(final FN2<Either<? extends BaseError, R>, T, T1> validator, final T1 param1) {
             return and(input -> validator.apply(input, param1));
         }
 
-        public <R, T1, T2> Parameter<R> and(final FN3<Either<? extends BaseError, R>, T, T1, T2> validator, final T1 param1, final T2 param2) {
+        public <R, T1, T2> P<R> and(final FN3<Either<? extends BaseError, R>, T, T1, T2> validator, final T1 param1, final T2 param2) {
             return and(input -> validator.apply(input, param1, param2));
         }
 
-        public <R, T1, T2, T3> Parameter<R> and(final FN4<Either<? extends BaseError, R>, T, T1, T2, T3> validator, final T1 param1, final T2 param2, final T3 param3) {
+        public <R, T1, T2, T3> P<R> and(final FN4<Either<? extends BaseError, R>, T, T1, T2, T3> validator, final T1 param1, final T2 param2, final T3 param3) {
             return and(input -> validator.apply(input, param1, param2, param3));
         }
 
-        public <R, T1, T2, T3, T4> Parameter<R> and(final FN5<Either<? extends BaseError, R>, T, T1, T2, T3, T4> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4) {
+        public <R, T1, T2, T3, T4> P<R> and(final FN5<Either<? extends BaseError, R>, T, T1, T2, T3, T4> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4) {
             return and(input -> validator.apply(input, param1, param2, param3, param4));
         }
 
-        public <R, T1, T2, T3, T4, T5> Parameter<R> and(final FN6<Either<? extends BaseError, R>, T, T1, T2, T3, T4, T5> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5) {
+        public <R, T1, T2, T3, T4, T5> P<R> and(final FN6<Either<? extends BaseError, R>, T, T1, T2, T3, T4, T5> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5) {
             return and(input -> validator.apply(input, param1, param2, param3, param4, param5));
         }
 
-        public <R, T1, T2, T3, T4, T5, T6> Parameter<R> and(final FN7<Either<? extends BaseError, R>, T, T1, T2, T3, T4, T5, T6> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5, final T6 param6) {
+        public <R, T1, T2, T3, T4, T5, T6> P<R> and(final FN7<Either<? extends BaseError, R>, T, T1, T2, T3, T4, T5, T6> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5, final T6 param6) {
             return and(input -> validator.apply(input, param1, param2, param3, param4, param5, param6));
         }
 
-        public <R, T1, T2, T3, T4, T5, T6, T7> Parameter<R> and(final FN8<Either<? extends BaseError, R>, T, T1, T2, T3, T4, T5, T6, T7> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5, final T6 param6, final T7 param7) {
+        public <R, T1, T2, T3, T4, T5, T6, T7> P<R> and(final FN8<Either<? extends BaseError, R>, T, T1, T2, T3, T4, T5, T6, T7> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5, final T6 param6, final T7 param7) {
             return and(input -> validator.apply(input, param1, param2, param3, param4, param5, param6, param7));
         }
 
-        public <R, T1, T2, T3, T4, T5, T6, T7, T8> Parameter<R> and(final FN9<Either<? extends BaseError, R>, T, T1, T2, T3, T4, T5, T6, T7, T8> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5, final T6 param6, final T7 param7, final T8 param8) {
+        public <R, T1, T2, T3, T4, T5, T6, T7, T8> P<R> and(final FN9<Either<? extends BaseError, R>, T, T1, T2, T3, T4, T5, T6, T7, T8> validator, final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5, final T6 param6, final T7 param7, final T8 param8) {
             return and(input -> validator.apply(input, param1, param2, param3, param4, param5, param6, param7, param8));
+        }
+
+        public P<T> description(final String description) {
+            return this;
         }
     }
 }

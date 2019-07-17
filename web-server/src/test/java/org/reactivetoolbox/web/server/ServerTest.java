@@ -44,16 +44,20 @@ class ServerTest {
     @Test
     void serverCanBeCreated() {
         var userService = new UserService();
+        final P<String> param11 = inPath(String.class, "param1").and(Is::notNull);
         var server = server().with(
                 when(GET, "/one/two/{param1}/{param2}")
-                        .with(inPath(String.class, "param1").and(Is::notNull),
-                              inPath(String.class, "param2").and(Is::notNull),
+                        .description("....")
+                        .with(param11,
+                              inPath(String.class, "param2").and(Is::notNull).description("...."),
+                              inQuery(Integer.class, "limit").and(Is::notNull),
                               inAuthHeader(AuthHeader.JWT).and(Is::loggedIn))
-                        .then((param1, param2, user) -> fulfilled(success("Received: " + param1 + ", " + param2)))
+                        .then((param1, param2, limit, user) -> fulfilled(success("Received: " + param1 + ", " + param2 + ", " + limit + " from user" + user.userId())))
                         //Simple example of request postprocessing, in this case - setting of user-defined headers to response
-                        .then((context, result) -> result.then(value -> context.response().setHeader("X-User-Defined", "processed"))),
+                        .after((context, result) -> result.then(value -> context.response().setHeader("X-User-Defined", "processed"))),
 
                 when(POST, "/two/three/{param1}/{param2}/{param3}")
+                        .description(".....")
                         .with(inPath(String.class, "param1").and(Is::notNull),
                               inPath(UUID.class, "param2").and(Is::notNull),
                               inPath(Integer.class, "param3").and(Is::notNull),

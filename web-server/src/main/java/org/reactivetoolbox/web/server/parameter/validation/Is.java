@@ -7,9 +7,13 @@ import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.web.server.parameter.auth.Authentication;
 import org.reactivetoolbox.web.server.parameter.auth.Role;
 
+import java.util.regex.Pattern;
+
 import static org.reactivetoolbox.core.functional.Either.failure;
 
 public interface Is {
+    Pattern PASSWORD_CHECKER = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
+
     static Either<? extends BaseError, String> email(String email) {
         //TODO: implement e-mail validation
         return Either.success(email);
@@ -61,8 +65,7 @@ public interface Is {
     }
 
     static Either<? extends BaseError, String> validatePassword(final String string) {
-        //TODO: implement actual password quality check
-        return Either.success(string);
+        return PASSWORD_CHECKER.matcher(string).find() ? Either.success(string) : Either.failure(ValidationError.WEAK_PASSWORD);
     }
 
     static Either<? extends BaseError, Authentication> belongsToAll(final Authentication authentication, final Role... roles) {

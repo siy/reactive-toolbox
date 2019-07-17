@@ -10,5 +10,6 @@ public enum ValidationError implements BaseError {
     NUMBER_IS_ABOVE_UPPER_BOUND,
     USER_NOT_LOGGED_IN,
     USER_HAS_NOT_ENOUGH_PRIVILEGES,
+    WEAK_PASSWORD,
     ;
 }

@@ -18,7 +18,7 @@ public class RouteEnricher<R, T> implements RouteBase<T> {
         return new RouteEnricher<>(path, handler);
     }
 
-    public RouteEnricher<R, T> then(final Enricher<R, T> enricher) {
+    public RouteEnricher<R, T> after(final Enricher<R, T> enricher) {
         return new RouteEnricher<>(path, context ->
                 handler.apply(context).mapSuccess(result ->enricher.apply(context, result)));
     }
