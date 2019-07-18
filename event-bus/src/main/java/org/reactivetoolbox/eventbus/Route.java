@@ -18,8 +18,7 @@ package org.reactivetoolbox.eventbus;
 
 import org.reactivetoolbox.core.functional.Option;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.stream.Stream;
 
 //TODO: Javadoc
 public class Route<T> implements RouteBase<T> {
@@ -49,17 +48,12 @@ public class Route<T> implements RouteBase<T> {
     }
 
     @Override
-    public Route<T> asRoute() {
-        return this;
+    public Stream<Route<T>> asRoute() {
+        return Stream.of(this);
     }
 
     @Override
-    public Option<String> routeDescription() {
-        return Option.empty();
-    }
-
-    @Override
-    public List<String> parameterDescription() {
-        return Collections.emptyList();
+    public Stream<Option<RouteDescription>> descriptions() {
+        return Stream.empty();
     }
 }

@@ -16,7 +16,10 @@ package org.reactivetoolbox.build;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.eventbus.RouteBase;
+import org.reactivetoolbox.eventbus.Routes;
 import org.reactivetoolbox.web.server.HttpMethod;
+import org.reactivetoolbox.web.server.RequestContext;
 
 //TODO: Javadoc
 public final class Build {
@@ -28,5 +31,11 @@ public final class Build {
 
     public static HttpRouteBuilder when(final HttpMethod method, final String path) {
         return HttpRouteBuilder.create(method, path);
+    }
+
+    @SafeVarargs
+    public static Routes<RequestContext> with(final String root, final RouteBase<RequestContext> ... routes) {
+        //TODO: add support for rooting inner routes at given root
+        return Routes.of(routes);
     }
 }

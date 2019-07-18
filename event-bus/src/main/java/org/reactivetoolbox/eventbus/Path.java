@@ -50,7 +50,7 @@ public interface Path {
 
     boolean matches(final String input);
 
-    static Path of(final String stringPath, PathKey key) {
+    static Path of(final String stringPath, final PathKey key) {
         return of("/" + key.key() + normalize(stringPath));
     }
 
@@ -69,7 +69,7 @@ public interface Path {
             return "/";
         }
 
-        final var stripped = path.strip();
+        final var stripped = path.replace("//", "/").strip();
         final var stringPath = stripped.startsWith("/") ? stripped : "/" + stripped;
         final var index = stringPath.lastIndexOf('/');
 

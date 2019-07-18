@@ -21,8 +21,10 @@ import org.reactivetoolbox.eventbus.Handler;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.eventbus.RouteBase;
+import org.reactivetoolbox.eventbus.RouteDescription;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 //TODO: Javadoc
 public class RouteEnricher<R, T> implements RouteBase<T> {
@@ -54,17 +56,12 @@ public class RouteEnricher<R, T> implements RouteBase<T> {
     }
 
     @Override
-    public Route<T> asRoute() {
-        return Route.of(path, handler);
+    public Stream<Route<T>> asRoute() {
+        return Stream.of(Route.of(path, handler));
     }
 
     @Override
-    public Option<String> routeDescription() {
-        return Option.of(methodDescription);
-    }
-
-    @Override
-    public List<String> parameterDescription() {
-        return parameterDescriptions;
+    public Stream<Option<RouteDescription>> descriptions() {
+        return Stream.empty();
     }
 }

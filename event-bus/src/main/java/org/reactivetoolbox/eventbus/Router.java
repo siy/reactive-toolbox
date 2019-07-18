@@ -27,6 +27,8 @@ public interface Router<T> {
 
     Router<T> with(final RouteBase<T>... routes);
 
+    Router<T> with(final Routes<T>... routes);
+
     static <T> Router<T> of() {
         return new RouterImpl<>();
     }

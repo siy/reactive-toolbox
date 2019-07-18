@@ -18,13 +18,11 @@ package org.reactivetoolbox.eventbus;
 
 import org.reactivetoolbox.core.functional.Option;
 
-import java.util.List;
+import java.util.stream.Stream;
 
 //TODO: Javadoc
 public interface RouteBase<T> {
-    Route<T> asRoute();
+    Stream<Route<T>> asRoute();
 
-    Option<String> routeDescription();
-
-    List<String> parameterDescription();
+    Stream<Option<RouteDescription>> descriptions();
 }
