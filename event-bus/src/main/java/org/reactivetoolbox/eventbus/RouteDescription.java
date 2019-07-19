@@ -1,5 +1,5 @@
 package org.reactivetoolbox.eventbus;
 
-public final class RouteDescription {
+public interface RouteDescription {
 //TODO: finish it
 }

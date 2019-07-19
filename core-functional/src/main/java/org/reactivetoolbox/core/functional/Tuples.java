@@ -30,6 +30,7 @@ import org.reactivetoolbox.core.functional.Functions.FN9;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * Tuple classes with various size and convenient static factories for tuples. All tuple classes are immutable. <br/>
@@ -395,6 +396,20 @@ public final class Tuples {
                 consumer.accept(value);
             }
         }
+
+        /**
+         * Return all values contained in tuple as stream.
+         * <p>
+         * <b>WARNING: this method is inherently type-unsafe, because all information about types is lost. Use with
+         * extreme care!!!</b>
+         *
+         * @return {@link Stream} of values contained in tuple
+         */
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        public <R> Stream<R> stream() {
+            return Stream.of(values).map(v -> (R) v);
+        }
+
     }
 
     public static class Tuple0 extends Tuple {
@@ -427,7 +442,7 @@ public final class Tuples {
 
         @SuppressWarnings("unchecked")
         //TODO: convert it to zip?
-        protected <TT1> Tuple1<TT1> compose(Object... values) {
+        protected <TT1> Tuple1<TT1> compose(final Object... values) {
             return new Tuple1<>((TT1) values[0]);
         }
 

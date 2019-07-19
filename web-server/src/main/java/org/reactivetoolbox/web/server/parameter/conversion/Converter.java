@@ -3,7 +3,9 @@ package org.reactivetoolbox.web.server.parameter.conversion;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
+import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.web.server.RequestContext;
+import org.reactivetoolbox.web.server.parameter.TypeDescription;
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -21,5 +23,9 @@ import org.reactivetoolbox.web.server.RequestContext;
  */
 
 //TODO: Javadoc
+@FunctionalInterface
 public interface Converter<T> extends FN1<Either<? extends BaseError, T>, RequestContext> {
+    default Option<TypeDescription> typeDescription() {
+        return Option.empty();
+    }
 }

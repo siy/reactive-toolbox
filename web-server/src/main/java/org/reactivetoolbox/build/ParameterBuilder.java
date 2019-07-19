@@ -13,7 +13,9 @@ import org.reactivetoolbox.core.functional.Functions.FN6;
 import org.reactivetoolbox.core.functional.Functions.FN7;
 import org.reactivetoolbox.core.functional.Functions.FN8;
 import org.reactivetoolbox.core.functional.Functions.FN9;
+import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.functional.Tuples;
+import org.reactivetoolbox.core.functional.Tuples.Tuple;
 import org.reactivetoolbox.core.functional.Tuples.Tuple1;
 import org.reactivetoolbox.core.functional.Tuples.Tuple2;
 import org.reactivetoolbox.core.functional.Tuples.Tuple3;
@@ -24,12 +26,16 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple7;
 import org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import org.reactivetoolbox.core.functional.Tuples.Tuple9;
 import org.reactivetoolbox.eventbus.Path;
+import org.reactivetoolbox.eventbus.RouteDescription;
 import org.reactivetoolbox.web.server.RequestContext;
+import org.reactivetoolbox.web.server.parameter.ParameterDescription;
 import org.reactivetoolbox.web.server.parameter.Parameters.P;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static java.util.Arrays.asList;
 import static org.reactivetoolbox.core.functional.Tuples.squeeze;
 
 /*
@@ -144,6 +150,11 @@ public class ParameterBuilder {
         return new PB9<>(path, description, Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8, param9));
     }
 
+    private static List<Option<ParameterDescription>> describe(final Tuple parameters) {
+        final Stream<Option<ParameterDescription>> stream = parameters.<P>stream().map(P::description);
+        return stream.collect(Collectors.toList());
+    }
+
     public static class ParameterBuilder0 {
         private final Path path;
         private final String description;
@@ -154,8 +165,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN0<Promise<Either<? extends BaseError, R>>> handler) {
-            return RouteEnricher.of(path, description, Collections.emptyList(),
-                                    ignored -> Either.success(handler.apply()));
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, Collections.emptyList());
+
+            return RouteEnricher.of(path, routeDescription, ignored -> Either.success(handler.apply()));
         }
     }
 
@@ -171,7 +183,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN1<Promise<Either<? extends BaseError, R>>, T1> handler) {
-            return RouteEnricher.of(path, description, parameters.map(v1 -> asList(v1.description())),
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
+
+            return RouteEnricher.of(path, routeDescription,
                                     context -> parameters.map(v1 -> squeeze(v1.converter().apply(context)))
                                                          .flatMap(Either::<BaseError, Tuple1<T1>>success)
                                                          .mapSuccess(params -> params.map(handler)));
@@ -194,8 +208,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN2<Promise<Either<? extends BaseError, R>>, T1, T2> handler) {
-            return RouteEnricher.of(path, description, parameters.map((v1, v2) -> asList(v1.description(),
-                                                                                         v2.description())),
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
+
+            return RouteEnricher.of(path, routeDescription,
                                     context -> parameters.map((v1, v2) -> squeeze(v1.converter().apply(context),
                                                                                   v2.converter().apply(context)))
                                                          .flatMap(tuple -> tuple.map(validator))
@@ -227,9 +242,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN3<Promise<Either<? extends BaseError, R>>, T1, T2, T3> handler) {
-            return RouteEnricher.of(path, description, parameters.map((v1, v2, v3) -> asList(v1.description(),
-                                                                                             v2.description(),
-                                                                                             v3.description())),
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
+
+            return RouteEnricher.of(path, routeDescription,
                                     context -> parameters.map((v1, v2, v3) -> squeeze(v1.converter().apply(context),
                                                                                       v2.converter().apply(context),
                                                                                       v3.converter().apply(context)))
@@ -264,10 +279,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN4<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4> handler) {
-            return RouteEnricher.of(path, description, parameters.map((v1, v2, v3, v4) -> asList(v1.description(),
-                                                                                                 v2.description(),
-                                                                                                 v3.description(),
-                                                                                                 v4.description())),
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
+
+            return RouteEnricher.of(path, routeDescription,
                                     context -> parameters.map((v1, v2, v3, v4) -> squeeze(v1.converter().apply(context),
                                                                                           v2.converter().apply(context),
                                                                                           v3.converter().apply(context),
@@ -306,11 +320,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN5<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5> handler) {
-            return RouteEnricher.of(path, description, parameters.map((v1, v2, v3, v4, v5) -> asList(v1.description(),
-                                                                                                     v2.description(),
-                                                                                                     v3.description(),
-                                                                                                     v4.description(),
-                                                                                                     v5.description())),
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
+
+            return RouteEnricher.of(path, routeDescription,
                                     context -> parameters.map((v1, v2, v3, v4, v5) -> squeeze(v1.converter().apply(context),
                                                                                               v2.converter().apply(context),
                                                                                               v3.converter().apply(context),
@@ -352,12 +364,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN6<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6> handler) {
-            return RouteEnricher.of(path, description, parameters.map((v1, v2, v3, v4, v5, v6) -> asList(v1.description(),
-                                                                                                         v2.description(),
-                                                                                                         v3.description(),
-                                                                                                         v4.description(),
-                                                                                                         v5.description(),
-                                                                                                         v6.description())),
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
+
+            return RouteEnricher.of(path, routeDescription,
                                     context -> parameters.map((v1, v2, v3, v4, v5, v6) -> squeeze(v1.converter().apply(context),
                                                                                                   v2.converter().apply(context),
                                                                                                   v3.converter().apply(context),
@@ -390,13 +399,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN7<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7> handler) {
-            return RouteEnricher.of(path, description, parameters.map((v1, v2, v3, v4, v5, v6, v7) -> asList(v1.description(),
-                                                                                                             v2.description(),
-                                                                                                             v3.description(),
-                                                                                                             v4.description(),
-                                                                                                             v5.description(),
-                                                                                                             v6.description(),
-                                                                                                             v7.description())),
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
+
+            return RouteEnricher.of(path, routeDescription,
                                     context -> parameters.map((v1, v2, v3, v4, v5, v6, v7) -> squeeze(v1.converter().apply(context),
                                                                                                       v2.converter().apply(context),
                                                                                                       v3.converter().apply(context),
@@ -437,14 +442,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN8<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8> handler) {
-            return RouteEnricher.of(path, description, parameters.map((v1, v2, v3, v4, v5, v6, v7, v8) -> asList(v1.description(),
-                                                                                                                 v2.description(),
-                                                                                                                 v3.description(),
-                                                                                                                 v4.description(),
-                                                                                                                 v5.description(),
-                                                                                                                 v6.description(),
-                                                                                                                 v7.description(),
-                                                                                                                 v8.description())),
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
+
+            return RouteEnricher.of(path, routeDescription,
                                     context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8) -> squeeze(v1.converter().apply(context),
                                                                                                           v2.converter().apply(context),
                                                                                                           v3.converter().apply(context),
@@ -487,15 +487,9 @@ public class ParameterBuilder {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN9<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
-            return RouteEnricher.of(path, description, parameters.map((v1, v2, v3, v4, v5, v6, v7, v8, v9) -> asList(v1.description(),
-                                                                                                                     v2.description(),
-                                                                                                                     v3.description(),
-                                                                                                                     v4.description(),
-                                                                                                                     v5.description(),
-                                                                                                                     v6.description(),
-                                                                                                                     v7.description(),
-                                                                                                                     v8.description(),
-                                                                                                                     v9.description())),
+            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
+
+            return RouteEnricher.of(path, routeDescription,
                                     context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8, v9) -> squeeze(v1.converter().apply(context),
                                                                                                               v2.converter().apply(context),
                                                                                                               v3.converter().apply(context),

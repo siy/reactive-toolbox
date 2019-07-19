@@ -23,36 +23,30 @@ import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.eventbus.RouteBase;
 import org.reactivetoolbox.eventbus.RouteDescription;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 //TODO: Javadoc
 public class RouteEnricher<R, T> implements RouteBase<T> {
     private final Path path;
+    private final RouteDescription description;
     private final Handler<R, T> handler;
-    private final String methodDescription;
-    private final List<String> parameterDescriptions;
 
     private RouteEnricher(final Path path,
-                          final String methodDescription,
-                          final List<String> parameterDescriptions,
+                          final RouteDescription description,
                           final Handler<R, T> handler) {
         this.path = path;
+        this.description = description;
         this.handler = handler;
-        //TODO: rework handling of descriptions, perhaps shift them to earlier stage
-        this.methodDescription = methodDescription;
-        this.parameterDescriptions = parameterDescriptions;
     }
 
     public static <R, T> RouteEnricher<R, T> of(final Path path,
-                                                final String methodDescription,
-                                                final List<String> parameterDescriptions,
+                                                final RouteDescription description,
                                                 final Handler<R, T> handler) {
-        return new RouteEnricher<>(path, methodDescription, parameterDescriptions, handler);
+        return new RouteEnricher<>(path, description, handler);
     }
 
     public RouteEnricher<R, T> after(final Enricher<R, T> enricher) {
-        return new RouteEnricher<>(path, methodDescription, parameterDescriptions,
+        return new RouteEnricher<>(path, description,
                                    context -> handler.apply(context).mapSuccess(result ->enricher.apply(context, result)));
     }
 
@@ -68,6 +62,6 @@ public class RouteEnricher<R, T> implements RouteBase<T> {
 
     @Override
     public RouteBase<T> root(final Option<String> root) {
-        return new RouteEnricher<>(path.root(root), methodDescription, parameterDescriptions, handler);
+        return new RouteEnricher<>(path.root(root), description, handler);
     }
 }
