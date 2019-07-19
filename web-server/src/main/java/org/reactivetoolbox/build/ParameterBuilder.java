@@ -105,16 +105,15 @@ public class ParameterBuilder {
         return new PB6<>(path, description, Tuples.of(param1, param2, param3, param4, param5, param6));
     }
 
-    public static <T1, T2, T3, T4, T5, T6, T7> PB7<T1, T2, T3, T4, T5, T6, T7> of(
-            final Path path,
-            final String description,
-            final P<T1> param1,
-            final P<T2> param2,
-            final P<T3> param3,
-            final P<T4> param4,
-            final P<T5> param5,
-            final P<T6> param6,
-            final P<T7> param7) {
+    public static <T1, T2, T3, T4, T5, T6, T7> PB7<T1, T2, T3, T4, T5, T6, T7> of(final Path path,
+                                                                                  final String description,
+                                                                                  final P<T1> param1,
+                                                                                  final P<T2> param2,
+                                                                                  final P<T3> param3,
+                                                                                  final P<T4> param4,
+                                                                                  final P<T5> param5,
+                                                                                  final P<T6> param6,
+                                                                                  final P<T7> param7) {
         return new PB7<>(path, description, Tuples.of(param1, param2, param3, param4, param5, param6, param7));
     }
 
@@ -173,9 +172,9 @@ public class ParameterBuilder {
 
         public <R> RouteEnricher<R, RequestContext> then(final FN1<Promise<Either<? extends BaseError, R>>, T1> handler) {
             return RouteEnricher.of(path, description, parameters.map(v1 -> asList(v1.description())),
-                    context -> parameters.map(v1 -> squeeze(v1.converter().apply(context)))
-                            .flatMap(Either::<BaseError, Tuple1<T1>>success)
-                            .mapSuccess(params -> params.map(handler)));
+                                    context -> parameters.map(v1 -> squeeze(v1.converter().apply(context)))
+                                                         .flatMap(Either::<BaseError, Tuple1<T1>>success)
+                                                         .mapSuccess(params -> params.map(handler)));
         }
     }
 
@@ -184,7 +183,7 @@ public class ParameterBuilder {
         private final String description;
         private final Tuple2<P<T1>, P<T2>> parameters;
         private FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> validator =
-                (param1, param2) -> Either.success(Tuples.of(param1, param2));
+            (param1, param2) -> Either.success(Tuples.of(param1, param2));
 
         private PB2(final Path path,
                     final String description,
@@ -197,10 +196,10 @@ public class ParameterBuilder {
         public <R> RouteEnricher<R, RequestContext> then(final FN2<Promise<Either<? extends BaseError, R>>, T1, T2> handler) {
             return RouteEnricher.of(path, description, parameters.map((v1, v2) -> asList(v1.description(),
                                                                                          v2.description())),
-                    context -> parameters.map((v1, v2) -> squeeze(v1.converter().apply(context),
-                                                                  v2.converter().apply(context)))
-                            .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)));
+                                    context -> parameters.map((v1, v2) -> squeeze(v1.converter().apply(context),
+                                                                                  v2.converter().apply(context)))
+                                                         .flatMap(tuple -> tuple.map(validator))
+                                                         .mapSuccess(params -> params.map(handler)));
         }
 
         public PB2<T1, T2> and(final FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> validator) {
@@ -231,11 +230,11 @@ public class ParameterBuilder {
             return RouteEnricher.of(path, description, parameters.map((v1, v2, v3) -> asList(v1.description(),
                                                                                              v2.description(),
                                                                                              v3.description())),
-                    context -> parameters.map((v1, v2, v3) -> squeeze(v1.converter().apply(context),
-                                                                      v2.converter().apply(context),
-                                                                      v3.converter().apply(context)))
-                            .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)));
+                                    context -> parameters.map((v1, v2, v3) -> squeeze(v1.converter().apply(context),
+                                                                                      v2.converter().apply(context),
+                                                                                      v3.converter().apply(context)))
+                                                         .flatMap(tuple -> tuple.map(validator))
+                                                         .mapSuccess(params -> params.map(handler)));
         }
 
         public PB3<T1, T2, T3> and(final FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> validator) {
@@ -269,12 +268,12 @@ public class ParameterBuilder {
                                                                                                  v2.description(),
                                                                                                  v3.description(),
                                                                                                  v4.description())),
-                    context -> parameters.map((v1, v2, v3, v4) -> squeeze(v1.converter().apply(context),
-                                                                          v2.converter().apply(context),
-                                                                          v3.converter().apply(context),
-                                                                          v4.converter().apply(context)))
-                            .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)));
+                                    context -> parameters.map((v1, v2, v3, v4) -> squeeze(v1.converter().apply(context),
+                                                                                          v2.converter().apply(context),
+                                                                                          v3.converter().apply(context),
+                                                                                          v4.converter().apply(context)))
+                                                         .flatMap(tuple -> tuple.map(validator))
+                                                         .mapSuccess(params -> params.map(handler)));
         }
 
         public PB4<T1, T2, T3, T4> and(final FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> validator) {
@@ -291,11 +290,12 @@ public class ParameterBuilder {
                                                                                                               param2,
                                                                                                               param3,
                                                                                                               param4,
-                                                                                                              param5) -> Either.success(Tuples.of(param1,
-                                                                                                                                                  param2,
-                                                                                                                                                  param3,
-                                                                                                                                                  param4,
-                                                                                                                                                  param5));
+                                                                                                              param5) -> Either.success(Tuples.of(
+            param1,
+            param2,
+            param3,
+            param4,
+            param5));
 
         private PB5(final Path path,
                     final String description,
@@ -311,13 +311,13 @@ public class ParameterBuilder {
                                                                                                      v3.description(),
                                                                                                      v4.description(),
                                                                                                      v5.description())),
-                    context -> parameters.map((v1, v2, v3, v4, v5) -> squeeze(v1.converter().apply(context),
-                                                                              v2.converter().apply(context),
-                                                                              v3.converter().apply(context),
-                                                                              v4.converter().apply(context),
-                                                                              v5.converter().apply(context)))
-                            .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)));
+                                    context -> parameters.map((v1, v2, v3, v4, v5) -> squeeze(v1.converter().apply(context),
+                                                                                              v2.converter().apply(context),
+                                                                                              v3.converter().apply(context),
+                                                                                              v4.converter().apply(context),
+                                                                                              v5.converter().apply(context)))
+                                                         .flatMap(tuple -> tuple.map(validator))
+                                                         .mapSuccess(params -> params.map(handler)));
         }
 
         public PB5<T1, T2, T3, T4, T5> and(final FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> validator) {
@@ -335,12 +335,13 @@ public class ParameterBuilder {
                                                                                                                       param3,
                                                                                                                       param4,
                                                                                                                       param5,
-                                                                                                                      param6) -> Either.success(Tuples.of(param1,
-                                                                                                                                                          param2,
-                                                                                                                                                          param3,
-                                                                                                                                                          param4,
-                                                                                                                                                          param5,
-                                                                                                                                                          param6));
+                                                                                                                      param6) -> Either.success(Tuples
+                                                                                                                                                    .of(param1,
+                                                                                                                                                        param2,
+                                                                                                                                                        param3,
+                                                                                                                                                        param4,
+                                                                                                                                                        param5,
+                                                                                                                                                        param6));
 
         private PB6(final Path path,
                     final String description,
@@ -357,14 +358,14 @@ public class ParameterBuilder {
                                                                                                          v4.description(),
                                                                                                          v5.description(),
                                                                                                          v6.description())),
-                    context -> parameters.map((v1, v2, v3, v4, v5, v6) -> squeeze(v1.converter().apply(context),
-                                                                                  v2.converter().apply(context),
-                                                                                  v3.converter().apply(context),
-                                                                                  v4.converter().apply(context),
-                                                                                  v5.converter().apply(context),
-                                                                                  v6.converter().apply(context)))
-                            .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)));
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6) -> squeeze(v1.converter().apply(context),
+                                                                                                  v2.converter().apply(context),
+                                                                                                  v3.converter().apply(context),
+                                                                                                  v4.converter().apply(context),
+                                                                                                  v5.converter().apply(context),
+                                                                                                  v6.converter().apply(context)))
+                                                         .flatMap(tuple -> tuple.map(validator))
+                                                         .mapSuccess(params -> params.map(handler)));
         }
 
         public PB6<T1, T2, T3, T4, T5, T6> and(final FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> validator) {
@@ -377,7 +378,8 @@ public class ParameterBuilder {
         private final Path path;
         private final String description;
         private final Tuple7<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>, P<T6>, P<T7>> parameters;
-        private FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator = (param1, param2, param3, param4, param5, param6, param7) -> Either.success(Tuples.of(param1, param2, param3, param4, param5, param6, param7));
+        private FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator = (param1, param2, param3, param4, param5, param6, param7) -> Either
+            .success(Tuples.of(param1, param2, param3, param4, param5, param6, param7));
 
         private PB7(final Path path,
                     final String description,
@@ -395,15 +397,15 @@ public class ParameterBuilder {
                                                                                                              v5.description(),
                                                                                                              v6.description(),
                                                                                                              v7.description())),
-                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7) -> squeeze(v1.converter().apply(context),
-                                                                                             v2.converter().apply(context),
-                                                                                             v3.converter().apply(context),
-                                                                                             v4.converter().apply(context),
-                                                                                             v5.converter().apply(context),
-                                                                                             v6.converter().apply(context),
-                                                                                             v7.converter().apply(context)))
-                            .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)));
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7) -> squeeze(v1.converter().apply(context),
+                                                                                                      v2.converter().apply(context),
+                                                                                                      v3.converter().apply(context),
+                                                                                                      v4.converter().apply(context),
+                                                                                                      v5.converter().apply(context),
+                                                                                                      v6.converter().apply(context),
+                                                                                                      v7.converter().apply(context)))
+                                                         .flatMap(tuple -> tuple.map(validator))
+                                                         .mapSuccess(params -> params.map(handler)));
         }
 
         public PB7<T1, T2, T3, T4, T5, T6, T7> and(final FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator) {
@@ -423,14 +425,8 @@ public class ParameterBuilder {
                                                                                                                                       param5,
                                                                                                                                       param6,
                                                                                                                                       param7,
-                                                                                                                                      param8) -> Either.success(Tuples.of(param1,
-                                                                                                                                                                          param2,
-                                                                                                                                                                          param3,
-                                                                                                                                                                          param4,
-                                                                                                                                                                          param5,
-                                                                                                                                                                          param6,
-                                                                                                                                                                          param7,
-                                                                                                                                                                          param8));
+                                                                                                                                      param8) -> Either
+            .success(Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8));
 
         private PB8(final Path path,
                     final String description,
@@ -449,16 +445,16 @@ public class ParameterBuilder {
                                                                                                                  v6.description(),
                                                                                                                  v7.description(),
                                                                                                                  v8.description())),
-                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8) -> squeeze(v1.converter().apply(context),
-                                                                                          v2.converter().apply(context),
-                                                                                          v3.converter().apply(context),
-                                                                                          v4.converter().apply(context),
-                                                                                          v5.converter().apply(context),
-                                                                                          v6.converter().apply(context),
-                                                                                          v7.converter().apply(context),
-                                                                                          v8.converter().apply(context)))
-                            .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)));
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8) -> squeeze(v1.converter().apply(context),
+                                                                                                          v2.converter().apply(context),
+                                                                                                          v3.converter().apply(context),
+                                                                                                          v4.converter().apply(context),
+                                                                                                          v5.converter().apply(context),
+                                                                                                          v6.converter().apply(context),
+                                                                                                          v7.converter().apply(context),
+                                                                                                          v8.converter().apply(context)))
+                                                         .flatMap(tuple -> tuple.map(validator))
+                                                         .mapSuccess(params -> params.map(handler)));
         }
 
         public PB8<T1, T2, T3, T4, T5, T6, T7, T8> and(final FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> validator) {
@@ -479,15 +475,8 @@ public class ParameterBuilder {
                                                                                                                                               param6,
                                                                                                                                               param7,
                                                                                                                                               param8,
-                                                                                                                                              param9) -> Either.success(Tuples.of(param1,
-                                                                                                                                                                                  param2,
-                                                                                                                                                                                  param3,
-                                                                                                                                                                                  param4,
-                                                                                                                                                                                  param5,
-                                                                                                                                                                                  param6,
-                                                                                                                                                                                  param7,
-                                                                                                                                                                                  param8,
-                                                                                                                                                                                  param9));
+                                                                                                                                              param9) -> Either
+            .success(Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8, param9));
 
         private PB9(final Path path,
                     final String description,
@@ -507,17 +496,17 @@ public class ParameterBuilder {
                                                                                                                      v7.description(),
                                                                                                                      v8.description(),
                                                                                                                      v9.description())),
-                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8, v9) -> squeeze(v1.converter().apply(context),
-                                                                                              v2.converter().apply(context),
-                                                                                              v3.converter().apply(context),
-                                                                                              v4.converter().apply(context),
-                                                                                              v5.converter().apply(context),
-                                                                                              v6.converter().apply(context),
-                                                                                              v7.converter().apply(context),
-                                                                                              v8.converter().apply(context),
-                                                                                              v9.converter().apply(context)))
-                            .flatMap(tuple -> tuple.map(validator))
-                            .mapSuccess(params -> params.map(handler)));
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8, v9) -> squeeze(v1.converter().apply(context),
+                                                                                                              v2.converter().apply(context),
+                                                                                                              v3.converter().apply(context),
+                                                                                                              v4.converter().apply(context),
+                                                                                                              v5.converter().apply(context),
+                                                                                                              v6.converter().apply(context),
+                                                                                                              v7.converter().apply(context),
+                                                                                                              v8.converter().apply(context),
+                                                                                                              v9.converter().apply(context)))
+                                                         .flatMap(tuple -> tuple.map(validator))
+                                                         .mapSuccess(params -> params.map(handler)));
         }
 
         public PB9<T1, T2, T3, T4, T5, T6, T7, T8, T9> and(final FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> validator) {

@@ -24,7 +24,6 @@ import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.eventbus.RouteBase;
 import org.reactivetoolbox.eventbus.Router;
-import org.reactivetoolbox.eventbus.Routes;
 import org.reactivetoolbox.eventbus.RoutingError;
 
 import java.util.ArrayList;
@@ -52,23 +51,12 @@ public final class RouterImpl<T> implements Router<T> {
 
     @SafeVarargs
     @Override
-    public final Router<T> with(final RouteBase<T>... routes) {
-        return add(Arrays.stream(routes));
-    }
-
-    @SafeVarargs
-    @Override
-    public final Router<T> with(final Routes<T>... routes) {
-        Arrays.stream(routes)
-              .map(Routes::routes)
-              .map(List::stream)
-              .forEach(this::add);
-        return this;
+    public final Router<T> with(final Option<String> root, final RouteBase<T>... routes) {
+        return add(Arrays.stream(routes).map(route -> route.root(root)));
     }
 
     private Router<T> add(final Stream<RouteBase<T>> routes) {
-        routes.map(RouteBase::asRoute)
-              .forEach(stream -> stream.forEach(this::add));
+        routes.flatMap(RouteBase::stream).forEach(this::add);
         return this;
     }
 

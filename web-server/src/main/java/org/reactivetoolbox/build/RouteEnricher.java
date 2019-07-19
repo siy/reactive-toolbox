@@ -39,6 +39,7 @@ public class RouteEnricher<R, T> implements RouteBase<T> {
                           final Handler<R, T> handler) {
         this.path = path;
         this.handler = handler;
+        //TODO: rework handling of descriptions, perhaps shift them to earlier stage
         this.methodDescription = methodDescription;
         this.parameterDescriptions = parameterDescriptions;
     }
@@ -56,12 +57,17 @@ public class RouteEnricher<R, T> implements RouteBase<T> {
     }
 
     @Override
-    public Stream<Route<T>> asRoute() {
+    public Stream<Route<T>> stream() {
         return Stream.of(Route.of(path, handler));
     }
 
     @Override
     public Stream<Option<RouteDescription>> descriptions() {
         return Stream.empty();
+    }
+
+    @Override
+    public RouteBase<T> root(final Option<String> root) {
+        return new RouteEnricher<>(path.root(root), methodDescription, parameterDescriptions, handler);
     }
 }

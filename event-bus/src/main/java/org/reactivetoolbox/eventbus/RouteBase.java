@@ -20,9 +20,38 @@ import org.reactivetoolbox.core.functional.Option;
 
 import java.util.stream.Stream;
 
-//TODO: Javadoc
+/**
+ * The base interface of all kinds of routes, either single or sets of routes.
+ * Implementations might not be capable of performing handling of events by
+ * itself, but should be able to build stream of instances of {@link Route},
+ * which actually can handle events.
+ *
+ * @param <T>
+ */
 public interface RouteBase<T> {
-    Stream<Route<T>> asRoute();
+    /**
+     * Create a stream of instances of {@link Route}.
+     *
+     * @return {@link Stream} of {@link Route}s
+     */
+    Stream<Route<T>> stream();
 
+    /**
+     * Create a stream of descriptions for routes. Note that order and number of
+     * elements in this stream must match order and number of {@link Route}s
+     * produced by stream created by {@link #stream()}. If implementation does
+     * not support this functionality, empty {@link Stream} should be returned.
+     *
+     * @return {@link Stream} of {@link RouteDescription}s
+     */
     Stream<Option<RouteDescription>> descriptions();
+
+    /**
+     * Change root (path prefix) for this route.
+     *
+     * @param root
+     *        New path prefix
+     * @return new instance with modified root
+     */
+    RouteBase<T> root(Option<String> root);
 }

@@ -16,23 +16,31 @@ package org.reactivetoolbox.build;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.RouteBase;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.Server;
 
 public class ServerBuilder {
-    private Router<RequestContext> router;
+    private final Router<RequestContext> router;
 
-    public ServerBuilder withRouter(final Router<RequestContext> router) {
+    private ServerBuilder(final Router<RequestContext> router) {
         this.router = router;
-        return this;
+    }
+
+    public static ServerBuilder with(final Router<RequestContext> router) {
+        return new ServerBuilder(router);
     }
 
     @SafeVarargs
-    public final ServerBuilder with(final RouteBase<RequestContext>... routes) {
-        this.router = Router.of(routes);
-        return this;
+    public static ServerBuilder with(final RouteBase<RequestContext>... routes) {
+        return new ServerBuilder(Router.of(Option.empty(), routes));
+    }
+
+    @SafeVarargs
+    public static ServerBuilder with(final String root, final RouteBase<RequestContext>... routes) {
+        return new ServerBuilder(Router.of(Option.of(root), routes));
     }
 
     public Server build() {

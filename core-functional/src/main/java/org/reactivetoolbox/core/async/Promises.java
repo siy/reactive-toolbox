@@ -16,6 +16,7 @@ package org.reactivetoolbox.core.async;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.functional.Tuples.Tuple1;
 
@@ -27,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static org.reactivetoolbox.core.functional.Tuples.Tuple;
 import static org.reactivetoolbox.core.functional.Tuples.Tuple2;
@@ -53,27 +53,30 @@ public class Promises {
     @SafeVarargs
     public static <T> Promise<T> any(final Promise<T>... promises) {
         final var result = Promises.<T>give();
-        Arrays.asList(promises).forEach(promise -> promise.then(value -> result.resolve(value)));
+        Arrays.asList(promises).forEach(promise -> promise.then(result::resolve));
         return result;
     }
 
     @SuppressWarnings("unchecked")
     public static <T1> Promise<Tuple1<T1>> all(final Promise<T1> promise) {
-        return zipper(values -> of((T1) values[0]), promise);
+        return zipper(values -> of((T1) values[0]),
+                      promise);
     }
 
     @SuppressWarnings("unchecked")
     public static <T1, T2> Promise<Tuple2<T1, T2>> all(final Promise<T1> promise1,
                                                        final Promise<T2> promise2) {
-        return zipper(values -> of((T1) values[0], (T2) values[1]), promise1, promise2);
+        return zipper(values -> of((T1) values[0],
+                                   (T2) values[1]),
+                      promise1,
+                      promise2);
     }
 
     @SuppressWarnings("unchecked")
     public static <T1, T2, T3> Promise<Tuple3<T1, T2, T3>> all(final Promise<T1> promise1,
                                                                final Promise<T2> promise2,
                                                                final Promise<T3> promise3) {
-        return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2]), promise1,
-                      promise2, promise3);
+        return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2]), promise1, promise2, promise3);
     }
 
     @SuppressWarnings("unchecked")
@@ -81,8 +84,7 @@ public class Promises {
                                                                        final Promise<T2> promise2,
                                                                        final Promise<T3> promise3,
                                                                        final Promise<T4> promise4) {
-        return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3]),
-                      promise1, promise2, promise3, promise4);
+        return zipper(values -> of((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3]), promise1, promise2, promise3, promise4);
     }
 
     @SuppressWarnings("unchecked")
@@ -210,7 +212,7 @@ public class Promises {
         }
     }
 
-    private static <T extends Tuple> Promise<T> zipper(final Function<Object[], T> valueTransformer,
+    private static <T extends Tuple> Promise<T> zipper(final FN1<T, Object[]> valueTransformer,
                                                        final Promise<?>... promises) {
         final var values = new Object[promises.length];
         final var result = Promises.<T>give();

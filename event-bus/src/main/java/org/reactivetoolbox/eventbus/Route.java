@@ -48,12 +48,17 @@ public class Route<T> implements RouteBase<T> {
     }
 
     @Override
-    public Stream<Route<T>> asRoute() {
+    public Stream<Route<T>> stream() {
         return Stream.of(this);
     }
 
     @Override
     public Stream<Option<RouteDescription>> descriptions() {
         return Stream.empty();
+    }
+
+    @Override
+    public RouteBase<T> root(final Option<String> root) {
+        return new Route<>(path.root(root), handler);
     }
 }

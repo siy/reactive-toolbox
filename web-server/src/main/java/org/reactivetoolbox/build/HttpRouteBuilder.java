@@ -39,7 +39,7 @@ public class HttpRouteBuilder {
         this.path = Path.of(path, method);
     }
 
-    public static HttpRouteBuilder create(final HttpMethod method, final String path) {
+    public static HttpRouteBuilder when(final HttpMethod method, final String path) {
         return new HttpRouteBuilder(method, path);
     }
 
@@ -82,39 +82,36 @@ public class HttpRouteBuilder {
         return ParameterBuilder.of(path, description, param1, param2, param3, param4, param5, param6);
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7> PB7<T1, T2, T3, T4, T5, T6, T7> with(
-            final P<T1> param1,
-            final P<T2> param2,
-            final P<T3> param3,
-            final P<T4> param4,
-            final P<T5> param5,
-            final P<T6> param6,
-            final P<T7> param7) {
+    public <T1, T2, T3, T4, T5, T6, T7> PB7<T1, T2, T3, T4, T5, T6, T7> with(final P<T1> param1,
+                                                                             final P<T2> param2,
+                                                                             final P<T3> param3,
+                                                                             final P<T4> param4,
+                                                                             final P<T5> param5,
+                                                                             final P<T6> param6,
+                                                                             final P<T7> param7) {
         return ParameterBuilder.of(path, description, param1, param2, param3, param4, param5, param6, param7);
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7, T8> PB8<T1, T2, T3, T4, T5, T6, T7, T8> with(
-            final P<T1> param1,
-            final P<T2> param2,
-            final P<T3> param3,
-            final P<T4> param4,
-            final P<T5> param5,
-            final P<T6> param6,
-            final P<T7> param7,
-            final P<T8> param8) {
+    public <T1, T2, T3, T4, T5, T6, T7, T8> PB8<T1, T2, T3, T4, T5, T6, T7, T8> with(final P<T1> param1,
+                                                                                     final P<T2> param2,
+                                                                                     final P<T3> param3,
+                                                                                     final P<T4> param4,
+                                                                                     final P<T5> param5,
+                                                                                     final P<T6> param6,
+                                                                                     final P<T7> param7,
+                                                                                     final P<T8> param8) {
         return ParameterBuilder.of(path, description, param1, param2, param3, param4, param5, param6, param7, param8);
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9> PB9<T1, T2, T3, T4, T5, T6, T7, T8, T9> with(
-            final P<T1> param1,
-            final P<T2> param2,
-            final P<T3> param3,
-            final P<T4> param4,
-            final P<T5> param5,
-            final P<T6> param6,
-            final P<T7> param7,
-            final P<T8> param8,
-            final P<T9> param9) {
+    public <T1, T2, T3, T4, T5, T6, T7, T8, T9> PB9<T1, T2, T3, T4, T5, T6, T7, T8, T9> with(final P<T1> param1,
+                                                                                             final P<T2> param2,
+                                                                                             final P<T3> param3,
+                                                                                             final P<T4> param4,
+                                                                                             final P<T5> param5,
+                                                                                             final P<T6> param6,
+                                                                                             final P<T7> param7,
+                                                                                             final P<T8> param8,
+                                                                                             final P<T9> param9) {
         return ParameterBuilder.of(path, description, param1, param2, param3, param4, param5, param6, param7, param8, param9);
     }
 

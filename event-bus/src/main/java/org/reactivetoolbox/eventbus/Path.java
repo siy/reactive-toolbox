@@ -1,5 +1,6 @@
 package org.reactivetoolbox.eventbus;
 
+import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.functional.Pair;
 
 import java.util.ArrayList;
@@ -34,8 +35,6 @@ import java.util.regex.Pattern;
  * Note: relative paths are not supported, each path is explicitly converted to absolute form (i.e. starting with <code>/</code>).
  */
 public interface Path {
-    Pattern PARAMETER_PATTERN = Pattern.compile("(?:\\/)(\\{\\w+\\})");
-
     boolean isExact();
 
     default boolean hasParams() {
@@ -50,27 +49,34 @@ public interface Path {
 
     boolean matches(final String input);
 
-    static Path of(final String stringPath, final PathKey key) {
-        return of("/" + key.key() + normalize(stringPath));
+    String source();
+
+    PathKey key();
+
+    default Path root(final Option<String> root) {
+        return root.map(prefix -> of(prefix + "/" + source(), key())).otherwise(this);
     }
 
     static Path of(final String stringPath) {
+        return of(stringPath, () -> "");
+    }
+
+    static Path of(final String stringPath, final PathKey key) {
         final var normalizedPath = normalize(stringPath);
 
         if (containsParameters(normalizedPath)) {
-            return new ParametrizedPath(normalizedPath);
+            return new ParametrizedPath(normalizedPath, key);
         } else {
-            return new ExactPath(normalizedPath);
+            return new ExactPath(normalizedPath, key);
         }
     }
 
-    private static String normalize(final String path) {
+    static String normalize(final String path) {
         if (path == null || path.isBlank() || "/".equals(path)) {
             return "/";
         }
 
-        final var stripped = path.replace("//", "/").strip();
-        final var stringPath = stripped.startsWith("/") ? stripped : "/" + stripped;
+        final var stringPath = MULTISLASH.matcher("/" + path.strip()).replaceAll("/");
         final var index = stringPath.lastIndexOf('/');
 
         if (index < (stringPath.length() - 1)) {
@@ -80,15 +86,22 @@ public interface Path {
         }
     }
 
+    Pattern MULTISLASH = Pattern.compile("/+");
+    Pattern PARAMETER_PATTERN = Pattern.compile("(?:\\/)(\\{\\w+\\})");
+
     private static boolean containsParameters(final String stringPath) {
         return PARAMETER_PATTERN.matcher(stringPath).find();
     }
 
     final class ExactPath implements Path {
         private final String prefix;
+        private final String source;
+        private final PathKey key;
 
-        private ExactPath(final String prefix) {
-            this.prefix = prefix;
+        private ExactPath(final String source, final PathKey key) {
+            this.source = source;
+            this.key = key;
+            prefix = normalize("/" + key.key() + "/" + source);
         }
 
         @Override
@@ -115,33 +128,46 @@ public interface Path {
         public boolean matches(final String input) {
             return prefix.equals(input);
         }
+
+        @Override
+        public String source() {
+            return source;
+        }
+
+        @Override
+        public PathKey key() {
+            return key;
+        }
     }
 
     final class ParametrizedPath implements Path {
+        private final String source;
         private final String prefix;
         private final List<String> parameterNames;
         private final Pattern pathPattern;
+        private final PathKey key;
 
-        private ParametrizedPath(final String pathPatternWithParameters) {
-            final var matcher = PARAMETER_PATTERN.matcher(pathPatternWithParameters);
+        private ParametrizedPath(final String source, final PathKey key) {
+            this.key = key;
+            this.source = source;
+            final var normalizedSource = normalize("/" + key.key() + "/" + source);
+            final var matcher = PARAMETER_PATTERN.matcher(normalizedSource);
             final var names = new ArrayList<String>();
 
             if (!matcher.find()) {
                 // Should never happen under normal circumstances, but better be safe than sorry
-                throw new IllegalArgumentException("Path contains no parameters inside: " + pathPatternWithParameters);
+                throw new IllegalArgumentException("Path contains no parameters inside: " + normalizedSource);
             }
 
-            prefix = pathPatternWithParameters.substring(0, matcher.start());
+            prefix = normalizedSource.substring(0, matcher.start());
 
             do {
-                names.add(pathPatternWithParameters.substring(matcher.start() + 2, matcher.end() - 1));
+                names.add(normalizedSource.substring(matcher.start() + 2, matcher.end() - 1));
             }
             while (matcher.find());
 
             parameterNames = names;
-
-            final String regex = matcher.reset().replaceAll("\\/(\\\\w+?)");
-            pathPattern = Pattern.compile(regex);
+            pathPattern = Pattern.compile(matcher.reset().replaceAll("\\/(\\\\w+?)"));
         }
 
         @Override
@@ -156,7 +182,7 @@ public interface Path {
 
         @Override
         public List<Pair<String, String>> extractParameters(final String source) {
-            final var matcher = pathPattern.matcher(Path.normalize(source));
+            final var matcher = pathPattern.matcher(normalize(source));
 
             if (!matcher.find()) {
                 return Collections.emptyList();
@@ -184,6 +210,16 @@ public interface Path {
         @Override
         public boolean matches(final String input) {
             return pathPattern.matcher(input).find();
+        }
+
+        @Override
+        public String source() {
+            return source;
+        }
+
+        @Override
+        public PathKey key() {
+            return key;
         }
     }
 }
