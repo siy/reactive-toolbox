@@ -38,7 +38,19 @@ public class ParameterDescription {
         return mandatory;
     }
 
-    public ParameterDescription makeMandatory() {
-        return new ParameterDescription(name, type, description, true);
+    public ParameterDescription name(final String name) {
+        return new ParameterDescription(name, type, description, mandatory);
+    }
+
+    public ParameterDescription type(final Option<TypeDescription> type) {
+        return new ParameterDescription(name, type, description, mandatory);
+    }
+
+    public ParameterDescription mandatory(final boolean mandatory) {
+        return new ParameterDescription(name, type, description, mandatory);
+    }
+
+    public ParameterDescription description(final String description) {
+        return new ParameterDescription(name, type, description, mandatory);
     }
 }

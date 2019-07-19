@@ -20,6 +20,9 @@ import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
+import org.reactivetoolbox.web.server.RequestContext;
+import org.reactivetoolbox.web.server.parameter.Parameters;
+import org.reactivetoolbox.web.server.parameter.Parameters.P;
 import org.reactivetoolbox.web.server.parameter.auth.Authentication;
 import org.reactivetoolbox.web.server.parameter.auth.Role;
 
@@ -27,16 +30,109 @@ import java.util.regex.Pattern;
 
 import static org.reactivetoolbox.core.functional.Either.failure;
 
-//TODO: Javadoc
+//TODO: Javadoc, tests
 public interface Is {
     Pattern PASSWORD_CHECKER = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
 
-    static Either<? extends BaseError, String> email(String email) {
-        //TODO: implement e-mail validation
+
+    static Either<? extends BaseError, String> email(final String email) {
+        //TODO: implement e-mail validation, implement validator object with description
         return Either.success(email);
     }
 
+    @FunctionalInterface
     interface Validator<R, T> extends FN1<Either<? extends BaseError, R>, T> {
+        default P<R> modify(final P<T> input) {
+            return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply), input.description().get());
+        }
+    }
+
+    static <T> Validator<T, Option<T>> required() {
+        return new Validator<>() {
+            @Override
+            public P<T> modify(final P<Option<T>> input) {
+                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
+                                     input.description()
+                                          .map(d -> d.mandatory(true))
+                                          .get());
+            }
+
+            @Override
+            public Either<? extends BaseError, T> apply(final Option<T> param1) {
+                return notNull(param1);
+            }
+        };
+    }
+
+    static Validator<String, Option<String>> notNullOrEmpty() {
+        return new Validator<>() {
+            @Override
+            public P<String> modify(final P<Option<String>> input) {
+                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
+                                     input.description()
+                                          .map(d -> d.mandatory(true))
+                                          .map(d -> d.description(Option.of(d.description()).map(s -> s + ", c")
+                                                                        .otherwise("C") + "an't be empty"))
+                                          .get());
+            }
+
+            @Override
+            public Either<? extends BaseError, String> apply(final Option<String> param1) {
+                return notNullOrEmpty(param1);
+            }
+        };
+    }
+
+    static Validator<String, Option<String>> lenBetween(final int min, final int max) {
+        return new Validator<>() {
+            @Override
+            public P<String> modify(final P<Option<String>> input) {
+                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
+                                     input.description()
+                                          .map(d -> d.mandatory(true))
+                                          .map(d -> d.description(Option.of(d.description()).map(s -> s + ", m")
+                                                                        .otherwise("M") + "ust have len between " + min + " and " + max))
+                                          .get());
+            }
+
+            @Override
+            public Either<? extends BaseError, String> apply(final Option<String> param1) {
+                return lenBetween(param1, min, max);
+            }
+        };
+    }
+
+    static Validator<String, String> validatePassword() {
+        return new Validator<>() {
+            @Override
+            public P<String> modify(final P<String> input) {
+                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
+                                     input.description()
+                                          .map(d -> d.mandatory(true))
+                                          .map(d -> d.description(Option.of(d.description()).map(s -> s + ", m")
+                                                                        .otherwise("M") + "ust have at least 8 character, "
+                                                                                        + "contain at least one upper case letter, "
+                                                                                        + "lower case letter, digit and special character"))
+                                          .get());
+            }
+
+            @Override
+            public Either<? extends BaseError, String> apply(final String param1) {
+                return validatePassword(param1);
+            }
+        };
+    }
+
+    static <T extends Number> Validator<T, T> between(final int min, final int max) {
+        return new NumberIntegerRangeValidator<>(min, max);
+    }
+
+    static <T extends Number> Validator<T, T> between(final long min, final long max) {
+        return new NumberLongRangeValidator<>(min, max);
+    }
+
+    static <T extends Number> Validator<T, T> between(final double min, final double max) {
+        return new NumberDoubleRangeValidator<>(min, max);
     }
 
     static <T> Either<ValidationError, T> notNull(final Option<T> input) {
@@ -51,20 +147,16 @@ public interface Is {
                 .otherwise(() -> failure(ValidationError.STRING_IS_NULL));
     }
 
-    static <T extends Number> Either<ValidationError, T> between(final T input, final int min, final int max) {
-        return input.intValue() < min
-                ? failure(ValidationError.NUMBER_IS_BELOW_LOWER_BOUND)
-                : input.intValue() > max
-                        ? failure(ValidationError.NUMBER_IS_ABOVE_UPPER_BOUND)
-                        : Either.success(input);
+    static <T extends Number> Either<? extends BaseError, T> between(final T input, final int min, final int max) {
+        return new NumberIntegerRangeValidator<T>(min, max).apply(input);
     }
 
-    static <T extends Number> Either<ValidationError, T> between(final T input, final double min, final double max) {
-        return input.doubleValue() < min
-                ? failure(ValidationError.NUMBER_IS_BELOW_LOWER_BOUND)
-                : input.doubleValue() > max
-                        ? failure(ValidationError.NUMBER_IS_ABOVE_UPPER_BOUND)
-                        : Either.success(input);
+    static <T extends Number> Either<? extends BaseError, T> between(final T input, final long min, final long max) {
+        return new NumberLongRangeValidator<T>(min, max).apply(input);
+    }
+
+    static <T extends Number> Either<? extends BaseError, T> between(final T input, final double min, final double max) {
+        return new NumberDoubleRangeValidator<T>(min, max).apply(input);
     }
 
     static Either<ValidationError, String> lenBetween(final Option<String> input1, final int minLen, final int maxLen) {
@@ -91,5 +183,69 @@ public interface Is {
 
     static Either<? extends BaseError, Authentication> belongsToAny(final Authentication authentication, final Role... roles) {
         return authentication.hasAnyRoles(roles);
+    }
+
+    abstract class RangeValidator<T extends Number, V extends Comparable> implements Validator<T, T> {
+        private final V min;
+        private final V max;
+
+        public RangeValidator(final V min, final V max) {
+            this.min = min;
+            this.max = max;
+        }
+
+        @Override
+        public P<T> modify(final P<T> input) {
+            return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
+                                 input.description()
+                                      .map(d -> d.description(Option.of(d.description()).map(s -> s + ", v")
+                                                                    .otherwise("V") + "alue must be between " + min + " and " + max))
+                                      .get());
+        }
+
+        abstract V value(final T input);
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Either<? extends BaseError, T> apply(final T param1) {
+            return value(param1).compareTo(min) < 0
+                   ? failure(ValidationError.NUMBER_IS_BELOW_LOWER_BOUND)
+                   : value(param1).compareTo(max) > 0
+                     ? failure(ValidationError.NUMBER_IS_ABOVE_UPPER_BOUND)
+                     : Either.success(param1);
+        }
+    }
+
+    class NumberIntegerRangeValidator<T extends Number> extends RangeValidator<T, Integer> {
+        public NumberIntegerRangeValidator(final int min, final int max) {
+            super(min, max);
+        }
+
+        @Override
+        Integer value(final Number input) {
+            return input.intValue();
+        }
+    }
+
+    class NumberLongRangeValidator<T extends Number> extends RangeValidator<T, Long> {
+        public NumberLongRangeValidator(final long min, final long max) {
+            super(min, max);
+        }
+
+        @Override
+        Long value(final Number input) {
+            return input.longValue();
+        }
+    }
+
+    class NumberDoubleRangeValidator<T extends Number> extends RangeValidator<T, Double> {
+        public NumberDoubleRangeValidator(final double min, final double max) {
+            super(min, max);
+        }
+
+        @Override
+        Double value(final Number input) {
+            return input.doubleValue();
+        }
     }
 }

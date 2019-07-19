@@ -55,9 +55,9 @@ class ServerTest {
                  with("/clips",
                       when(GET, "/one/two/{param1}/{param2}")
                           .description("....")
-                          .with(inPath(String.class, "param1").and(Is::notNull),
-                                inPath(String.class, "param2").and(Is::notNull).description("...."),
-                                inQuery(Integer.class, "limit").and(Is::notNull),
+                          .with(inPath(String.class, "param1").and(Is.required()),
+                                inPath(String.class, "param2").description("Second parameter").and(Is.required()),
+                                inQuery(Integer.class, "limit").and(Is.required()),
                                 inAuthHeader(AuthHeader.JWT).and(Is::loggedIn))
                           .then((param1, param2, limit, user) -> readyOk("[" + param1 + ", " + param2 + ", " + limit + ", " + user.userId() + "]"))
                           //Simple example of request postprocessing, in this case - setting of user-defined headers to response
@@ -65,9 +65,9 @@ class ServerTest {
 
                       when(POST, "/two/three/{param1}/{param2}/{param3}")
                           .description(".....")
-                          .with(inPath(String.class, "param1").and(Is::notNull),
-                                inPath(UUID.class, "param2").and(Is::notNull),
-                                inPath(Integer.class, "param3").and(Is::notNull),
+                          .with(inPath(String.class, "param1").and(Is.required()),
+                                inPath(UUID.class, "param2").and(Is.required()),
+                                inPath(Integer.class, "param3").and(Is.required()),
                                 inAuthHeader(AuthHeader.JWT).and(Is::loggedIn)
                                                             .and(Is::belongsToAny, TestRoles.REGULAR, TestRoles.ADMIN))
                           // Cross-parameter validation, here does nothing, but can be used to check if overall combination of parameters is valid
@@ -81,13 +81,21 @@ class ServerTest {
 
                       //User login request
                       when(POST, "/login")
-                          .with(inBody(String.class, "login").and(Is::notNullOrEmpty), inBody(String.class, "password").and(Is::notNullOrEmpty))
+                          .with(inBody(String.class, "login")
+                                    .description("User login")
+                                    .and(Is.notNullOrEmpty()),
+                                inBody(String.class, "password")
+                                    .description("User password")
+                                    .and(Is.notNullOrEmpty()))
                           .then(userService::login),
 
                       //More or less traditional user registration request validation
                       when(POST, "/register")
-                          .with(inBody(String.class, "login").and(Is::lenBetween, 3, 128).and(Is::email),
-                                inBody(String.class, "password").and(Is::lenBetween, 6, 128).and(Is::validatePassword))
+                          .with(inBody(String.class, "login")
+                                    .and(Is.lenBetween(3, 128)).and(Is::email),
+                                inBody(String.class, "password")
+                                    .and(Is.lenBetween(6, 128))
+                                    .and(Is::validatePassword))
                           .then(userService::login))),
 
             //Simplest entrypoint description, independently attached to root

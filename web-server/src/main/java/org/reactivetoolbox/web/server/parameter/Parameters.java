@@ -11,7 +11,6 @@ import org.reactivetoolbox.core.functional.Functions.FN7;
 import org.reactivetoolbox.core.functional.Functions.FN8;
 import org.reactivetoolbox.core.functional.Functions.FN9;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.parameter.auth.AuthHeader;
 import org.reactivetoolbox.web.server.parameter.auth.Authentication;
 import org.reactivetoolbox.web.server.parameter.conversion.Converter;
@@ -59,25 +58,28 @@ public class Parameters {
     }
 
     public static <T> P<Option<T>> inContext(final Class<T> type) {
-        return new P<>(FACTORY.getContextConverter(type));
+        return new P<>(FACTORY.getContextConverter(type), (String) null);
     }
 
     public static P<Option<Authentication>> inAuthHeader(final AuthHeader header) {
-        return new P<>(FACTORY.getHeaderConverter(Authentication.class, Headers.AUTHORIZATION, header));
+        return new P<>(FACTORY.getHeaderConverter(Authentication.class, Headers.AUTHORIZATION, header), (String) null);
+    }
+
+    public static <T> P<T> of(final Converter<T> converter, final ParameterDescription parameterDescription) {
+        return new P<>(converter, parameterDescription);
     }
 
     public static class P<T> {
         private final Converter<T> converter;
-        private final String name;
-        private String description;
-
-        private P(final Converter<T> converter) {
-            this(converter, null);
-        }
+        private final ParameterDescription parameterDescription;
 
         private P(final Converter<T> converter, final String name) {
+            this(converter, ParameterDescription.of(name, converter.typeDescription(), null));
+        }
+
+        private P(final Converter<T> converter, final ParameterDescription parameterDescription) {
             this.converter = converter;
-            this.name = name;
+            this.parameterDescription = parameterDescription;
         }
 
         public Converter<T> converter() {
@@ -85,19 +87,15 @@ public class Parameters {
         }
 
         public P<T> description(final String description) {
-            this.description = description;
-            return this;
+            return new P<>(converter, parameterDescription.description(description));
         }
 
         public Option<ParameterDescription> description() {
-            return Option.of(name)
-                         .map(paramName -> ParameterDescription.of(name,
-                                                                   converter.typeDescription(),
-                                                                   description));
+            return Option.of(parameterDescription);
         }
 
         public <R> P<R> and(final Validator<R, T> validator) {
-            return new P<R>((RequestContext context) -> converter.apply(context).flatMap(validator::apply));
+            return validator.modify(this);
         }
 
         public <R, T1> P<R> and(final FN2<Either<? extends BaseError, R>, T, T1> validator, final T1 param1) {
