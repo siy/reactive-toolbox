@@ -26,6 +26,7 @@ import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions;
 import org.reactivetoolbox.core.functional.Option;
+import org.reactivetoolbox.core.functional.Pair;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.web.server.HttpEnvelope;
@@ -38,6 +39,9 @@ import org.reactivetoolbox.web.server.adapter.ServerAdapter;
 import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -108,7 +112,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
     private Option<Either<? extends BaseError, Promise<Either<? extends BaseError, Object>>>> deliver(final HttpServerExchange exchange) {
         return HttpMethod.fromString(exchange.getRequestMethod().toString())
                          .map(method -> Path.of(exchange.getRelativePath(), method))
-                         .map(path -> router.deliver(HttpEnvelope.of(path, new UndertowRequestContext(exchange))));
+                         .map(path -> router.deliver(HttpEnvelope.of(path, new UndertowRequestContext(path, exchange))));
     }
 
     private static class UndertowRequest implements Request {
@@ -134,11 +138,14 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
     }
 
     private static class UndertowRequestContext implements RequestContext {
+        private final Path path;
         private final HttpServerExchange exchange;
         private final UndertowRequest request;
         private final UndertowResponse response;
+        private final Map<String, String> pathParameters = new HashMap<>();
 
-        private UndertowRequestContext(final HttpServerExchange exchange) {
+        private UndertowRequestContext(final Path path, final HttpServerExchange exchange) {
+            this.path = path;
             this.exchange = exchange;
             request = new UndertowRequest(exchange);
             response = new UndertowResponse(exchange);
@@ -152,6 +159,23 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         @Override
         public Response response() {
             return response;
+        }
+
+        @Override
+        public Path path() {
+            return path;
+        }
+
+        @Override
+        public RequestContext pathParameters(final List<Pair<String, String>> pairs) {
+            pairs.stream().forEach(pair -> pathParameters.put(pair.left(), pair.right()));
+
+            return this;
+        }
+
+        @Override
+        public Option<String> pathParameter(final String name) {
+            return Option.of(pathParameters.get(name));
         }
     }
 }

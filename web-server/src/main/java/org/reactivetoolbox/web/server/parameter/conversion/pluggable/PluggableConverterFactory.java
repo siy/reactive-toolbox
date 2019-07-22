@@ -22,8 +22,13 @@ public class PluggableConverterFactory implements ConverterFactory {
     }
 
     @Override
-    public <T> Converter<Option<T>> getParameterConverter(final Class<T> type, final String name) {
-        return delegate.getParameterConverter(type, name);
+    public <T> Converter<Option<T>> getPathParameterConverter(final Class<T> type, final String name) {
+        return delegate.getPathParameterConverter(type, name);
+    }
+
+    @Override
+    public <T> Converter<Option<T>> getQueryParameterConverter(final Class<T> type, final String name) {
+        return delegate.getQueryParameterConverter(type, name);
     }
 
     @Override

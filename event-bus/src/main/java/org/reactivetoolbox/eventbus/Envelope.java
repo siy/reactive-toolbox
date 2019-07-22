@@ -20,13 +20,31 @@ import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 
 /**
- * Common interface for message envelopes.
+ * Common interface for message envelopes. The envelope binds together message and its destination. Beside this
+ * envelope enables specific pre-processing of the message according to destination route right before the
+ * handler associated with the route will be invoked.
  *
  * @param <T>
  *        Type of contained message
  */
 public interface Envelope<T> {
-    Either<? extends BaseError, T> onDelivery();
+    /**
+     * Perform envelope-specific actions right before invocation of the handler assigned to the route.
+     * Note that passed instance of the {@link Route<T>} may contain different path than one contained
+     * in the envelope itself (accessible via {@link #target()} method). This is because envelope always
+     * contains exact path associated with particular request, while route definition may contain path
+     * with parameter templates.
+     *
+     * @param route
+     *        Matching route
+     * @return {@link Either} with successful
+     */
+    Either<? extends BaseError, T> onDelivery(final Route<T> route);
 
+    /**
+     * Destination path for the routing.
+     *
+     * @return target {@link Path} of the request stored in this {@link Envelope}
+     */
     Path target();
 }

@@ -1,6 +1,7 @@
 package org.reactivetoolbox.eventbus.impl;
 
 import org.junit.jupiter.api.Test;
+import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Option;
@@ -99,7 +100,7 @@ class RouterImplTest {
         }
 
         @Override
-        public Either<RoutingError, String> onDelivery() {
+        public Either<? extends BaseError, String> onDelivery(final Route<String> route) {
             return success(payload);
         }
 

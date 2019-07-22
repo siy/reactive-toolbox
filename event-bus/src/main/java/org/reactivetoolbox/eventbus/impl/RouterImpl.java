@@ -43,7 +43,7 @@ public final class RouterImpl<T> implements Router<T> {
     @Override
     public <R> Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> deliver(final Envelope<T> event) {
         final Option<Either<? extends BaseError, Promise<Either<? extends BaseError, R>>>> eitherOption =
-            findRoute(event).map(route -> event.onDelivery()
+            findRoute(event).map(route -> event.onDelivery(route)
                                                .flatMap(request -> route.<R>handler().apply(request)));
 
         return eitherOption.otherwise(() -> Either.failure(RoutingError.NO_SUCH_ROUTE));

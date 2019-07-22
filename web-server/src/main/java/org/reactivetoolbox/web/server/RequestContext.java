@@ -16,8 +16,23 @@ package org.reactivetoolbox.web.server;
  * limitations under the License.
  */
 
-//TODO: Javadoc
+import org.reactivetoolbox.core.functional.Option;
+import org.reactivetoolbox.core.functional.Pair;
+import org.reactivetoolbox.eventbus.Path;
+
+import java.util.List;
+
+/**
+ * HTTP Request context abstraction
+ */
 public interface RequestContext {
     Request request();
+
     Response response();
+
+    Path path();
+
+    RequestContext pathParameters(final List<Pair<String, String>> pairs);
+
+    Option<String> pathParameter(final String name);
 }

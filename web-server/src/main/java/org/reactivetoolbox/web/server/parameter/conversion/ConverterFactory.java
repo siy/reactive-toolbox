@@ -27,7 +27,9 @@ import java.nio.ByteBuffer;
 //TODO: Javadoc
 public interface ConverterFactory {
     //TODO: add support for generic types
-    <T> Converter<Option<T>> getParameterConverter(final Class<T> type, final String name);
+    <T> Converter<Option<T>> getPathParameterConverter(final Class<T> type, final String name);
+
+    <T> Converter<Option<T>> getQueryParameterConverter(final Class<T> type, final String name);
 
     <T> Converter<Option<T>> getHeaderConverter(final Class<T> type, final HeaderName name);
 

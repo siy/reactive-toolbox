@@ -50,7 +50,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inPath(final Class<T> type, final String name) {
-        return new P<>(ConverterFactory.pluggable().getParameterConverter(type, name), name);
+        return new P<>(ConverterFactory.pluggable().getPathParameterConverter(type, name), name);
     }
 
     /**
@@ -63,7 +63,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inQuery(final Class<T> type, final String name) {
-        return new P<>(ConverterFactory.pluggable().getParameterConverter(type, name), name);
+        return new P<>(ConverterFactory.pluggable().getQueryParameterConverter(type, name), name);
     }
 
     /**
