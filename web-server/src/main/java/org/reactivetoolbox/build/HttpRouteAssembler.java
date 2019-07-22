@@ -33,18 +33,26 @@ import org.reactivetoolbox.web.server.parameter.Parameters.P;
 //TODO: Javadoc
 public class HttpRouteBuilder {
     private final Path path;
-    private String description = "(no description)";
+    private final String description;
 
-    private HttpRouteBuilder(final HttpMethod method, final String path) {
-        this.path = Path.of(path, method);
+    private HttpRouteBuilder(final Path path, final String description) {
+        this.path = path;
+        this.description = description;
+    }
+
+    public HttpRouteBuilder description(final String description) {
+        return new HttpRouteBuilder(path, description);
     }
 
     public static HttpRouteBuilder when(final HttpMethod method, final String path) {
-        return new HttpRouteBuilder(method, path);
+        return new HttpRouteBuilder(Path.of(path, method), "(no description)");
+    }
+
+    public ParameterBuilder0 withoutParameters() {
+        return ParameterBuilder.of(path, description);
     }
 
     public <T1> PB1<T1> with(final P<T1> param1) {
-        //RouteDescription.of(description, param1);
         return ParameterBuilder.of(path, description, param1);
     }
 
@@ -114,14 +122,5 @@ public class HttpRouteBuilder {
                                                                                              final P<T8> param8,
                                                                                              final P<T9> param9) {
         return ParameterBuilder.of(path, description, param1, param2, param3, param4, param5, param6, param7, param8, param9);
-    }
-
-    public ParameterBuilder0 withoutParameters() {
-        return ParameterBuilder.of(path, description);
-    }
-
-    public HttpRouteBuilder description(final String description) {
-        this.description = description;
-        return this;
     }
 }
