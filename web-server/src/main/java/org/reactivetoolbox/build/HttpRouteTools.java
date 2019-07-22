@@ -5,6 +5,7 @@ import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
 
 import static org.reactivetoolbox.core.async.Promises.fulfilled;
+import static org.reactivetoolbox.core.functional.Either.failure;
 import static org.reactivetoolbox.core.functional.Either.success;
 import static org.reactivetoolbox.core.functional.Tuples.Tuple1;
 import static org.reactivetoolbox.core.functional.Tuples.Tuple2;
@@ -25,6 +26,10 @@ public class HttpRouteTools {
 
     public static <T> Promise<Either<? extends BaseError, T>> readyOk(final T value) {
         return fulfilled(ok(value));
+    }
+
+    public static <T> Promise<Either<? extends BaseError, T>> readyFail(final BaseError failure) {
+        return fulfilled(failure(failure));
     }
 
     public static <T1> Either<? extends BaseError, Tuple1<T1>> valid(final T1 v1) {

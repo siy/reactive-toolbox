@@ -8,5 +8,5 @@ module org.reactivetoolbox.web {
     exports org.reactivetoolbox.web.server.parameter.auth;
     requires org.reactivetoolbox.core;
     requires org.reactivetoolbox.eventbus;
-    //uses java.util;
+    requires undertow.core;
 }

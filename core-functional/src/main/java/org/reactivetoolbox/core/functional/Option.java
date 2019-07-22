@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 public class Option<T> {
     private final T value;
 
-    private Option(T value) {
+    private Option(final T value) {
         this.value = value;
     }
 
@@ -63,15 +63,15 @@ public class Option<T> {
         return isEmpty() ? empty() : mapper.apply(value);
     }
 
-    public Option<T> or(Supplier<? extends Option<T>> supplier) {
+    public Option<T> or(final Supplier<? extends Option<T>> supplier) {
         return isPresent() ? this : supplier.get();
     }
 
-    public T otherwise(T other) {
+    public T otherwise(final T other) {
         return value != null ? value : other;
     }
 
-    public T otherwise(Supplier<? extends T> supplier) {
+    public T otherwise(final Supplier<? extends T> supplier) {
         return value != null ? value : supplier.get();
     }
 
@@ -87,7 +87,7 @@ public class Option<T> {
         throw new IllegalStateException("No value present");
     }
 
-    public <X extends Throwable> T otherwiseThrow(Supplier<? extends X> exceptionSupplier) throws X {
+    public <X extends Throwable> T otherwiseThrow(final Supplier<? extends X> exceptionSupplier) throws X {
         if (isPresent()) {
             return value;
         }

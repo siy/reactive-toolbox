@@ -16,12 +16,17 @@ package org.reactivetoolbox.web.server.parameter.conversion;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.web.server.parameter.HeaderName;
 import org.reactivetoolbox.web.server.parameter.auth.AuthHeader;
+import org.reactivetoolbox.web.server.parameter.conversion.pluggable.PluggableConverterFactory;
+
+import java.nio.ByteBuffer;
 
 //TODO: Javadoc
 public interface ConverterFactory {
+    //TODO: add support for generic types
     <T> Converter<Option<T>> getParameterConverter(final Class<T> type, final String name);
 
     <T> Converter<Option<T>> getHeaderConverter(final Class<T> type, final HeaderName name);
@@ -31,4 +36,10 @@ public interface ConverterFactory {
     <T> Converter<Option<T>> getBodyValueConverter(final Class<T> type, final String name);
 
     <T> Converter<Option<T>> getContextConverter(final Class<T> type);
+
+    <T> FN1<ByteBuffer[], Object> getResultSerializer();
+
+    static ConverterFactory pluggable() {
+        return PluggableConverterFactory.load();
+    }
 }

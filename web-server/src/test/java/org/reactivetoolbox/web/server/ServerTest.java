@@ -6,6 +6,7 @@ import org.reactivetoolbox.build.ServerAssembler;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.web.server.adapter.undertow.UndertowServerAdapter;
 import org.reactivetoolbox.web.server.parameter.auth.AuthHeader;
 import org.reactivetoolbox.web.server.parameter.auth.Authentication;
 import org.reactivetoolbox.web.server.parameter.auth.UserId;
@@ -112,6 +113,6 @@ class ServerTest {
                 .description("Healtcheck entrypoint")
                 .withoutParameters()
                 .then(() -> readyOk("{\"status\":\"UP\"}"))
-        ).build();
+        ).build(UndertowServerAdapter::with);
     }
 }

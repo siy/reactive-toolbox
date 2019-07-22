@@ -30,6 +30,12 @@
 			<groupId>io.undertow</groupId>
 			<artifactId>undertow-websockets-jsr</artifactId>
 			<version>2.0.21.Final</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>undertow-servlet</artifactId>
+					<groupId>io.undertow</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 </project>

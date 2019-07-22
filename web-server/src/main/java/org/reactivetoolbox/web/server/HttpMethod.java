@@ -16,14 +16,31 @@ package org.reactivetoolbox.web.server;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.PathKey;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
 
 //TODO: Javadoc
 public enum HttpMethod implements PathKey {
     GET, PUT, PATCH, POST, HEADER;
 
+    private static final Map<String, HttpMethod> lookupMap = new HashMap<>();
+
+    static {
+        Stream.of(values()).forEach(method -> lookupMap.put(method.key(), method));
+    }
+
     @Override
     public String key() {
         return name();
+    }
+
+    public static Option<HttpMethod> fromString(final String name) {
+        return Option.of(name)
+                     .map(String::toUpperCase)
+                     .flatMap(s -> Option.of(lookupMap.get(s)));
     }
 }

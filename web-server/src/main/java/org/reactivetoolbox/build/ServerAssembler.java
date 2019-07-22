@@ -16,11 +16,13 @@ package org.reactivetoolbox.build;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.RouteBase;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.Server;
+import org.reactivetoolbox.web.server.adapter.ServerAdapter;
 
 /**
  * HTTP server fluent assembler.
@@ -46,8 +48,7 @@ public class ServerAssembler {
         return new ServerAssembler(Router.of(Option.of(root), routes));
     }
 
-    public Server build() {
-        //TODO: implement
-        return null;
+    public Server build(final FN1<ServerAdapter, Router<RequestContext>> factory) {
+        return Server.of(router, factory.apply(router));
     }
 }

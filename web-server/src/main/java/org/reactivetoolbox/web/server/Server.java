@@ -16,13 +16,61 @@ package org.reactivetoolbox.web.server;
  * limitations under the License.
  */
 
-//TODO: extend it to make usable, add Javadoc
-public interface Server {
-//    void run();
-//
-//    <E extends BaseError, R, T> void registerHandler(Http method, String path, FN1<Promise<E, R>, T> handler, Parameter<?>[] parameters);
-//
-//    default PathBuilder on() {
-//        return PathBuilder.of(this);
-//    }
+import org.reactivetoolbox.core.async.BaseError;
+import org.reactivetoolbox.core.async.Promises;
+import org.reactivetoolbox.core.async.Promises.Promise;
+import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.eventbus.Router;
+import org.reactivetoolbox.web.server.adapter.ServerAdapter;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.reactivetoolbox.build.HttpRouteTools.readyFail;
+
+/**
+ * HTTP Server implementation
+ */
+public class Server {
+    private final Router<RequestContext> router;
+    private final ServerAdapter adapter;
+    private final AtomicBoolean running = new AtomicBoolean();
+
+    private Server(final Router<RequestContext> router, final ServerAdapter adapter) {
+        this.router = router;
+        this.adapter = adapter;
+    }
+
+    public static Server of(final Router<RequestContext> router, final ServerAdapter adapter) {
+        return new Server(router, adapter);
+    }
+
+    public Router<RequestContext> router() {
+        return router;
+    }
+
+    public Promise<Either<? extends BaseError, Server>> start() {
+        if (running.compareAndSet(false, true)) {
+            final var result = Promises.<Either<? extends BaseError, Server>>give();
+
+            adapter.start()
+                   .then(startResult -> result.resolve(startResult.mapSuccess(ad -> this)));
+
+            return result;
+        } else {
+            return readyFail(ServerError.ALREADY_RUNNING);
+        }
+    }
+
+    public Promise<Either<? extends BaseError, Server>> stop() {
+        if (running.compareAndSet(true, false)) {
+            final var result = Promises.<Either<? extends BaseError, Server>>give();
+
+            adapter.stop()
+                   .then(stopResult -> result.resolve(stopResult.mapSuccess(ad -> this)));
+
+            return result;
+        } else {
+            return readyFail(ServerError.NOT_YET_RUNNING);
+        }
+    }
 }

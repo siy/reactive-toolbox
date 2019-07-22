@@ -19,7 +19,12 @@ package org.reactivetoolbox.eventbus;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 
-//TODO: Javadoc
+/**
+ * Common interface for message envelopes.
+ *
+ * @param <T>
+ *        Type of contained message
+ */
 public interface Envelope<T> {
     Either<? extends BaseError, T> onDelivery();
 
