@@ -22,7 +22,8 @@ import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN2;
 
 /**
- * This interface describes function which enriches the output of route handler.
+ * This interface describes function which enriches the output of route handler by postprocessing result.
+ * Unlike route handler itself, this function has explicit access to the request context.
  *
  * @param <R> type of output value
  * @param <T> context type

@@ -54,18 +54,53 @@ import static org.reactivetoolbox.core.functional.Tuples.squeeze;
  * limitations under the License.
  */
 
-//TODO: Javadoc
+/**
+ * Assembling flow for parameter collection and mapping to request handler.
+ */
 public class HttpParameterAssembler {
-    public static ParameterBuilder0 of(final Path path, final String description) {
-        return new ParameterBuilder0(path, description);
+    /**
+     * Prepare assembling of zero-parameter route
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @return route prepared for attaching handler
+     */
+    public static PB0 of(final Path path, final String description) {
+        return new PB0(path, description);
     }
 
+    /**
+     * Prepare assembling of route with single parameter
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @param param1
+     *        Parameter definition for parameter #1
+     * @return route prepared for attaching handler
+     */
     public static <T1> PB1<T1> of(final Path path,
                                   final String description,
                                   final P<T1> param1) {
         return new PB1<>(path, description, Tuples.of(param1));
     }
 
+    /**
+     * Prepare assembling of route with 2 parameters
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @param param1
+     *        Parameter definition for parameter #1
+     * @param param2
+     *        Parameter definition for parameter #2
+     * @return route prepared for attaching handler
+     */
     public static <T1, T2> PB2<T1, T2> of(final Path path,
                                           final String description,
                                           final P<T1> param1,
@@ -73,6 +108,21 @@ public class HttpParameterAssembler {
         return new PB2<>(path, description, Tuples.of(param1, param2));
     }
 
+    /**
+     * Prepare assembling of route with 3 parameters
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @param param1
+     *        Parameter definition for parameter #1
+     * @param param2
+     *        Parameter definition for parameter #2
+     * @param param3
+     *        Parameter definition for parameter #3
+     * @return route prepared for attaching handler
+     */
     public static <T1, T2, T3> PB3<T1, T2, T3> of(final Path path,
                                                   final String description,
                                                   final P<T1> param1,
@@ -81,6 +131,23 @@ public class HttpParameterAssembler {
         return new PB3<>(path, description, Tuples.of(param1, param2, param3));
     }
 
+    /**
+     * Prepare assembling of route with 4 parameters
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @param param1
+     *        Parameter definition for parameter #1
+     * @param param2
+     *        Parameter definition for parameter #2
+     * @param param3
+     *        Parameter definition for parameter #3
+     * @param param4
+     *        Parameter definition for parameter #4
+     * @return route prepared for attaching handler
+     */
     public static <T1, T2, T3, T4> PB4<T1, T2, T3, T4> of(final Path path,
                                                           final String description,
                                                           final P<T1> param1,
@@ -90,6 +157,25 @@ public class HttpParameterAssembler {
         return new PB4<>(path, description, Tuples.of(param1, param2, param3, param4));
     }
 
+    /**
+     * Prepare assembling of route with 5 parameters
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @param param1
+     *        Parameter definition for parameter #1
+     * @param param2
+     *        Parameter definition for parameter #2
+     * @param param3
+     *        Parameter definition for parameter #3
+     * @param param4
+     *        Parameter definition for parameter #4
+     * @param param5
+     *        Parameter definition for parameter #5
+     * @return route prepared for attaching handler
+     */
     public static <T1, T2, T3, T4, T5> PB5<T1, T2, T3, T4, T5> of(final Path path,
                                                                   final String description,
                                                                   final P<T1> param1,
@@ -100,6 +186,27 @@ public class HttpParameterAssembler {
         return new PB5<>(path, description, Tuples.of(param1, param2, param3, param4, param5));
     }
 
+    /**
+     * Prepare assembling of route with 6 parameters
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @param param1
+     *        Parameter definition for parameter #1
+     * @param param2
+     *        Parameter definition for parameter #2
+     * @param param3
+     *        Parameter definition for parameter #3
+     * @param param4
+     *        Parameter definition for parameter #4
+     * @param param5
+     *        Parameter definition for parameter #5
+     * @param param6
+     *        Parameter definition for parameter #6
+     * @return route prepared for attaching handler
+     */
     public static <T1, T2, T3, T4, T5, T6> PB6<T1, T2, T3, T4, T5, T6> of(final Path path,
                                                                           final String description,
                                                                           final P<T1> param1,
@@ -111,6 +218,29 @@ public class HttpParameterAssembler {
         return new PB6<>(path, description, Tuples.of(param1, param2, param3, param4, param5, param6));
     }
 
+    /**
+     * Prepare assembling of route with 7 parameters
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @param param1
+     *        Parameter definition for parameter #1
+     * @param param2
+     *        Parameter definition for parameter #2
+     * @param param3
+     *        Parameter definition for parameter #3
+     * @param param4
+     *        Parameter definition for parameter #4
+     * @param param5
+     *        Parameter definition for parameter #5
+     * @param param6
+     *        Parameter definition for parameter #6
+     * @param param7
+     *        Parameter definition for parameter #7
+     * @return route prepared for attaching handler
+     */
     public static <T1, T2, T3, T4, T5, T6, T7> PB7<T1, T2, T3, T4, T5, T6, T7> of(final Path path,
                                                                                   final String description,
                                                                                   final P<T1> param1,
@@ -123,6 +253,31 @@ public class HttpParameterAssembler {
         return new PB7<>(path, description, Tuples.of(param1, param2, param3, param4, param5, param6, param7));
     }
 
+    /**
+     * Prepare assembling of route with 8 parameters
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @param param1
+     *        Parameter definition for parameter #1
+     * @param param2
+     *        Parameter definition for parameter #2
+     * @param param3
+     *        Parameter definition for parameter #3
+     * @param param4
+     *        Parameter definition for parameter #4
+     * @param param5
+     *        Parameter definition for parameter #5
+     * @param param6
+     *        Parameter definition for parameter #6
+     * @param param7
+     *        Parameter definition for parameter #7
+     * @param param8
+     *        Parameter definition for parameter #8
+     * @return route prepared for attaching handler
+     */
     public static <T1, T2, T3, T4, T5, T6, T7, T8> PB8<T1, T2, T3, T4, T5, T6, T7, T8> of(final Path path,
                                                                                           final String description,
                                                                                           final P<T1> param1,
@@ -136,6 +291,33 @@ public class HttpParameterAssembler {
         return new PB8<>(path, description, Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8));
     }
 
+    /**
+     * Prepare assembling of route with 9 parameters
+     *
+     * @param path
+     *        Route path
+     * @param description
+     *        Route description
+     * @param param1
+     *        Parameter definition for parameter #1
+     * @param param2
+     *        Parameter definition for parameter #2
+     * @param param3
+     *        Parameter definition for parameter #3
+     * @param param4
+     *        Parameter definition for parameter #4
+     * @param param5
+     *        Parameter definition for parameter #5
+     * @param param6
+     *        Parameter definition for parameter #6
+     * @param param7
+     *        Parameter definition for parameter #7
+     * @param param8
+     *        Parameter definition for parameter #8
+     * @param param9
+     *        Parameter definition for parameter #9
+     * @return route prepared for attaching handler
+     */
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9> PB9<T1, T2, T3, T4, T5, T6, T7, T8, T9> of(final Path path,
                                                                                                   final String description,
                                                                                                   final P<T1> param1,
@@ -155,11 +337,11 @@ public class HttpParameterAssembler {
         return stream.collect(Collectors.toList());
     }
 
-    public static class ParameterBuilder0 {
+    public static class PB0 {
         private final Path path;
         private final String description;
 
-        private ParameterBuilder0(final Path path, final String description) {
+        private PB0(final Path path, final String description) {
             this.path = path;
             this.description = description;
         }

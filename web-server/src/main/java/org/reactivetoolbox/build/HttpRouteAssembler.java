@@ -16,6 +16,7 @@ package org.reactivetoolbox.build;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.build.HttpParameterAssembler.PB0;
 import org.reactivetoolbox.build.HttpParameterAssembler.PB1;
 import org.reactivetoolbox.build.HttpParameterAssembler.PB2;
 import org.reactivetoolbox.build.HttpParameterAssembler.PB3;
@@ -25,7 +26,6 @@ import org.reactivetoolbox.build.HttpParameterAssembler.PB6;
 import org.reactivetoolbox.build.HttpParameterAssembler.PB7;
 import org.reactivetoolbox.build.HttpParameterAssembler.PB8;
 import org.reactivetoolbox.build.HttpParameterAssembler.PB9;
-import org.reactivetoolbox.build.HttpParameterAssembler.ParameterBuilder0;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.web.server.HttpMethod;
 import org.reactivetoolbox.web.server.parameter.Parameters.P;
@@ -50,7 +50,7 @@ public class HttpRouteAssembler {
         return new HttpRouteAssembler(Path.of(path, method), "(no description)");
     }
 
-    public ParameterBuilder0 withoutParameters() {
+    public PB0 withoutParameters() {
         return HttpParameterAssembler.of(path, description);
     }
 

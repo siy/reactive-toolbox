@@ -22,6 +22,9 @@ import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.Server;
 
+/**
+ * HTTP server fluent assembler.
+ */
 public class ServerAssembler {
     private final Router<RequestContext> router;
 

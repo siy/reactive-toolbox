@@ -25,7 +25,14 @@ import org.reactivetoolbox.eventbus.RouteDescription;
 
 import java.util.stream.Stream;
 
-//TODO: Javadoc
+/**
+ * HTTP route assembling helper class which allows attaching of post-processing of the handler invocation result.
+ * Postprocessing handlers should satisfy {@link Enricher} interface.
+ *
+ * @param <R>
+ * @param <T>
+ * @see Enricher
+ */
 public class RouteEnricher<R, T> implements RouteBase<T> {
     private final Path path;
     private final RouteDescription description;
