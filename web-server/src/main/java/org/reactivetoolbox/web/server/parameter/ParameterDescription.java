@@ -2,12 +2,17 @@ package org.reactivetoolbox.web.server.parameter;
 
 import org.reactivetoolbox.core.functional.Option;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Container for request parameter documentation details
  */
 public class ParameterDescription {
     private final String name;
     private final Option<TypeDescription> type;
+    private final List<String> validationComments = new ArrayList<>();
     private final String description;
     private final boolean mandatory;
 
@@ -36,6 +41,15 @@ public class ParameterDescription {
 
     public boolean mandatory() {
         return mandatory;
+    }
+
+    public List<String> validationComments() {
+        return Collections.unmodifiableList(validationComments);
+    }
+
+    public ParameterDescription addValidationComment(final String comment) {
+        validationComments.add(comment);
+        return this;
     }
 
     public ParameterDescription name(final String name) {

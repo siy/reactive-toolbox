@@ -32,13 +32,8 @@ import static org.reactivetoolbox.core.functional.Either.failure;
 
 //TODO: Javadoc, tests
 public interface Is {
-    Pattern PASSWORD_CHECKER = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
+    Pattern PASSWORD_CHECKER = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{2,}$");
 
-
-    static Either<? extends BaseError, String> email(final String email) {
-        //TODO: implement e-mail validation, implement validator object with description
-        return Either.success(email);
-    }
 
     @FunctionalInterface
     interface Validator<R, T> extends FN1<Either<? extends BaseError, R>, T> {
@@ -54,6 +49,7 @@ public interface Is {
                 return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                      input.description()
                                           .map(d -> d.mandatory(true))
+                                          .map(d -> d.addValidationComment("Required parameter"))
                                           .get());
             }
 
@@ -71,8 +67,7 @@ public interface Is {
                 return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                      input.description()
                                           .map(d -> d.mandatory(true))
-                                          .map(d -> d.description(Option.of(d.description()).map(s -> s + ", c")
-                                                                        .otherwise("C") + "an't be empty"))
+                                          .map(d -> d.addValidationComment("Can't be empty"))
                                           .get());
             }
 
@@ -90,8 +85,7 @@ public interface Is {
                 return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                      input.description()
                                           .map(d -> d.mandatory(true))
-                                          .map(d -> d.description(Option.of(d.description()).map(s -> s + ", m")
-                                                                        .otherwise("M") + "ust have len between " + min + " and " + max))
+                                          .map(d -> d.addValidationComment("Must have len between " + min + " and " + max))
                                           .get());
             }
 
@@ -102,25 +96,46 @@ public interface Is {
         };
     }
 
-    static Validator<String, String> validatePassword() {
+    static Validator<String, String> strongPassword() {
         return new Validator<>() {
             @Override
             public P<String> modify(final P<String> input) {
                 return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                      input.description()
                                           .map(d -> d.mandatory(true))
-                                          .map(d -> d.description(Option.of(d.description()).map(s -> s + ", m")
-                                                                        .otherwise("M") + "ust have at least 8 character, "
-                                                                                        + "contain at least one upper case letter, "
-                                                                                        + "lower case letter, digit and special character"))
+                                          .map(d -> d.addValidationComment("Must contain at least one: upper case letter, "
+                                                                           + "lower case letter, digit and special character"))
                                           .get());
             }
 
             @Override
             public Either<? extends BaseError, String> apply(final String param1) {
-                return validatePassword(param1);
+                return strongPassword(param1);
             }
         };
+    }
+
+    static Validator<String, String> email() {
+        return new Validator<>() {
+            @Override
+            public P<String> modify(final P<String> input) {
+                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
+                                     input.description()
+                                          .map(d -> d.mandatory(true))
+                                          .map(d -> d.addValidationComment("Must be a correctly formatted e-mail address."))
+                                          .get());
+            }
+
+            @Override
+            public Either<? extends BaseError, String> apply(final String param1) {
+                return email(param1);
+            }
+        };
+    }
+
+    static Either<? extends BaseError, String> email(final String email) {
+        //TODO: implement e-mail validation, implement validator object with description
+        return Either.success(email);
     }
 
     static <T extends Number> Validator<T, T> between(final int min, final int max) {
@@ -173,7 +188,7 @@ public interface Is {
                 .otherwise(() -> failure(ValidationError.USER_NOT_LOGGED_IN));
     }
 
-    static Either<? extends BaseError, String> validatePassword(final String string) {
+    static Either<? extends BaseError, String> strongPassword(final String string) {
         return PASSWORD_CHECKER.matcher(string).find() ? Either.success(string) : Either.failure(ValidationError.WEAK_PASSWORD);
     }
 
@@ -198,8 +213,7 @@ public interface Is {
         public P<T> modify(final P<T> input) {
             return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                  input.description()
-                                      .map(d -> d.description(Option.of(d.description()).map(s -> s + ", v")
-                                                                    .otherwise("V") + "alue must be between " + min + " and " + max))
+                                      .map(d -> d.addValidationComment("Value must be between " + min + " and " + max))
                                       .get());
         }
 

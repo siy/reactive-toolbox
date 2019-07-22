@@ -17,7 +17,7 @@ import static org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import static org.reactivetoolbox.core.functional.Tuples.Tuple9;
 import static org.reactivetoolbox.core.functional.Tuples.of;
 
-public class ResponseBuilder {
+public class HttpRouteTools {
 
     public static <T> Either<? extends BaseError, T> ok(final T value) {
         return success(value);

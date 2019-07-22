@@ -11,6 +11,9 @@ import org.reactivetoolbox.core.functional.Functions.FN7;
 import org.reactivetoolbox.core.functional.Functions.FN8;
 import org.reactivetoolbox.core.functional.Functions.FN9;
 import org.reactivetoolbox.core.functional.Option;
+import org.reactivetoolbox.web.server.Request;
+import org.reactivetoolbox.web.server.RequestContext;
+import org.reactivetoolbox.web.server.Response;
 import org.reactivetoolbox.web.server.parameter.auth.AuthHeader;
 import org.reactivetoolbox.web.server.parameter.auth.Authentication;
 import org.reactivetoolbox.web.server.parameter.conversion.Converter;
@@ -35,32 +38,90 @@ import java.util.ServiceLoader;
  * limitations under the License.
  */
 
-//TODO: Javadoc
+/**
+ * HTTP Request parameters.
+ */
 public class Parameters {
     private static final ConverterFactory FACTORY = ServiceLoader.load(ConverterFactory.class)
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("Unable to find suitable ConverterFactory"));
 
+    /**
+     * Define parameter passed as part of request path.
+     *
+     * @param type
+     *        Parameter type
+     * @param name
+     *        Parameter name
+     * @return Request parameter definition
+     */
     public static <T> P<Option<T>> inPath(final Class<T> type, final String name) {
         return new P<>(FACTORY.getParameterConverter(type, name), name);
     }
 
+    /**
+     * Define parameter passed as part of query string.
+     *
+     * @param type
+     *        Parameter type
+     * @param name
+     *        Parameter name
+     * @return Request parameter definition
+     */
     public static <T> P<Option<T>> inQuery(final Class<T> type, final String name) {
         return new P<>(FACTORY.getParameterConverter(type, name), name);
     }
 
+    /**
+     * Define parameter passed as part of request body.
+     *
+     * @param type
+     *        Parameter type
+     * @param name
+     *        Parameter name
+     * @return Request parameter definition
+     */
     public static <T> P<Option<T>> inBody(final Class<T> type, final String name) {
         return new P<>(FACTORY.getBodyValueConverter(type, name), name);
     }
 
+    /**
+     * Define parameter passed as request header.
+     *
+     * @param type
+     *        Parameter type
+     * @param name
+     *        Parameter name
+     * @return Request parameter definition
+     */
     public static <T> P<Option<T>> inHeader(final Class<T> type, final HeaderName name) {
         return new P<>(FACTORY.getHeaderConverter(type, name), name.header());
     }
 
+    /**
+     * Define parameter which will hold information from request context.
+     * The {@code type} parameter can be one of the following classes:
+     * <ul>
+     *     <li>{@link RequestContext} - for full request processing context</li>
+     *     <li>{@link Request} - for request part of the context</li>
+     *     <li>{@link Response} - for response part of the context</li>
+     * </ul>
+     *
+     * @param type
+     *        Parameter type - one of the listed above
+     * @return Request parameter definition
+     */
     public static <T> P<Option<T>> inContext(final Class<T> type) {
         return new P<>(FACTORY.getContextConverter(type), (String) null);
     }
 
+    /**
+     * Define parameter derived from {@code "Authorization"} header.
+     *
+     * @param header
+     *        Type of the recognized authorization. Basic and JWT types are supported
+     * @return Request parameter definition
+     */
     public static P<Option<Authentication>> inAuthHeader(final AuthHeader header) {
         return new P<>(FACTORY.getHeaderConverter(Authentication.class, Headers.AUTHORIZATION, header), (String) null);
     }
@@ -69,6 +130,12 @@ public class Parameters {
         return new P<>(converter, parameterDescription);
     }
 
+    /**
+     * Container for parameter definition.
+     *
+     * @param <T>
+     *        Type of the parameter value
+     */
     public static class P<T> {
         private final Converter<T> converter;
         private final ParameterDescription parameterDescription;
@@ -94,6 +161,15 @@ public class Parameters {
             return Option.of(parameterDescription);
         }
 
+        /**
+         * Add validation to the parameter.
+         *
+         * @param validator
+         *        The validator to be applied to parameter during conversion of parameter value
+         * @param <R>
+         *        New type of the parameter value
+         * @return updated parameter definition
+         */
         public <R> P<R> and(final Validator<R, T> validator) {
             return validator.modify(this);
         }

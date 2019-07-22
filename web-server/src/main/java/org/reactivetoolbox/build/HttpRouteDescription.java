@@ -13,7 +13,6 @@ public class HttpRouteDescription implements RouteDescription {
     private final List<Option<ParameterDescription>> parameterDescriptions;
 
     private HttpRouteDescription(final Path path, final String description, final List<Option<ParameterDescription>> parameterDescriptions) {
-
         this.path = path;
         this.description = description;
         this.parameterDescriptions = parameterDescriptions;

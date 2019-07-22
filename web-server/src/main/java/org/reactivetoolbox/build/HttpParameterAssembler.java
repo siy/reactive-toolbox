@@ -55,7 +55,7 @@ import static org.reactivetoolbox.core.functional.Tuples.squeeze;
  */
 
 //TODO: Javadoc
-public class ParameterBuilder {
+public class HttpParameterAssembler {
     public static ParameterBuilder0 of(final Path path, final String description) {
         return new ParameterBuilder0(path, description);
     }

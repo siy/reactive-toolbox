@@ -2,7 +2,7 @@ package org.reactivetoolbox.web.server;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.reactivetoolbox.build.ServerBuilder;
+import org.reactivetoolbox.build.ServerAssembler;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
@@ -13,9 +13,9 @@ import org.reactivetoolbox.web.server.parameter.validation.Is;
 
 import java.util.UUID;
 
-import static org.reactivetoolbox.build.HttpRouteBuilder.when;
-import static org.reactivetoolbox.build.ResponseBuilder.readyOk;
-import static org.reactivetoolbox.build.ResponseBuilder.valid;
+import static org.reactivetoolbox.build.HttpRouteAssembler.when;
+import static org.reactivetoolbox.build.HttpRouteTools.readyOk;
+import static org.reactivetoolbox.build.HttpRouteTools.valid;
 import static org.reactivetoolbox.eventbus.Routes.with;
 import static org.reactivetoolbox.web.server.HttpMethod.GET;
 import static org.reactivetoolbox.web.server.HttpMethod.POST;
@@ -50,13 +50,13 @@ class ServerTest {
     void serverCanBeCreated() {
         final var userService = new UserService();
 
-        final var server = ServerBuilder.with(
+        final var server = ServerAssembler.with(
             with("/v1/",
                  with("/clips",
                       when(GET, "/one/two/{param1}/{param2}")
                           .description("....")
                           .with(inPath(String.class, "param1").and(Is.required()),
-                                inPath(String.class, "param2").description("Second parameter").and(Is.required()),
+                                inPath(String.class, "param2").and(Is.required()).description("Second parameter"),
                                 inQuery(Integer.class, "limit").and(Is.required()),
                                 inAuthHeader(AuthHeader.JWT).and(Is::loggedIn))
                           .then((param1, param2, limit, user) -> readyOk("[" + param1 + ", " + param2 + ", " + limit + ", " + user.userId() + "]"))
@@ -76,30 +76,42 @@ class ServerTest {
 
                  with("/user",
                       when(PUT, "")
+                          .description("Get profile of logged in user")
                           .with(inAuthHeader(AuthHeader.JWT).and(Is::loggedIn).and(Is::belongsToAll, TestRoles.REGULAR))
                           .then(userService::getProfile),
 
                       //User login request
                       when(POST, "/login")
+                          .description("Login user into application")
                           .with(inBody(String.class, "login")
-                                    .description("User login")
-                                    .and(Is.notNullOrEmpty()),
+                                    .and(Is.notNullOrEmpty())
+                                    .description("User login"),
                                 inBody(String.class, "password")
-                                    .description("User password")
-                                    .and(Is.notNullOrEmpty()))
+                                    .and(Is.notNullOrEmpty())
+                                    .description("User password"))
                           .then(userService::login),
 
                       //More or less traditional user registration request validation
                       when(POST, "/register")
+                          .description("Register new user into system")
                           .with(inBody(String.class, "login")
-                                    .and(Is.lenBetween(3, 128)).and(Is::email),
+                                    .and(Is.lenBetween(6, 128)).and(Is.email())
+                                    .description("Desired user login"),
                                 inBody(String.class, "password")
                                     .and(Is.lenBetween(6, 128))
-                                    .and(Is::validatePassword))
+                                    .and(Is.strongPassword())
+                                    .description("Proposed user password"))
                           .then(userService::login))),
 
             //Simplest entrypoint description, independently attached to root
             when(GET, "/")
-                .withoutParameters().then(() -> readyOk("Hello world!"))).build();
+                .description("Root request")
+                .withoutParameters()
+                .then(() -> readyOk("Hello world!")),
+            when(GET, "/health")
+                .description("Healtcheck entrypoint")
+                .withoutParameters()
+                .then(() -> readyOk("{\"status\":\"UP\"}"))
+        ).build();
     }
 }

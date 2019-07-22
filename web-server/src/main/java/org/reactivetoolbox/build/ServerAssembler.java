@@ -22,25 +22,25 @@ import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.Server;
 
-public class ServerBuilder {
+public class ServerAssembler {
     private final Router<RequestContext> router;
 
-    private ServerBuilder(final Router<RequestContext> router) {
+    private ServerAssembler(final Router<RequestContext> router) {
         this.router = router;
     }
 
-    public static ServerBuilder with(final Router<RequestContext> router) {
-        return new ServerBuilder(router);
+    public static ServerAssembler with(final Router<RequestContext> router) {
+        return new ServerAssembler(router);
     }
 
     @SafeVarargs
-    public static ServerBuilder with(final RouteBase<RequestContext>... routes) {
-        return new ServerBuilder(Router.of(Option.empty(), routes));
+    public static ServerAssembler with(final RouteBase<RequestContext>... routes) {
+        return new ServerAssembler(Router.of(Option.empty(), routes));
     }
 
     @SafeVarargs
-    public static ServerBuilder with(final String root, final RouteBase<RequestContext>... routes) {
-        return new ServerBuilder(Router.of(Option.of(root), routes));
+    public static ServerAssembler with(final String root, final RouteBase<RequestContext>... routes) {
+        return new ServerAssembler(Router.of(Option.of(root), routes));
     }
 
     public Server build() {
