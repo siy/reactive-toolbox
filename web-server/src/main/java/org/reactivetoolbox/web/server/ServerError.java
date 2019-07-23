@@ -7,7 +7,8 @@ public enum ServerError implements BaseError {
     ALREADY_RUNNING(500, "Server is already running and can't be started again"),
     SERVER_FAILED_TO_START(500, "Server failed to start"),
     SERVER_FAILED_TO_STOP(500, "Server failed to stop"),
-    BAD_REQUEST(404, "Invalid request path or method"),
+    BAD_REQUEST(404, "Not found"),
+    METHOD_NOT_ALLOWED(405, "Method not allowed"),
     ;
 
     private final int code;

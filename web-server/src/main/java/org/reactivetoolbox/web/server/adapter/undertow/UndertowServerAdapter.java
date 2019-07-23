@@ -20,11 +20,12 @@ import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.CanonicalPathHandler;
+import io.undertow.util.HttpString;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promises;
 import org.reactivetoolbox.core.async.Promises.Promise;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions;
+import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.functional.Pair;
 import org.reactivetoolbox.eventbus.Path;
@@ -44,17 +45,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static org.reactivetoolbox.core.functional.Either.lift;
+
 /**
  * Implementation of the {@link ServerAdapter} for Undertow (
  */
 public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
     private static final Either<ServerError, Promise<Either<? extends BaseError, Object>>> ERROR_404 = Either.failure(ServerError.BAD_REQUEST);
+    private static final Either<ServerError, Promise<Either<? extends BaseError, Object>>> ERROR_405 = Either.failure(ServerError.METHOD_NOT_ALLOWED);
 
     private final Undertow server;
     private final Router<RequestContext> router;
-    private final Functions.FN1<ByteBuffer[], Object> serializer;
-    private final Function<Undertow, Either<Throwable, ServerAdapter>> serverStart = Either.lift((server) -> {  server.start(); return this; });
-    private final Function<Undertow, Either<Throwable, ServerAdapter>> serverStop = Either.lift((server) -> { server.start(); return this; });
+    private final FN1<ByteBuffer[], Object> serializer;
+    private final Function<Undertow, Either<Throwable, ServerAdapter>> serverStart = lift((server) -> {  server.start(); return this; });
+    private final Function<Undertow, Either<Throwable, ServerAdapter>> serverStop = lift((server) -> { server.start(); return this; });
 
     private UndertowServerAdapter(final Router<RequestContext> router) {
         this.router = router;
@@ -89,21 +93,21 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
             return;
         }
 
-        deliver(exchange).otherwise(ERROR_404)
+        deliver(exchange).otherwise(ERROR_405)
                          .mapSuccess(val -> serializeSuccess(exchange, val))
                          .mapFailure(err -> serializeError(exchange, err));
     }
 
     private Promise<Either<? extends BaseError, Object>> serializeSuccess(final HttpServerExchange exchange,
                                                                           final Promise<Either<? extends BaseError, Object>> successResult) {
-        exchange.setResponseCode(200)
+        exchange.setStatusCode(200)
                 .getResponseSender()
                 .send(serializer.apply(successResult));
         return successResult;
     }
 
     private BaseError serializeError(final HttpServerExchange exchange, final BaseError failureResult) {
-        exchange.setResponseCode(failureResult.code())
+        exchange.setStatusCode(failureResult.code())
                 .getResponseSender()
                 .send(failureResult.message());
         return failureResult;
@@ -132,7 +136,9 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
         @Override
         public Response setHeader(final String name, final String value) {
-            //TODO: implement it
+            Option.of(HttpString.tryFromString(name))
+                  .map(header -> exchange.getResponseHeaders().add(header, value));
+            
             return this;
         }
     }
