@@ -3,6 +3,7 @@ package org.reactivetoolbox.core.functional;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -57,6 +58,13 @@ public class Option<T> {
 
     public <U> Option<U> map(final FN1<U, T> mapper) {
         return isEmpty() ? empty() : Option.of(mapper.apply(value));
+    }
+
+    public Option<T> consume(final Consumer<T> consumer) {
+        if (isPresent()) {
+            consumer.accept(value);
+        }
+        return this;
     }
 
     public <U> Option<U> flatMap(final FN1<Option<U>, T> mapper) {

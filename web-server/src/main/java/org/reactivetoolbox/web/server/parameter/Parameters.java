@@ -16,9 +16,10 @@ import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.Response;
 import org.reactivetoolbox.web.server.parameter.auth.AuthHeader;
 import org.reactivetoolbox.web.server.parameter.auth.Authentication;
+import org.reactivetoolbox.web.server.parameter.auth.AuthenticationConverter;
 import org.reactivetoolbox.web.server.parameter.conversion.Converter;
 import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
-import org.reactivetoolbox.web.server.parameter.validation.Is.Validator;
+import org.reactivetoolbox.web.server.parameter.validation.Validator;
 
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
@@ -50,7 +51,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inPath(final Class<T> type, final String name) {
-        return new P<>(ConverterFactory.pluggable().getPathParameterConverter(type, name), name);
+        return new P<>(ConverterFactory.pathParameter(type, name), name);
     }
 
     /**
@@ -63,7 +64,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inQuery(final Class<T> type, final String name) {
-        return new P<>(ConverterFactory.pluggable().getQueryParameterConverter(type, name), name);
+        return new P<>(ConverterFactory.queryParameter(type, name), name);
     }
 
     /**
@@ -76,7 +77,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inBody(final Class<T> type, final String name) {
-        return new P<>(ConverterFactory.pluggable().getBodyValueConverter(type, name), name);
+        return new P<>(ConverterFactory.bodyParameter(type, name), name);
     }
 
     /**
@@ -89,7 +90,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inHeader(final Class<T> type, final HeaderName name) {
-        return new P<>(ConverterFactory.pluggable().getHeaderConverter(type, name), name.header());
+        return new P<>(ConverterFactory.headerParameter(type, name.header()), name.header());
     }
 
     /**
@@ -106,7 +107,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inContext(final Class<T> type) {
-        return new P<>(ConverterFactory.pluggable().getContextConverter(type), (String) null);
+        return new P<>(ConverterFactory.inContext(type), (String) null);
     }
 
     /**
@@ -117,7 +118,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static P<Option<Authentication>> inAuthHeader(final AuthHeader header) {
-        return new P<>(ConverterFactory.pluggable().getHeaderConverter(Authentication.class, Headers.AUTHORIZATION, header), (String) null);
+        return inHeader(String.class, Headers.AUTHORIZATION).and(AuthenticationConverter.create(header));
     }
 
     public static <T> P<T> of(final Converter<T> converter, final ParameterDescription parameterDescription) {

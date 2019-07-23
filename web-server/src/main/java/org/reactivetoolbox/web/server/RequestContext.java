@@ -16,11 +16,12 @@ package org.reactivetoolbox.web.server;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.core.functional.Pair;
 import org.reactivetoolbox.eventbus.Path;
+import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
 
-import java.util.List;
+import java.nio.ByteBuffer;
 
 /**
  * HTTP Request context abstraction
@@ -32,7 +33,9 @@ public interface RequestContext {
 
     Path path();
 
-    RequestContext pathParameters(final List<Pair<String, String>> pairs);
+    <T> ConverterFactory.ValueConverter<T> valueConverter(final Class<T> type);
 
-    Option<String> pathParameter(final String name);
+    <T> Option<T> contextComponent(Class<T> type);
+
+    FN1<ByteBuffer, Object> resultSerializer();
 }

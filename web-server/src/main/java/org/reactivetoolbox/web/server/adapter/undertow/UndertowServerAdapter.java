@@ -28,6 +28,7 @@ import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.functional.Pair;
+import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.web.server.HttpEnvelope;
@@ -37,9 +38,11 @@ import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.Response;
 import org.reactivetoolbox.web.server.ServerError;
 import org.reactivetoolbox.web.server.adapter.ServerAdapter;
-import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
+import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory.ValueConverter;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,14 +59,11 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
     private final Undertow server;
     private final Router<RequestContext> router;
-    private final FN1<ByteBuffer[], Object> serializer;
     private final Function<Undertow, Either<Throwable, ServerAdapter>> serverStart = lift((server) -> {  server.start(); return this; });
     private final Function<Undertow, Either<Throwable, ServerAdapter>> serverStop = lift((server) -> { server.start(); return this; });
 
     private UndertowServerAdapter(final Router<RequestContext> router) {
         this.router = router;
-        serializer = ConverterFactory.pluggable()
-                                     .getResultSerializer();
         server = Undertow.builder()
                          .addHttpListener(8080, "0.0.0.0")
                          .setHandler(new CanonicalPathHandler(this))
@@ -93,53 +93,120 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
             return;
         }
 
-        deliver(exchange).otherwise(ERROR_405)
-                         .mapSuccess(val -> serializeSuccess(exchange, val))
-                         .mapFailure(err -> serializeError(exchange, err));
+        final var envelope = toEnvelope(exchange);
+        final var serializer = envelope.map(Envelope::payload)
+                                       .map(RequestContext::resultSerializer);
+
+        deliver(envelope)
+                .otherwise(ERROR_405)
+                .onFailure(failure -> serializeError(exchange, failure))
+                .onSuccess(promise -> promise.then(either -> either.onFailure(failure -> serializeError(exchange, failure))
+                                                                   .onSuccess(success -> serializer.consume(fn -> serializeSuccess(exchange, fn, success)))));
     }
 
-    private Promise<Either<? extends BaseError, Object>> serializeSuccess(final HttpServerExchange exchange,
-                                                                          final Promise<Either<? extends BaseError, Object>> successResult) {
-        exchange.setStatusCode(200)
-                .getResponseSender()
-                .send(serializer.apply(successResult));
-        return successResult;
+    private void serializeSuccess(final HttpServerExchange exchange, final FN1<ByteBuffer, Object> fn, final Object success) {
+        exchange.getResponseSender().send(fn.apply(success));
     }
 
-    private BaseError serializeError(final HttpServerExchange exchange, final BaseError failureResult) {
+    private void serializeError(final HttpServerExchange exchange, final BaseError failureResult) {
         exchange.setStatusCode(failureResult.code())
                 .getResponseSender()
                 .send(failureResult.message());
-        return failureResult;
     }
 
-    private Option<Either<? extends BaseError, Promise<Either<? extends BaseError, Object>>>> deliver(final HttpServerExchange exchange) {
+    private Option<Either<? extends BaseError, Promise<Either<? extends BaseError, Object>>>> deliver(final Option<Envelope<RequestContext>> envelope) {
+        return envelope.map(router::deliver);
+    }
+
+    private Option<Envelope<RequestContext>> toEnvelope(final HttpServerExchange exchange) {
         return HttpMethod.fromString(exchange.getRequestMethod().toString())
                          .map(method -> Path.of(exchange.getRelativePath(), method))
-                         .map(path -> router.deliver(HttpEnvelope.of(path, new UndertowRequestContext(path, exchange))));
+                         .map(path -> HttpEnvelope.of(path, new UndertowRequestContext(path, exchange)));
     }
 
     private static class UndertowRequest implements Request {
+        private final Map<String, String> pathParameters = new HashMap<>();
         private final HttpServerExchange exchange;
+        private final RequestContext context;
 
-        public UndertowRequest(final HttpServerExchange exchange) {
+        public UndertowRequest(final HttpServerExchange exchange,
+                               final RequestContext context) {
             this.exchange = exchange;
+            this.context = context;
+        }
+
+        @Override
+        public Request pathParameters(final List<Pair<String, String>> pairs) {
+            pairs.stream().forEach(pair -> pathParameters.put(pair.left(), pair.right()));
+            return this;
+        }
+
+        @Override
+        public RequestContext context() {
+            return context;
+        }
+
+        @Override
+        public Option<String> pathParameter(final String name) {
+            return Option.of(pathParameters.get(name));
+        }
+
+        @Override
+        public Option<String> queryParameter(final String name) {
+            return Option.of(exchange.getQueryParameters().get(name))
+                         .flatMap(dq -> Option.of(dq.pollFirst()));
+        }
+
+        @Override
+        public List<String> queryParameters(final String name) {
+            final Option<List<String>> values = Option.of(exchange.getQueryParameters().get(name))
+                                                      .map(ArrayList::new);
+
+            return values.otherwise(Collections::emptyList);
+        }
+
+        @Override
+        public Map<String, List<String>> queryParameters() {
+            return null;
+        }
+
+        @Override
+        public Option<String> header(final String name) {
+            return null;
+        }
+
+        @Override
+        public Option<String> bodyParameter(final String name) {
+            return null;
+        }
+
+        @Override
+        public Option<String> body() {
+            return null;
         }
     }
 
     private static class UndertowResponse implements Response {
         private final HttpServerExchange exchange;
+        private final RequestContext context;
 
-        public UndertowResponse(final HttpServerExchange exchange) {
+        public UndertowResponse(final HttpServerExchange exchange,
+                                final RequestContext context) {
             this.exchange = exchange;
+            this.context = context;
         }
 
         @Override
         public Response setHeader(final String name, final String value) {
             Option.of(HttpString.tryFromString(name))
                   .map(header -> exchange.getResponseHeaders().add(header, value));
-            
+
             return this;
+        }
+
+        @Override
+        public RequestContext context() {
+            return context;
         }
     }
 
@@ -148,13 +215,12 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         private final HttpServerExchange exchange;
         private final UndertowRequest request;
         private final UndertowResponse response;
-        private final Map<String, String> pathParameters = new HashMap<>();
 
         private UndertowRequestContext(final Path path, final HttpServerExchange exchange) {
             this.path = path;
             this.exchange = exchange;
-            request = new UndertowRequest(exchange);
-            response = new UndertowResponse(exchange);
+            request = new UndertowRequest(exchange, this);
+            response = new UndertowResponse(exchange, this);
         }
 
         @Override
@@ -173,15 +239,21 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         }
 
         @Override
-        public RequestContext pathParameters(final List<Pair<String, String>> pairs) {
-            pairs.stream().forEach(pair -> pathParameters.put(pair.left(), pair.right()));
-
-            return this;
+        public <T> ValueConverter<T> valueConverter(final Class<T> type) {
+            //TODO: finish it
+            return null;
         }
 
         @Override
-        public Option<String> pathParameter(final String name) {
-            return Option.of(pathParameters.get(name));
+        public <T> Option<T> contextComponent(final Class<T> type) {
+            //TODO: finish it
+            return null;
+        }
+
+        @Override
+        public FN1<ByteBuffer, Object> resultSerializer() {
+            //TODO: finish it
+            return null;
         }
     }
 }

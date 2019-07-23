@@ -16,6 +16,29 @@ package org.reactivetoolbox.web.server;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Option;
+import org.reactivetoolbox.core.functional.Pair;
+
+import java.util.List;
+import java.util.Map;
+
 //TODO: extend it to make usable, add Javadoc
 public interface Request {
+    Request pathParameters(final List<Pair<String, String>> pairs);
+
+    RequestContext context();
+
+    Option<String> pathParameter(final String name);
+
+    Option<String> queryParameter(String name);
+
+    List<String> queryParameters(String name);
+
+    Map<String, List<String>> queryParameters();
+
+    Option<String> header(String name);
+
+    Option<String> bodyParameter(String name);
+
+    Option<String> body();
 }

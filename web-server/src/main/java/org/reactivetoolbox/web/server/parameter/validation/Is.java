@@ -18,7 +18,6 @@ package org.reactivetoolbox.web.server.parameter.validation;
 
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.parameter.Parameters;
@@ -33,14 +32,6 @@ import static org.reactivetoolbox.core.functional.Either.failure;
 //TODO: Javadoc, tests
 public interface Is {
     Pattern PASSWORD_CHECKER = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{2,}$");
-
-
-    @FunctionalInterface
-    interface Validator<R, T> extends FN1<Either<? extends BaseError, R>, T> {
-        default P<R> modify(final P<T> input) {
-            return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply), input.description().get());
-        }
-    }
 
     static <T> Validator<T, Option<T>> required() {
         return new Validator<>() {

@@ -16,32 +16,55 @@ package org.reactivetoolbox.web.server.parameter.conversion;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.async.BaseError;
+import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
+import org.reactivetoolbox.core.functional.Functions.FN2;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.web.server.parameter.HeaderName;
-import org.reactivetoolbox.web.server.parameter.auth.AuthHeader;
-import org.reactivetoolbox.web.server.parameter.conversion.pluggable.PluggableConverterFactory;
+import org.reactivetoolbox.web.server.RequestContext;
 
-import java.nio.ByteBuffer;
-
-//TODO: Javadoc
+/**
+ * Set of convenience methods for composing various value converters
+ */
 public interface ConverterFactory {
-    //TODO: add support for generic types
-    <T> Converter<Option<T>> getPathParameterConverter(final Class<T> type, final String name);
+    interface StringExtractor extends FN1<Either<? extends BaseError, Option<String>>, RequestContext> {}
+    interface ValueConverter<T> extends FN1<Either<? extends BaseError, Option<T>>, Option<String>> {}
+    interface NamedStringExtractor extends FN2<Either<? extends BaseError, Option<String>>, RequestContext, String> {}
 
-    <T> Converter<Option<T>> getQueryParameterConverter(final Class<T> type, final String name);
+    NamedStringExtractor fromQuery = (context, name) -> Either.success(context.request().queryParameter(name));
+    NamedStringExtractor fromPath = (context, name) -> Either.success(context.request().pathParameter(name));
+    NamedStringExtractor fromHeader = (context, name) -> Either.success(context.request().header(name));
+    NamedStringExtractor fromBody = (context, name) -> Either.success(context.request().bodyParameter(name));
 
-    <T> Converter<Option<T>> getHeaderConverter(final Class<T> type, final HeaderName name);
+    static StringExtractor forName(final NamedStringExtractor extractor, final String name) {
+        return (context) -> extractor.apply(context, name);
+    }
 
-    <T> Converter<Option<T>> getHeaderConverter(final Class<T> type, final HeaderName name, final AuthHeader headerType);
+    static <T> Converter<Option<T>> composeConverter(final StringExtractor stringExtractor, final Class<T> type) {
+        return (context) -> stringExtractor.apply(context).flatMap((value) -> context.valueConverter(type).apply(value));
+    }
 
-    <T> Converter<Option<T>> getBodyValueConverter(final Class<T> type, final String name);
+    static <T> Converter<Option<T>> pathParameter(final Class<T> type, final String name) {
+        return composeConverter(forName(fromPath, name), type);
+    }
 
-    <T> Converter<Option<T>> getContextConverter(final Class<T> type);
+    static <T> Converter<Option<T>> queryParameter(final Class<T> type, final String name) {
+        return composeConverter(forName(fromQuery, name), type);
+    }
 
-    <T> FN1<ByteBuffer[], Object> getResultSerializer();
+    static <T> Converter<Option<T>> headerParameter(final Class<T> type, final String name) {
+        return composeConverter(forName(fromHeader, name), type);
+    }
 
-    static ConverterFactory pluggable() {
-        return PluggableConverterFactory.load();
+    static <T> Converter<Option<T>> bodyParameter(final Class<T> type, final String name) {
+        return composeConverter(forName(fromBody, name), type);
+    }
+
+    static <T> Converter<Option<T>> inContext(final Class<T> type) {
+        return (context) -> Either.success(context.contextComponent(type));
+    }
+
+    static <T> Converter<Option<T>> fullBody(final Class<T> type) {
+        return composeConverter((context) -> Either.success(context.request().body()), type);
     }
 }

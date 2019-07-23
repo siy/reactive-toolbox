@@ -47,4 +47,11 @@ public interface Envelope<T> {
      * @return target {@link Path} of the request stored in this {@link Envelope}
      */
     Path target();
+
+    /**
+     * Content of the envelope
+     *
+     * @return stored content
+     */
+    T payload();
 }

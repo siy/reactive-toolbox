@@ -19,4 +19,6 @@ package org.reactivetoolbox.web.server;
 //TODO: extend it to make usable, add Javadoc
 public interface Response {
     Response setHeader(String name, String value);
+
+    RequestContext context();
 }

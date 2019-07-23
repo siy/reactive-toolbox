@@ -28,11 +28,16 @@ public class HttpEnvelope implements Envelope<RequestContext> {
 
         return (route.path().hasParams() && pairs.isEmpty())
                ? Either.failure(ServerError.BAD_REQUEST)
-               : Either.success(context.pathParameters(pairs));
+               : Either.success(context.request().pathParameters(pairs).context());
     }
 
     @Override
     public Path target() {
         return path;
+    }
+
+    @Override
+    public RequestContext payload() {
+        return context;
     }
 }

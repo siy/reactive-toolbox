@@ -108,5 +108,10 @@ class RouterImplTest {
         public Path target() {
             return target;
         }
+
+        @Override
+        public String payload() {
+            return payload;
+        }
     }
 }
