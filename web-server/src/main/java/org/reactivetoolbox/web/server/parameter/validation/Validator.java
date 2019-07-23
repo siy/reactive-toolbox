@@ -10,6 +10,6 @@ import org.reactivetoolbox.web.server.parameter.Parameters.P;
 @FunctionalInterface
 public interface Validator<R, T> extends FN1<Either<? extends BaseError, R>, T> {
     default Parameters.P<R> modify(final P<T> input) {
-        return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply), input.description().get());
+        return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply), input.description());
     }
 }

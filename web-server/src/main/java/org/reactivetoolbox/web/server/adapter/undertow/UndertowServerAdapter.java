@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.reactivetoolbox.core.functional.Either.lift;
 
@@ -167,21 +168,29 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
         @Override
         public Map<String, List<String>> queryParameters() {
-            return null;
+            return exchange.getQueryParameters()
+                           .entrySet()
+                           .stream()
+                           .map(entry -> Pair.of(entry.getKey(), new ArrayList<>(entry.getValue())))
+                           .collect(Collectors.toMap(Pair::left, Pair::right));
         }
 
         @Override
         public Option<String> header(final String name) {
-            return null;
+            return Option.of(exchange.getRequestHeaders().get(name))
+                         .map(values -> values.stream().findFirst().map(Option::of).orElse(Option.empty()))
+                         .otherwise(Option::empty);
         }
 
         @Override
         public Option<String> bodyParameter(final String name) {
+            //TODO: implement it
             return null;
         }
 
         @Override
         public Option<String> body() {
+            //TODO: implement it
             return null;
         }
     }
@@ -200,7 +209,6 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         public Response setHeader(final String name, final String value) {
             Option.of(HttpString.tryFromString(name))
                   .map(header -> exchange.getResponseHeaders().add(header, value));
-
             return this;
         }
 
@@ -245,9 +253,16 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public <T> Option<T> contextComponent(final Class<T> type) {
-            //TODO: finish it
-            return null;
+            if (type == RequestContext.class) {
+                return Option.of((T) this);
+            } else if (type == Request.class) {
+                return Option.of((T) request);
+            } else if (type == Response.class) {
+                return Option.of((T) response);
+            }
+            return Option.empty();
         }
 
         @Override

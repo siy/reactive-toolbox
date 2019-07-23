@@ -24,7 +24,12 @@ import java.util.stream.Stream;
  * limitations under the License.
  */
 
-//TODO: Javadoc
+/**
+ * Implementation of basic immutable container for value which may or may not be present
+ *
+ * @param <T>
+ *        Type of contained value
+ */
 public class Option<T> {
     private final T value;
 
@@ -32,18 +37,39 @@ public class Option<T> {
         this.value = value;
     }
 
+    /**
+     * Create empty instance.
+     *
+     * @return Created instance
+     */
     public static <R> Option<R> empty() {
         return new Option<>(null);
     }
 
+    /**
+     * Create a present or empty instance depending on the passed value.
+     *
+     * @param value
+     *        Value to be stored in the created instance
+     * @return Created instance
+     */
     public static <R> Option<R> of(final R value) {
         return new Option<>(value);
     }
 
+    /**
+     * Get contained value without any checks or throwing exceptions.
+     *
+     * @return contained value, either <code>null</code> or <code>non-null</code>
+     */
     public T get() {
         return value;
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean isPresent() {
         return value != null;
     }

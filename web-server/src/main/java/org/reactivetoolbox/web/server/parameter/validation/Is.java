@@ -40,8 +40,7 @@ public interface Is {
                 return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                      input.description()
                                           .map(d -> d.mandatory(true))
-                                          .map(d -> d.addValidationComment("Required parameter"))
-                                          .get());
+                                          .map(d -> d.addValidationComment("Required parameter")));
             }
 
             @Override
@@ -58,8 +57,7 @@ public interface Is {
                 return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                      input.description()
                                           .map(d -> d.mandatory(true))
-                                          .map(d -> d.addValidationComment("Can't be empty"))
-                                          .get());
+                                          .map(d -> d.addValidationComment("Can't be empty")));
             }
 
             @Override
@@ -76,8 +74,7 @@ public interface Is {
                 return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                      input.description()
                                           .map(d -> d.mandatory(true))
-                                          .map(d -> d.addValidationComment("Must have len between " + min + " and " + max))
-                                          .get());
+                                          .map(d -> d.addValidationComment("Must have len between " + min + " and " + max)));
             }
 
             @Override
@@ -95,8 +92,7 @@ public interface Is {
                                      input.description()
                                           .map(d -> d.mandatory(true))
                                           .map(d -> d.addValidationComment("Must contain at least one: upper case letter, "
-                                                                           + "lower case letter, digit and special character"))
-                                          .get());
+                                                                           + "lower case letter, digit and special character")));
             }
 
             @Override
@@ -113,8 +109,7 @@ public interface Is {
                 return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                      input.description()
                                           .map(d -> d.mandatory(true))
-                                          .map(d -> d.addValidationComment("Must be a correctly formatted e-mail address."))
-                                          .get());
+                                          .map(d -> d.addValidationComment("Must be a correctly formatted e-mail address.")));
             }
 
             @Override
@@ -204,8 +199,7 @@ public interface Is {
         public P<T> modify(final P<T> input) {
             return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
                                  input.description()
-                                      .map(d -> d.addValidationComment("Value must be between " + min + " and " + max))
-                                      .get());
+                                      .map(d -> d.addValidationComment("Value must be between " + min + " and " + max)));
         }
 
         abstract V value(final T input);

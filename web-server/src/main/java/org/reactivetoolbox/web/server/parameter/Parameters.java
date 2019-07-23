@@ -121,7 +121,7 @@ public class Parameters {
         return inHeader(String.class, Headers.AUTHORIZATION).and(AuthenticationConverter.create(header));
     }
 
-    public static <T> P<T> of(final Converter<T> converter, final ParameterDescription parameterDescription) {
+    public static <T> P<T> of(final Converter<T> converter, final Option<ParameterDescription> parameterDescription) {
         return new P<>(converter, parameterDescription);
     }
 
@@ -133,13 +133,13 @@ public class Parameters {
      */
     public static class P<T> {
         private final Converter<T> converter;
-        private final ParameterDescription parameterDescription;
+        private final Option<ParameterDescription> parameterDescription;
 
         private P(final Converter<T> converter, final String name) {
-            this(converter, ParameterDescription.of(name, converter.typeDescription(), null));
+            this(converter, Option.of(ParameterDescription.of(name, converter.typeDescription(), null)));
         }
 
-        private P(final Converter<T> converter, final ParameterDescription parameterDescription) {
+        private P(final Converter<T> converter, final Option<ParameterDescription> parameterDescription) {
             this.converter = converter;
             this.parameterDescription = parameterDescription;
         }
@@ -149,11 +149,11 @@ public class Parameters {
         }
 
         public P<T> description(final String description) {
-            return new P<>(converter, parameterDescription.description(description));
+            return new P<>(converter, parameterDescription.map(value -> value.description(description)));
         }
 
         public Option<ParameterDescription> description() {
-            return Option.of(parameterDescription);
+            return parameterDescription;
         }
 
         /**

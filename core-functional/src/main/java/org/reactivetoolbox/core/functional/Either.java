@@ -87,14 +87,23 @@ public interface Either<F, S> {
      * {@link Throwable} into some more convenient type
      *
      * @param mapper
-     *        Transformation
+     *        Transformation function
      * @param <NF>
-     *        New type for failure get
+     *        New type for failure
      * @return transformed instance
      */
     <NF> Either<NF, S> mapFailure(final FN1<NF, F> mapper);
 
-    //TODO: docs
+    /**
+     * Transform given instance into another one which has same failure type
+     * but new success type. Convenient for "happy day scenario" processing
+     *
+     * @param mapper
+     *        Transformation function
+     * @param <NS>
+     *        New type for success
+     * @return transformed instance
+     */
     <NS> Either<F, NS> mapSuccess(final FN1<NS, S> mapper);
 
     /**
@@ -297,13 +306,13 @@ public interface Either<F, S> {
         }
 
         @Override
-        public Either<F, S> onSuccess(Consumer<S> consumer) {
+        public Either<F, S> onSuccess(final Consumer<S> consumer) {
             consumer.accept(success);
             return this;
         }
 
         @Override
-        public Either<F, S> onFailure(Consumer<F> consumer) {
+        public Either<F, S> onFailure(final Consumer<F> consumer) {
             return this;
         }
 
@@ -363,10 +372,11 @@ public interface Either<F, S> {
             return Option.of(failure);
         }
 
-        //TODO: does not look ok, what else can be done here?
+        //Note that for failure we can't actually transform the value, so error types of both instances should be compatible
+        //otherwise we'll get runtime class cast exception
         @Override
         @SuppressWarnings("unckecked")
-        public <NF, NS> Either<NF, NS> flatMap(final FN1<Either<NF, NS>, S> mapper) {
+        public <NF , NS> Either<NF, NS> flatMap(final FN1<Either<NF, NS>, S> mapper) {
             return new Failure<>((NF) failure);
         }
 
@@ -403,12 +413,12 @@ public interface Either<F, S> {
         }
 
         @Override
-        public Either<F, S> onSuccess(Consumer<S> consumer) {
+        public Either<F, S> onSuccess(final Consumer<S> consumer) {
             return this;
         }
 
         @Override
-        public Either<F, S> onFailure(Consumer<F> consumer) {
+        public Either<F, S> onFailure(final Consumer<F> consumer) {
             consumer.accept(failure);
             return this;
         }
