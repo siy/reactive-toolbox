@@ -20,7 +20,14 @@ import org.reactivetoolbox.core.functional.Option;
 
 import java.util.stream.Stream;
 
-//TODO: Javadoc
+/**
+ * The route in the router. It contains routing path (potentially with pattern) and handler assigned to this route.
+ *
+ * @param <T>
+ * @see {@link Router}
+ * @see {@link Envelope}
+ * @see {@link RouteBase}
+ */
 public class Route<T> implements RouteBase<T> {
     private final Path path;
     private final Handler<?, T> handler;
@@ -30,33 +37,70 @@ public class Route<T> implements RouteBase<T> {
         this.handler = handler;
     }
 
+    /**
+     * Create route for specified path and with provided handler.
+     *
+     * @param path
+     *        Route path
+     * @param handler
+     *        Route handler
+     * @return Created route
+     */
     public static <R> Route<R> of(final String path, final Handler<?, R> handler) {
         return of(Path.of(path), handler);
     }
 
+    /**
+     * Create route for specified path and with provided handler.
+     *
+     * @param path
+     *        Route path
+     * @param handler
+     *        Route handler
+     * @return Created route
+     */
     public static <R> Route<R> of(final Path path, final Handler<?, R> handler) {
         return new Route<>(path, handler);
     }
 
+    /**
+     * Get path assigned to this route
+     *
+     * @return Route path
+     */
     public Path path() {
         return path;
     }
 
+    /**
+     * Get handler assigned to this route
+     *
+     * @return Route handler
+     */
     @SuppressWarnings("unchecked")
     public <R> Handler<R, T> handler() {
         return (Handler<R, T>) handler;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Stream<Route<T>> stream() {
         return Stream.of(this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Stream<Option<RouteDescription>> descriptions() {
         return Stream.empty();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public RouteBase<T> root(final Option<String> root) {
         return new Route<>(path.root(root), handler);

@@ -16,7 +16,10 @@ package org.reactivetoolbox.web.server;
  * limitations under the License.
  */
 
-//TODO: extend it to make usable, add Javadoc
+/**
+ * Generalized HTTP request response interface
+ */
+//TODO: add Javadoc to methods
 public interface Response {
     Response setHeader(String name, String value);
 

@@ -4,7 +4,7 @@ import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.web.server.parameter.validation.Validator;
 
 public class AuthenticationConverter {
-    public static Validator<Option<Authentication>, Option<String>> create(final AuthHeader header) {
+    public static Validator<Option<Authentication>, Option<String>> create(final AuthorizationHeaderType header) {
         return switch(header) {
             case JWT -> JwtConverter.create();
             case BASIC -> BasicConverter.create();

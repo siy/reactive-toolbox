@@ -16,6 +16,8 @@ package org.reactivetoolbox.web.server.parameter.auth;
  * limitations under the License.
  */
 
-//TODO: Javadoc
+/**
+ * Marker interface for roles when role-based authentication.
+ */
 public interface Role {
 }

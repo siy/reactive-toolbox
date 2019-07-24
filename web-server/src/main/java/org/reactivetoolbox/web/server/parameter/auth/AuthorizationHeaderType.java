@@ -16,14 +16,16 @@ package org.reactivetoolbox.web.server.parameter.auth;
  * limitations under the License.
  */
 
-//TODO: Javadoc
-public enum AuthHeader {
+/**
+ * The type of "Authorization" header. The "Basic" and "Bearer" with JWT token are supported by now
+ */
+public enum AuthorizationHeaderType {
     JWT("Bearer"),
     BASIC("Basic")
     ;
     private final String prefix;
 
-    AuthHeader(final String prefix) {
+    AuthorizationHeaderType(final String prefix) {
         this.prefix = prefix;
     }
 

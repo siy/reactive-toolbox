@@ -22,7 +22,12 @@ import org.reactivetoolbox.web.server.parameter.TypeDescription;
  * limitations under the License.
  */
 
-//TODO: Javadoc
+/**
+ * Interface for parameter converters
+ *
+ * @param <T>
+ *        The type of the parameter value
+ */
 @FunctionalInterface
 public interface Converter<T> extends FN1<Either<? extends BaseError, T>, RequestContext> {
     default Option<TypeDescription> typeDescription() {

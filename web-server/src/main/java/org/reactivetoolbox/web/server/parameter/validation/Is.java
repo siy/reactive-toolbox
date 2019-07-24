@@ -29,10 +29,22 @@ import java.util.regex.Pattern;
 
 import static org.reactivetoolbox.core.functional.Either.failure;
 
-//TODO: Javadoc, tests
+/**
+ * Most common validators
+ */
 public interface Is {
     Pattern PASSWORD_CHECKER = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{2,}$");
 
+    /**
+     * Create new instance of {@link Validator} which validates that required parameter is present.
+     * <br>
+     * Unlike {@link #notNull(Option)} which also may serve as such validator, the {@link Validator} instance
+     * created with this method adds necessary comments for parameter into parameter description.
+     *
+     * @param <T>
+     *        Parameter type
+     * @return Created validator
+     */
     static <T> Validator<T, Option<T>> required() {
         return new Validator<>() {
             @Override
@@ -50,6 +62,15 @@ public interface Is {
         };
     }
 
+    /**
+     * Create new instance of {@link Validator} which validates that required string parameter is present and is not
+     * an empty string.
+     * <br>
+     * Unlike {@link #notNullOrEmpty(Option)} which also may serve as such validator, the {@link Validator} instance
+     * created with this method adds necessary comments for parameter into parameter description.
+     *
+     * @return Created validator
+     */
     static Validator<String, Option<String>> notNullOrEmpty() {
         return new Validator<>() {
             @Override
@@ -67,6 +88,16 @@ public interface Is {
         };
     }
 
+
+    /**
+     * Create new instance of {@link Validator} which validates that required string parameter is present and is a
+     * string with length between specified limits.
+     * <br>
+     * Unlike {@link #lenBetween(Option, int, int)} which also may serve as such validator, the {@link Validator} instance
+     * created with this method adds necessary comments for parameter into parameter description.
+     *
+     * @return Created validator
+     */
     static Validator<String, Option<String>> lenBetween(final int min, final int max) {
         return new Validator<>() {
             @Override
@@ -84,6 +115,24 @@ public interface Is {
         };
     }
 
+    /**
+     * Create new instance of {@link Validator} which validates that input string represents a password with following
+     * properties:
+     * <ul>
+     *     <li>Contains at least one lower case letter</li>
+     *     <li>Contains at least one upper case letter</li>
+     *     <li>Contains at least one digit</li>
+     *     <li>Contains at least one special character</li>
+     *     <li>Contains at least 2 character</li>
+     * </ul>
+     * Note: if longer password is required, then this validator can be combined with {@link #lenBetween(int, int)} or
+     * {@link #lenBetween(Option, int, int)} to enforce required password length.
+     * <br>
+     * Unlike {@link #strongPassword(String)} which also may serve as such validator, the {@link Validator} instance
+     * created with this method adds necessary comments for parameter into parameter description.
+     *
+     * @return Created validator
+     */
     static Validator<String, String> strongPassword() {
         return new Validator<>() {
             @Override
@@ -102,6 +151,7 @@ public interface Is {
         };
     }
 
+    //TODO: finish it
     static Validator<String, String> email() {
         return new Validator<>() {
             @Override
@@ -119,28 +169,85 @@ public interface Is {
         };
     }
 
+    //TODO: finish it
     static Either<? extends BaseError, String> email(final String email) {
-        //TODO: implement e-mail validation, implement validator object with description
         return Either.success(email);
     }
 
+    /**
+     * Create new instance of {@link Validator} which validates that number input is between specified integer bounds.
+     * <br>
+     * Unlike {@link #between(Number, int, int)}  which also may serve as such validator, the {@link Validator} instance
+     * created with this method adds necessary comments for parameter into parameter description.
+     *
+     * @param min
+     *        Inclusive lower bound
+     * @param max
+     *        Inclusive upper bound
+     * @return Created validator
+     */
     static <T extends Number> Validator<T, T> between(final int min, final int max) {
         return new NumberIntegerRangeValidator<>(min, max);
     }
 
+    /**
+     * Create new instance of {@link Validator} which validates that number input is between specified long integer bounds.
+     * <br>
+     * Unlike {@link #between(Number, long, long)}  which also may serve as such validator, the {@link Validator} instance
+     * created with this method adds necessary comments for parameter into parameter description.
+     *
+     * @param min
+     *        Inclusive lower bound
+     * @param max
+     *        Inclusive upper bound
+     * @return Created validator
+     */
     static <T extends Number> Validator<T, T> between(final long min, final long max) {
         return new NumberLongRangeValidator<>(min, max);
     }
 
+    /**
+     * Create new instance of {@link Validator} which validates that number input is between specified double precision
+     * floating point bounds.
+     * <br>
+     * Unlike {@link #between(Number, double, double)}  which also may serve as such validator, the {@link Validator} instance
+     * created with this method adds necessary comments for parameter into parameter description.
+     *
+     * @param min
+     *        Inclusive lower bound
+     * @param max
+     *        Inclusive upper bound
+     * @return Created validator
+     */
     static <T extends Number> Validator<T, T> between(final double min, final double max) {
         return new NumberDoubleRangeValidator<>(min, max);
     }
 
+    /**
+     * Validate that parameter is not <code>null</code>. This method serves as a converting {@link Validator} and
+     * transforms optional parameter value into actual parameter value or causes a validation failure if
+     * parameter is missing
+     *
+     * @param input
+     *        Input parameter
+     * @param <T>
+     *        Input parameter type
+     * @return Validation result
+     */
     static <T> Either<ValidationError, T> notNull(final Option<T> input) {
         return input.map(Either::<ValidationError, T>success)
                 .otherwise(() -> failure(ValidationError.STRING_IS_NULL));
     }
 
+    /**
+     * Validate that string parameter is not <code>null</code> and does not represent an empty string.
+     * This method serves as a converting {@link Validator} and transforms optional parameter string into actual string
+     * or causes a validation failure if string is empty or missing
+     *
+     * @param input
+     *        Input parameter
+     * @return Validation result
+     */
     static Either<ValidationError, String> notNullOrEmpty(final Option<String> input) {
         return input.map(val -> val.isBlank()
                 ? Either.<ValidationError, String>failure(ValidationError.STRING_IS_EMPTY)
@@ -148,40 +255,131 @@ public interface Is {
                 .otherwise(() -> failure(ValidationError.STRING_IS_NULL));
     }
 
+    /**
+     * Validate that number parameter is between specified integer bounds.
+     *
+     * @param input
+     *        Input parameter
+     * @param min
+     *        Inclusive lower bound
+     * @param max
+     *        Inclusive upper bound
+     * @return Validation result
+     */
     static <T extends Number> Either<? extends BaseError, T> between(final T input, final int min, final int max) {
         return new NumberIntegerRangeValidator<T>(min, max).apply(input);
     }
 
+    /**
+     * Validate that number parameter is between specified long integer bounds.
+     *
+     * @param input
+     *        Input parameter
+     * @param min
+     *        Inclusive lower bound
+     * @param max
+     *        Inclusive upper bound
+     * @return Validation result
+     */
     static <T extends Number> Either<? extends BaseError, T> between(final T input, final long min, final long max) {
         return new NumberLongRangeValidator<T>(min, max).apply(input);
     }
 
+    /**
+     * Validate that number parameter is between specified double precision floating point bounds.
+     *
+     * @param input
+     *        Input parameter
+     * @param min
+     *        Inclusive lower bound
+     * @param max
+     *        Inclusive upper bound
+     * @return Validation result
+     */
     static <T extends Number> Either<? extends BaseError, T> between(final T input, final double min, final double max) {
         return new NumberDoubleRangeValidator<T>(min, max).apply(input);
     }
 
+    /**
+     * Validate that optional string parameter is not null and has length within specified range. If parameter value
+     * passes validation, then actual string parameter value is returned.
+     *
+     * @param input1
+     *        Input parameter
+     * @param min
+     *        Inclusive lower bound
+     * @param max
+     *        Inclusive upper bound
+     * @return Validation result
+     */
     static Either<ValidationError, String> lenBetween(final Option<String> input1, final int minLen, final int maxLen) {
         return notNull(input1)
                 .flatMap(input -> input.length() < minLen
                         ? failure(ValidationError.STRING_TOO_SHORT)
-                        : input.length() < maxLen
-                                ? failure(ValidationError.STRING_TOO_LONG)
-                                : Either.success(input));
+                        : input.length() > maxLen
+                                ? Either.success(input)
+                                : failure(ValidationError.STRING_TOO_LONG));
     }
 
+    /**
+     * Validate that user is logged in. The validation is applicable to JWT authentication only and checks that
+     * JWT token is valid and is not expired. This validation converts optional input value into actual value
+     * if parameter is present and valid.
+     *
+     * @param authentication
+     *        Input parameter
+     * @return Validation result
+     */
     static Either<? extends BaseError, Authentication> loggedIn(final Option<Authentication> authentication) {
         return authentication.map(Authentication::token)
                 .otherwise(() -> failure(ValidationError.USER_NOT_LOGGED_IN));
     }
 
+    /**
+     * Validate that input string represents a password with following properties:
+     * <ul>
+     * <li>Contains at least one lower case letter</li>
+     *        <li>Contains at least one upper case letter</li>
+     *        <li>Contains at least one digit</li>
+     *        <li>Contains at least one special character</li>
+     *        <li>Contains at least 2 character</li>
+     * </ul>
+     * Note: if longer password is required, then this validator can be combined with {@link #lenBetween(int, int)} or
+     * {@link #lenBetween(Option, int, int)} to enforce required password length.
+     *
+     * @param string
+     *        Input parameter
+     *
+     * @return Validation result
+     */
     static Either<? extends BaseError, String> strongPassword(final String string) {
         return PASSWORD_CHECKER.matcher(string).find() ? Either.success(string) : Either.failure(ValidationError.WEAK_PASSWORD);
     }
 
+    /**
+     * Check that user belongs to all roles specified as parameters. Note that this implementation is applicable
+     * only to {@link Authentication} implementations which support role validation.
+     *
+     * @param authentication
+     *        Input parameter
+     * @param roles
+     *        Roles to check
+     * @return Validation result
+     */
     static Either<? extends BaseError, Authentication> belongsToAll(final Authentication authentication, final Role... roles) {
         return authentication.hasAllRoles(roles);
     }
 
+    /**
+     * Check that user belongs to any roles specified as parameters. Note that this implementation is applicable
+     * only to {@link Authentication} implementations which support role validation.
+     *
+     * @param authentication
+     *        Input parameter
+     * @param roles
+     *        Roles to check
+     * @return Validation result
+     */
     static Either<? extends BaseError, Authentication> belongsToAny(final Authentication authentication, final Role... roles) {
         return authentication.hasAnyRoles(roles);
     }

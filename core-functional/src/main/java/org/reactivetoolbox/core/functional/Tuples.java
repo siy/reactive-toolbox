@@ -29,7 +29,6 @@ import org.reactivetoolbox.core.functional.Functions.FN8;
 import org.reactivetoolbox.core.functional.Functions.FN9;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -37,7 +36,6 @@ import java.util.stream.Stream;
  * The Tuple is a container for variables. Tuples with size 1 to 9 are provided. Each variable may have different type
  * and all type information is preserved.
  */
-//TODO: rename 'flatMap' -> 'to'
 public final class Tuples {
     private Tuples() {
     }
@@ -233,39 +231,113 @@ public final class Tuples {
         return new Tuple9<>(param1, param2, param3, param4, param5, param6, param7, param8, param9);
     }
 
-    public static <T1> Either<? extends BaseError, Tuple1<T1>> squeeze(final Either<? extends BaseError, T1> value) {
+    /**
+     * Transform {@link Either} with failure or success into {@link Either} with which contains either failure or
+     * tuple with success value.
+     *
+     * @param value
+     *        Input value
+     *
+     * @return {@link Either} with failure if input parameter contains failure or with {@link Tuple} which contains
+     *          success value from input parameter
+     */
+    public static <T1> Either<? extends BaseError, Tuple1<T1>> zip(final Either<? extends BaseError, T1> value) {
         return value.flatMap(vv1 -> Either.success(of(vv1)));
     }
 
-    public static <T1, T2> Either<? extends BaseError, Tuple2<T1, T2>> squeeze(final Either<? extends BaseError, T1> value1,
-                                                                               final Either<? extends BaseError, T2> value2) {
+    /**
+     * Transform input {@link Either}'s with failure or success into {@link Either} with which contains either failure
+     * or tuple with success values. Any parameter with failure will result to result with failure. The value of the
+     * failure will be one from first input parameter with failure.
+     *
+     * @param value1
+     *        Input value #1
+     * @param value2
+     *        Input value #2
+     *
+     * @return {@link Either} with failure if any input parameters contain failure or with {@link Tuple} which contains
+     *          success values from input parameters
+     */
+    public static <T1, T2> Either<? extends BaseError, Tuple2<T1, T2>> zip(final Either<? extends BaseError, T1> value1,
+                                                                           final Either<? extends BaseError, T2> value2) {
         return value1.flatMap(vv1 ->
                 value2.flatMap(vv2 -> Either.success(of(vv1, vv2))));
     }
 
-    public static <T1, T2, T3>  Either<? extends BaseError, Tuple3<T1, T2, T3>> squeeze(final Either<? extends BaseError, T1> value1,
-                                                                                        final Either<? extends BaseError, T2> value2,
-                                                                                        final Either<? extends BaseError, T3> value3) {
+    /**
+     * Transform input {@link Either}'s with failure or success into {@link Either} with which contains either failure
+     * or tuple with success values. Any parameter with failure will result to result with failure. The value of the
+     * failure will be one from first input parameter with failure.
+     *
+     * @param value1
+     *        Input value #1
+     * @param value2
+     *        Input value #2
+     * @param value3
+     *        Input value #3
+     *
+     * @return {@link Either} with failure if any input parameters contain failure or with {@link Tuple} which contains
+     *          success values from input parameters
+     */
+    public static <T1, T2, T3>  Either<? extends BaseError, Tuple3<T1, T2, T3>> zip(final Either<? extends BaseError, T1> value1,
+                                                                                    final Either<? extends BaseError, T2> value2,
+                                                                                    final Either<? extends BaseError, T3> value3) {
         return value1.flatMap(vv1 ->
                 value2.flatMap(vv2 ->
                  value3.flatMap(vv3 -> Either.success(of(vv1, vv2, vv3)))));
     }
 
-    public static <T1, T2, T3, T4>  Either<? extends BaseError, Tuple4<T1, T2, T3, T4>> squeeze(final Either<? extends BaseError, T1> value1,
-                                                                                                final Either<? extends BaseError, T2> value2,
-                                                                                                final Either<? extends BaseError, T3> value3,
-                                                                                                final Either<? extends BaseError, T4> value4) {
+    /**
+     * Transform input {@link Either}'s with failure or success into {@link Either} with which contains either failure
+     * or tuple with success values. Any parameter with failure will result to result with failure. The value of the
+     * failure will be one from first input parameter with failure.
+     *
+     * @param value1
+     *        Input value #1
+     * @param value2
+     *        Input value #2
+     * @param value3
+     *        Input value #3
+     * @param value4
+     *        Input value #4
+     *
+     * @return {@link Either} with failure if any input parameters contain failure or with {@link Tuple} which contains
+     *          success values from input parameters
+     */
+    public static <T1, T2, T3, T4>  Either<? extends BaseError, Tuple4<T1, T2, T3, T4>> zip(final Either<? extends BaseError, T1> value1,
+                                                                                            final Either<? extends BaseError, T2> value2,
+                                                                                            final Either<? extends BaseError, T3> value3,
+                                                                                            final Either<? extends BaseError, T4> value4) {
         return value1.flatMap(vv1 ->
                 value2.flatMap(vv2 ->
                  value3.flatMap(vv3 ->
                   value4.flatMap(vv4 -> Either.success(of(vv1, vv2, vv3, vv4))))));
     }
 
-    public static <T1, T2, T3, T4, T5>  Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>> squeeze(final Either<? extends BaseError, T1> value1,
-                                                                                                        final Either<? extends BaseError, T2> value2,
-                                                                                                        final Either<? extends BaseError, T3> value3,
-                                                                                                        final Either<? extends BaseError, T4> value4,
-                                                                                                        final Either<? extends BaseError, T5> value5) {
+    /**
+     * Transform input {@link Either}'s with failure or success into {@link Either} with which contains either failure
+     * or tuple with success values. Any parameter with failure will result to result with failure. The value of the
+     * failure will be one from first input parameter with failure.
+     *
+     * @param value1
+     *        Input value #1
+     * @param value2
+     *        Input value #2
+     * @param value3
+     *        Input value #3
+     * @param value4
+     *        Input value #4
+     * @param value5
+     *        Input value #5
+     *
+     * @return {@link Either} with failure if any input parameters contain failure or with {@link Tuple} which contains
+     *          success values from input parameters
+     */
+    public static <T1, T2, T3, T4, T5>  Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>> zip(final Either<? extends BaseError, T1> value1,
+                                                                                                    final Either<? extends BaseError, T2> value2,
+                                                                                                    final Either<? extends BaseError, T3> value3,
+                                                                                                    final Either<? extends BaseError, T4> value4,
+                                                                                                    final Either<? extends BaseError, T5> value5) {
         return value1.flatMap(vv1 ->
                 value2.flatMap(vv2 ->
                  value3.flatMap(vv3 ->
@@ -273,12 +345,33 @@ public final class Tuples {
                    value5.flatMap(vv5 -> Either.success(of(vv1, vv2, vv3, vv4, vv5)))))));
     }
 
-    public static <T1, T2, T3, T4, T5, T6>  Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>> squeeze(final Either<? extends BaseError, T1> value1,
-                                                                                                                final Either<? extends BaseError, T2> value2,
-                                                                                                                final Either<? extends BaseError, T3> value3,
-                                                                                                                final Either<? extends BaseError, T4> value4,
-                                                                                                                final Either<? extends BaseError, T5> value5,
-                                                                                                                final Either<? extends BaseError, T6> value6) {
+    /**
+     * Transform input {@link Either}'s with failure or success into {@link Either} with which contains either failure
+     * or tuple with success values. Any parameter with failure will result to result with failure. The value of the
+     * failure will be one from first input parameter with failure.
+     *
+     * @param value1
+     *        Input value #1
+     * @param value2
+     *        Input value #2
+     * @param value3
+     *        Input value #3
+     * @param value4
+     *        Input value #4
+     * @param value5
+     *        Input value #5
+     * @param value6
+     *        Input value #6
+     *
+     * @return {@link Either} with failure if any input parameters contain failure or with {@link Tuple} which contains
+     *          success values from input parameters
+     */
+    public static <T1, T2, T3, T4, T5, T6>  Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>> zip(final Either<? extends BaseError, T1> value1,
+                                                                                                            final Either<? extends BaseError, T2> value2,
+                                                                                                            final Either<? extends BaseError, T3> value3,
+                                                                                                            final Either<? extends BaseError, T4> value4,
+                                                                                                            final Either<? extends BaseError, T5> value5,
+                                                                                                            final Either<? extends BaseError, T6> value6) {
         return value1.flatMap(vv1 ->
                 value2.flatMap(vv2 ->
                  value3.flatMap(vv3 ->
@@ -287,13 +380,36 @@ public final class Tuples {
                     value6.flatMap(vv6 -> Either.success(of(vv1, vv2, vv3, vv4, vv5, vv6))))))));
     }
 
-    public static <T1, T2, T3, T4, T5, T6, T7>  Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>> squeeze(final Either<? extends BaseError, T1> value1,
-                                                                                                                        final Either<? extends BaseError, T2> value2,
-                                                                                                                        final Either<? extends BaseError, T3> value3,
-                                                                                                                        final Either<? extends BaseError, T4> value4,
-                                                                                                                        final Either<? extends BaseError, T5> value5,
-                                                                                                                        final Either<? extends BaseError, T6> value6,
-                                                                                                                        final Either<? extends BaseError, T7> value7) {
+    /**
+     * Transform input {@link Either}'s with failure or success into {@link Either} with which contains either failure
+     * or tuple with success values. Any parameter with failure will result to result with failure. The value of the
+     * failure will be one from first input parameter with failure.
+     *
+     * @param value1
+     *        Input value #1
+     * @param value2
+     *        Input value #2
+     * @param value3
+     *        Input value #3
+     * @param value4
+     *        Input value #4
+     * @param value5
+     *        Input value #5
+     * @param value6
+     *        Input value #6
+     * @param value7
+     *        Input value #7
+     *
+     * @return {@link Either} with failure if any input parameters contain failure or with {@link Tuple} which contains
+     *          success values from input parameters
+     */
+    public static <T1, T2, T3, T4, T5, T6, T7>  Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>> zip(final Either<? extends BaseError, T1> value1,
+                                                                                                                    final Either<? extends BaseError, T2> value2,
+                                                                                                                    final Either<? extends BaseError, T3> value3,
+                                                                                                                    final Either<? extends BaseError, T4> value4,
+                                                                                                                    final Either<? extends BaseError, T5> value5,
+                                                                                                                    final Either<? extends BaseError, T6> value6,
+                                                                                                                    final Either<? extends BaseError, T7> value7) {
         return value1.flatMap(vv1 ->
                 value2.flatMap(vv2 ->
                  value3.flatMap(vv3 ->
@@ -303,14 +419,39 @@ public final class Tuples {
                      value7.flatMap(vv7 -> Either.success(of(vv1, vv2, vv3, vv4, vv5, vv6, vv7)))))))));
     }
 
-    public static <T1, T2, T3, T4, T5, T6, T7, T8>  Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>> squeeze(final Either<? extends BaseError, T1> value1,
-                                                                                                                                final Either<? extends BaseError, T2> value2,
-                                                                                                                                final Either<? extends BaseError, T3> value3,
-                                                                                                                                final Either<? extends BaseError, T4> value4,
-                                                                                                                                final Either<? extends BaseError, T5> value5,
-                                                                                                                                final Either<? extends BaseError, T6> value6,
-                                                                                                                                final Either<? extends BaseError, T7> value7,
-                                                                                                                                final Either<? extends BaseError, T8> value8) {
+    /**
+     * Transform input {@link Either}'s with failure or success into {@link Either} with which contains either failure
+     * or tuple with success values. Any parameter with failure will result to result with failure. The value of the
+     * failure will be one from first input parameter with failure.
+     *
+     * @param value1
+     *        Input value #1
+     * @param value2
+     *        Input value #2
+     * @param value3
+     *        Input value #3
+     * @param value4
+     *        Input value #4
+     * @param value5
+     *        Input value #5
+     * @param value6
+     *        Input value #6
+     * @param value7
+     *        Input value #7
+     * @param value8
+     *        Input value #8
+     *
+     * @return {@link Either} with failure if any input parameters contain failure or with {@link Tuple} which contains
+     *          success values from input parameters
+     */
+    public static <T1, T2, T3, T4, T5, T6, T7, T8>  Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>> zip(final Either<? extends BaseError, T1> value1,
+                                                                                                                            final Either<? extends BaseError, T2> value2,
+                                                                                                                            final Either<? extends BaseError, T3> value3,
+                                                                                                                            final Either<? extends BaseError, T4> value4,
+                                                                                                                            final Either<? extends BaseError, T5> value5,
+                                                                                                                            final Either<? extends BaseError, T6> value6,
+                                                                                                                            final Either<? extends BaseError, T7> value7,
+                                                                                                                            final Either<? extends BaseError, T8> value8) {
         return value1.flatMap(vv1 ->
                 value2.flatMap(vv2 ->
                  value3.flatMap(vv3 ->
@@ -321,15 +462,42 @@ public final class Tuples {
                       value8.flatMap(vv8 -> Either.success(of(vv1, vv2, vv3, vv4, vv5, vv6, vv7, vv8))))))))));
     }
 
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9>  Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> squeeze(final Either<? extends BaseError, T1> value1,
-                                                                                                                                        final Either<? extends BaseError, T2> value2,
-                                                                                                                                        final Either<? extends BaseError, T3> value3,
-                                                                                                                                        final Either<? extends BaseError, T4> value4,
-                                                                                                                                        final Either<? extends BaseError, T5> value5,
-                                                                                                                                        final Either<? extends BaseError, T6> value6,
-                                                                                                                                        final Either<? extends BaseError, T7> value7,
-                                                                                                                                        final Either<? extends BaseError, T8> value8,
-                                                                                                                                        final Either<? extends BaseError, T9> value9) {
+    /**
+     * Transform input {@link Either}'s with failure or success into {@link Either} with which contains either failure
+     * or tuple with success values. Any parameter with failure will result to result with failure. The value of the
+     * failure will be one from first input parameter with failure.
+     *
+     * @param value1
+     *        Input value #1
+     * @param value2
+     *        Input value #2
+     * @param value3
+     *        Input value #3
+     * @param value4
+     *        Input value #4
+     * @param value5
+     *        Input value #5
+     * @param value6
+     *        Input value #6
+     * @param value7
+     *        Input value #7
+     * @param value8
+     *        Input value #8
+     * @param value9
+     *        Input value #9
+     *
+     * @return {@link Either} with failure if any input parameters contain failure or with {@link Tuple} which contains
+     *          success values from input parameters
+     */
+    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9>  Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> zip(final Either<? extends BaseError, T1> value1,
+                                                                                                                                    final Either<? extends BaseError, T2> value2,
+                                                                                                                                    final Either<? extends BaseError, T3> value3,
+                                                                                                                                    final Either<? extends BaseError, T4> value4,
+                                                                                                                                    final Either<? extends BaseError, T5> value5,
+                                                                                                                                    final Either<? extends BaseError, T6> value6,
+                                                                                                                                    final Either<? extends BaseError, T7> value7,
+                                                                                                                                    final Either<? extends BaseError, T8> value8,
+                                                                                                                                    final Either<? extends BaseError, T9> value9) {
         return value1.flatMap(vv1 ->
                 value2.flatMap(vv2 ->
                  value3.flatMap(vv3 ->
@@ -345,14 +513,10 @@ public final class Tuples {
      * Base class for all tuples.
      */
     public static class Tuple {
-        private final Object[] values;
+        protected final Object[] values;
 
         protected Tuple(final Object... values) {
             this.values = values;
-        }
-
-        protected Object get(final int i) {
-            return values[i];
         }
 
         public int size() {
@@ -382,22 +546,6 @@ public final class Tuples {
         }
 
         /**
-         * Submit all values contained in tuple to provided consumer.
-         * <p>
-         * <b>WARNING: this method is inherently type-unsafe, because all information about types is lost. Use with
-         * extreme care!!!</b>
-         *
-         * @param consumer
-         *        The {@link Consumer} to which stored values will be passed.
-         */
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        public void forEach(final Consumer consumer) {
-            for (final Object value : values) {
-                consumer.accept(value);
-            }
-        }
-
-        /**
          * Return all values contained in tuple as stream.
          * <p>
          * <b>WARNING: this method is inherently type-unsafe, because all information about types is lost. Use with
@@ -409,9 +557,11 @@ public final class Tuples {
         public <R> Stream<R> stream() {
             return Stream.of(values).map(v -> (R) v);
         }
-
     }
 
+    /**
+     * Empty tuple
+     */
     public static class Tuple0 extends Tuple {
         private Tuple0() {
             super();
@@ -426,157 +576,104 @@ public final class Tuples {
         }
     }
 
+    /**
+     * Tuple with 1 value
+     */
     public static class Tuple1<T1> extends Tuple {
         private Tuple1(final T1 param1) {
             super(param1);
         }
 
         @SuppressWarnings("unchecked")
-        public T1 get1() {
-            return (T1) get(0);
-        }
-
         public <T> T map(final FN1<T, T1> mapper) {
-            return mapper.apply(get1());
+            return mapper.apply((T1) values[0]);
         }
 
         @SuppressWarnings("unchecked")
-        //TODO: convert it to zip?
-        protected <TT1> Tuple1<TT1> compose(final Object... values) {
-            return new Tuple1<>((TT1) values[0]);
-        }
-
         public <T2> Tuple2<T1, T2> append(final T2 value) {
-            return new Tuple2<>(get1(), value);
+            return new Tuple2<>((T1) values[0], value);
         }
     }
 
+    /**
+     * Tuple with 2 values
+     */
     public static class Tuple2<T1, T2> extends Tuple {
         private Tuple2(final T1 param1, final T2 param2) {
             super(param1, param2);
         }
 
         @SuppressWarnings("unchecked")
-        public T1 get1() {
-            return (T1) get(0);
+        public <T> T map(final FN2<T, T1, T2> mapper) {
+            return mapper.apply((T1) values[0], (T2) values[1]);
         }
 
         @SuppressWarnings("unchecked")
-        public T2 get2() {
-            return (T2) get(1);
-        }
-
-        public <T> T map(final FN2<T, T1, T2> mapper) {
-            return mapper.apply(get1(), get2());
-        }
-
         public <T3> Tuple3<T1, T2, T3> append(final T3 value) {
-            return new Tuple3<>(get1(), get2(), value);
+            return new Tuple3<>((T1) values[0], (T2) values[1], value);
         }
     }
 
+    /**
+     * Tuple with 3 values
+     */
     public static class Tuple3<T1, T2, T3> extends Tuple {
         private Tuple3(final T1 param1, final T2 param2, final T3 param3) {
             super(param1, param2, param3);
         }
 
         @SuppressWarnings("unchecked")
-        public T1 get1() {
-            return (T1) get(0);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T2 get2() {
-            return (T2) get(1);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T3 get3() {
-            return (T3) get(2);
-        }
-
         public <T> T map(final FN3<T, T1, T2, T3> mapper) {
-            return mapper.apply(get1(), get2(), get3());
+            return mapper.apply((T1) values[0], (T2) values[1], (T3) values[2]);
         }
 
+        @SuppressWarnings("unchecked")
         public <T4> Tuple4<T1, T2, T3, T4> append(final T4 value) {
-            return new Tuple4<>(get1(), get2(), get3(), value);
+            return new Tuple4<>((T1) values[0], (T2) values[1], (T3) values[2], value);
         }
     }
 
+    /**
+     * Tuple with 4 values
+     */
     public static class Tuple4<T1, T2, T3, T4> extends Tuple {
         private Tuple4(final T1 param1, final T2 param2, final T3 param3, final T4 param4) {
             super(param1, param2, param3, param4);
         }
 
         @SuppressWarnings("unchecked")
-        public T1 get1() {
-            return (T1) get(0);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T2 get2() {
-            return (T2) get(1);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T3 get3() {
-            return (T3) get(2);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T4 get4() {
-            return (T4) get(3);
-        }
-
         public <T> T map(final FN4<T, T1, T2, T3, T4> mapper) {
-            return mapper.apply(get1(), get2(), get3(), get4());
+            return mapper.apply((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3]);
         }
 
+        @SuppressWarnings("unchecked")
         public <T5> Tuple5<T1, T2, T3, T4, T5> append(final T5 value) {
-            return new Tuple5<>(get1(), get2(), get3(), get4(), value);
+            return new Tuple5<>((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], value);
         }
     }
 
+    /**
+     * Tuple with 5 values
+     */
     public static class Tuple5<T1, T2, T3, T4, T5> extends Tuple {
         private Tuple5(final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5) {
             super(param1, param2, param3, param4, param5);
         }
 
         @SuppressWarnings("unchecked")
-        public T1 get1() {
-            return (T1) get(0);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T2 get2() {
-            return (T2) get(1);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T3 get3() {
-            return (T3) get(2);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T4 get4() {
-            return (T4) get(3);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T5 get5() {
-            return (T5) get(4);
-        }
-
         public <T> T map(final FN5<T, T1, T2, T3, T4, T5> mapper) {
-            return mapper.apply(get1(), get2(), get3(), get4(), get5());
+            return mapper.apply((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4]);
         }
 
+        @SuppressWarnings("unchecked")
         public <T6> Tuple6<T1, T2, T3, T4, T5, T6> append(final T6 value) {
-            return new Tuple6<>(get1(), get2(), get3(), get4(), get5(), value);
+            return new Tuple6<>((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4], value);
         }
     }
 
+    /**
+     * Tuple with 6 values
+     */
     public static class Tuple6<T1, T2, T3, T4, T5, T6> extends Tuple {
         private Tuple6(final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5,
                        final T6 param6) {
@@ -584,44 +681,19 @@ public final class Tuples {
         }
 
         @SuppressWarnings("unchecked")
-        public T1 get1() {
-            return (T1) get(0);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T2 get2() {
-            return (T2) get(1);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T3 get3() {
-            return (T3) get(2);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T4 get4() {
-            return (T4) get(3);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T5 get5() {
-            return (T5) get(4);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T6 get6() {
-            return (T6) get(5);
-        }
-
         public <T> T map(final FN6<T, T1, T2, T3, T4, T5, T6> mapper) {
-            return mapper.apply(get1(), get2(), get3(), get4(), get5(), get6());
+            return mapper.apply((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4], (T6) values[5]);
         }
 
+        @SuppressWarnings("unchecked")
         public <T7> Tuple7<T1, T2, T3, T4, T5, T6, T7> append(final T7 value) {
-            return new Tuple7<>(get1(), get2(), get3(), get4(), get5(), get6(), value);
+            return new Tuple7<>((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4], (T6) values[5], value);
         }
     }
 
+    /**
+     * Tuple with 7 values
+     */
     public static class Tuple7<T1, T2, T3, T4, T5, T6, T7> extends Tuple {
         private Tuple7(final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5,
                        final T6 param6, final T7 param7) {
@@ -629,49 +701,20 @@ public final class Tuples {
         }
 
         @SuppressWarnings("unchecked")
-        public T1 get1() {
-            return (T1) get(0);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T2 get2() {
-            return (T2) get(1);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T3 get3() {
-            return (T3) get(2);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T4 get4() {
-            return (T4) get(3);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T5 get5() {
-            return (T5) get(4);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T6 get6() {
-            return (T6) get(5);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T7 get7() {
-            return (T7) get(6);
-        }
-
         public <T> T map(final FN7<T, T1, T2, T3, T4, T5, T6, T7> mapper) {
-            return mapper.apply(get1(), get2(), get3(), get4(), get5(), get6(), get7());
+            return mapper.apply((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4], (T6) values[5], (T7) values[6]);
         }
 
+        @SuppressWarnings("unchecked")
         public <T8> Tuple8<T1, T2, T3, T4, T5, T6, T7, T8> append(final T8 value) {
-            return new Tuple8<>(get1(), get2(), get3(), get4(), get5(), get6(), get7(), value);
+            return new Tuple8<>((T1) values[0],
+                                (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4], (T6) values[5], (T7) values[6], value);
         }
     }
 
+    /**
+     * Tuple with 8 values
+     */
     public static class Tuple8<T1, T2, T3, T4, T5, T6, T7, T8> extends Tuple {
         private Tuple8(final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5,
                        final T6 param6, final T7 param7, final T8 param8) {
@@ -679,54 +722,21 @@ public final class Tuples {
         }
 
         @SuppressWarnings("unchecked")
-        public T1 get1() {
-            return (T1) get(0);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T2 get2() {
-            return (T2) get(1);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T3 get3() {
-            return (T3) get(2);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T4 get4() {
-            return (T4) get(3);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T5 get5() {
-            return (T5) get(4);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T6 get6() {
-            return (T6) get(5);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T7 get7() {
-            return (T7) get(6);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T8 get8() {
-            return (T8) get(7);
-        }
-
         public <T> T map(final FN8<T, T1, T2, T3, T4, T5, T6, T7, T8> mapper) {
-            return mapper.apply(get1(), get2(), get3(), get4(), get5(), get6(), get7(), get8());
+            return mapper.apply((T1) values[0], (T2) values[1],
+                                (T3) values[2], (T4) values[3], (T5) values[4], (T6) values[5], (T7) values[6], (T8) values[7]);
         }
 
+        @SuppressWarnings("unchecked")
         public <T9> Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9> append(final T9 value) {
-            return new Tuple9<>(get1(), get2(), get3(), get4(), get5(), get6(), get7(), get8(), value);
+            return new Tuple9<>((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3],
+                                (T5) values[4], (T6) values[5], (T7) values[6], (T8) values[7], value);
         }
     }
 
+    /**
+     * Tuple with 9 values
+     */
     public static class Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9> extends Tuple {
         private Tuple9(final T1 param1, final T2 param2, final T3 param3, final T4 param4, final T5 param5,
                        final T6 param6, final T7 param7, final T8 param8, final T9 param9) {
@@ -734,52 +744,9 @@ public final class Tuples {
         }
 
         @SuppressWarnings("unchecked")
-        public T1 get1() {
-            return (T1) get(0);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T2 get2() {
-            return (T2) get(1);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T3 get3() {
-            return (T3) get(2);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T4 get4() {
-            return (T4) get(3);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T5 get5() {
-            return (T5) get(4);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T6 get6() {
-            return (T6) get(5);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T7 get7() {
-            return (T7) get(6);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T8 get8() {
-            return (T8) get(7);
-        }
-
-        @SuppressWarnings("unchecked")
-        public T9 get9() {
-            return (T9) get(8);
-        }
-
         public <T> T map(final FN9<T, T1, T2, T3, T4, T5, T6, T7, T8, T9> mapper) {
-            return mapper.apply(get1(), get2(), get3(), get4(), get5(), get6(), get7(), get8(), get9());
+            return mapper.apply((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4],
+                                (T6) values[5], (T7) values[6], (T8) values[7], (T9) values[8]);
         }
     }
 }

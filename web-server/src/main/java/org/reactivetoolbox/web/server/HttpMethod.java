@@ -23,7 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-//TODO: Javadoc
+/**
+ * HTTP Methods declaration suitable for building {@link org.reactivetoolbox.eventbus.Path} for HTTP routes.
+ */
 public enum HttpMethod implements PathKey {
     GET, PUT, PATCH, POST, HEADER;
 

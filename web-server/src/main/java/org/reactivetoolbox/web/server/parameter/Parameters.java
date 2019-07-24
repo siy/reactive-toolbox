@@ -14,9 +14,9 @@ import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.web.server.Request;
 import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.Response;
-import org.reactivetoolbox.web.server.parameter.auth.AuthHeader;
 import org.reactivetoolbox.web.server.parameter.auth.Authentication;
 import org.reactivetoolbox.web.server.parameter.auth.AuthenticationConverter;
+import org.reactivetoolbox.web.server.parameter.auth.AuthorizationHeaderType;
 import org.reactivetoolbox.web.server.parameter.conversion.Converter;
 import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
 import org.reactivetoolbox.web.server.parameter.validation.Validator;
@@ -117,7 +117,7 @@ public class Parameters {
      *        Type of the recognized authorization. Basic and JWT types are supported
      * @return Request parameter definition
      */
-    public static P<Option<Authentication>> inAuthHeader(final AuthHeader header) {
+    public static P<Option<Authentication>> inAuthHeader(final AuthorizationHeaderType header) {
         return inHeader(String.class, Headers.AUTHORIZATION).and(AuthenticationConverter.create(header));
     }
 

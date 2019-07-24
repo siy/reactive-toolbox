@@ -16,7 +16,18 @@ package org.reactivetoolbox.eventbus;
  * limitations under the License.
  */
 
-//TODO: Javadoc
+/**
+ * Common interface for path keys. The purpose of path key is to distinguish routes
+ * with the same path but different purpose, for example to distinguish HTTP routes for
+ * different HTTP methods.
+ *
+ * @see {@link Path}
+ */
 public interface PathKey {
+    /**
+     * Get path key value.
+     *
+     * @return  Value of the key
+     */
     String key();
 }

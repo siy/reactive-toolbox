@@ -22,7 +22,10 @@ import org.reactivetoolbox.core.functional.Pair;
 import java.util.List;
 import java.util.Map;
 
-//TODO: extend it to make usable, add Javadoc
+/**
+ * Generalized HTTP request interface
+ */
+//TODO: finish docs
 public interface Request {
     Request pathParameters(final List<Pair<String, String>> pairs);
 

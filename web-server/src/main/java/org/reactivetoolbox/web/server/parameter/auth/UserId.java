@@ -21,8 +21,22 @@ import org.reactivetoolbox.core.functional.Either;
 
 import java.util.UUID;
 
-//TODO: Javadoc
+/**
+ * Generic user Id suitable for various use cases
+ */
 public interface UserId {
+    /**
+     * Get user Id as string, possibly converting it from internal representation.
+     *
+     * @return String representing user Id.
+     */
     String asString();
+
+    /**
+     * Get user Id as {@link UUID}, possibly converting it from internal representation.
+     * If error occurred or implementation does not support such a conversion, then {@link Either} with failure is returned.
+     *
+     * @return {@link Either} with user Id converted to {@link UUID} or with failure
+     */
     Either<? extends BaseError, UUID> asUUID();
 }

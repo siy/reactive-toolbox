@@ -23,15 +23,13 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
- * General purpose container suitable for holding pair of linked values, like key and get in map.
+ * General purpose container suitable for holding pair of linked values, like key and value in map.
  *
  * @param <L>
- *        type of failure get in pair
+ *        Type of left value
  * @param <R>
- *        type of success get in pair
+ *        Type of right value
  */
-//TODO: docs
-//TODO: add swap, flatMap
 public final class Pair<L, R> {
     private final L left;
     private final R right;
@@ -45,47 +43,107 @@ public final class Pair<L, R> {
      * Factory method for creation of instances of {@link Pair} with given values.
      *
      * @param left
-     *        failure get
+     *        Left value
      * @param right
-     *        success get
+     *        Right value
      * @param <L>
-     *        type of failure get
+     *        type of left value
      * @param <R>
-     *        type of success get
+     *        type of right value
      * @return created instance
      */
     public static <L, R> Pair<L, R> of(final L left, final R right) {
         return new Pair<>(left, right);
     }
 
+    /**
+     * Get left value in pair
+     *
+     * @return left value
+     */
     public L left() {
         return left;
     }
 
+    /**
+     * Get right value in pair
+     *
+     * @return right value
+     */
     public R right() {
         return right;
     }
 
-    public <L1, R1> Pair<L1, R1> map(final FN1<L1, L> leftMapper, final FN1<R1, R> rigthMapper) {
-        return of(leftMapper.apply(left), rigthMapper.apply(right));
+    /**
+     * Transform both values in pair and construct an instance with new values.
+     *
+     * @param leftMapper
+     *        Function used to transform left value
+     * @param rightMapper
+     *        Function used to transform right value
+     * @param <L1>
+     *        New type of left value
+     * @param <R1>
+     *        New type of right value
+     *
+     * @return Transformed pair
+     */
+    public <L1, R1> Pair<L1, R1> map(final FN1<L1, L> leftMapper, final FN1<R1, R> rightMapper) {
+        return of(leftMapper.apply(left), rightMapper.apply(right));
     }
 
+    /**
+     * Transform pair into value of other type
+     * @param mapper
+     *        Function used transform pair
+     * @param <V>
+     *        Type of new value
+     *
+     * @return Result of transformation
+     */
     public <V> V map(final FN2<V, L, R> mapper) {
         return mapper.apply(left, right);
     }
 
+    /**
+     * Transform pair into pair of values of other types
+     *
+     * @param mapper
+     *        Function used to transform pair
+     * @param <L1>
+     *        New left value type
+     * @param <R1>
+     *        New right value type
+     *
+     * @return Pair of transformed values
+     */
     public <L1, R1> Pair<L1, R1> flatMap(final FN2<Pair<L1, R1>, L, R> mapper) {
         return mapper.apply(left, right);
     }
 
+    /**
+     * Swap left and right values.
+     *
+     * @return Transformed pair
+     */
     public Pair<R, L> swap() {
         return of(right, left);
     }
 
+    /**
+     * Get access to left value
+     *
+     * @return {@link Option} which contains left value
+     */
     public Option<L> tryLeft() {
         return Option.of(left);
     }
 
+    /**
+     * Get access to right value
+     *
+     * @return {@link Option} which contains right value
+     */
     public Option<R> tryRight() {
         return Option.of(right);
     }

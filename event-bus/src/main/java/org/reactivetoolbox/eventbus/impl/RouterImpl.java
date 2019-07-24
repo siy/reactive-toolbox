@@ -35,11 +35,16 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Stream;
 
-//TODO: Javadoc
+/**
+ * Basic {@link Router<T>} implementation.
+ */
 public final class RouterImpl<T> implements Router<T> {
     private final ConcurrentMap<String, Route<T>> exactRoutes = new ConcurrentHashMap<>();
     private final ConcurrentNavigableMap<String, List<Route<T>>> prefixedRoutes = new ConcurrentSkipListMap<>();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <R> Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> deliver(final Envelope<T> event) {
         final Option<Either<? extends BaseError, Promise<Either<? extends BaseError, R>>>> eitherOption =
@@ -49,6 +54,9 @@ public final class RouterImpl<T> implements Router<T> {
         return eitherOption.otherwise(() -> Either.failure(RoutingError.NO_SUCH_ROUTE));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @SafeVarargs
     @Override
     public final Router<T> with(final Option<String> root, final RouteBase<T>... routes) {

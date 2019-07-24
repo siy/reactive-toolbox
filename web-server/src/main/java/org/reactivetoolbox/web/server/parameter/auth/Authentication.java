@@ -19,8 +19,15 @@ package org.reactivetoolbox.web.server.parameter.auth;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 
-//TODO: Javadoc
+/**
+ * Common interface for authentication data container.
+ */
 public interface Authentication {
+    /**
+     * Get user ID associated with this instance
+     *
+     * @return User ID
+     */
     UserId userId();
     Either<? extends BaseError, Authentication> token();
     Either<? extends BaseError, Authentication> hasAllRoles(Role ... roles);

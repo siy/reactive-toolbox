@@ -19,7 +19,9 @@ package org.reactivetoolbox.eventbus;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 
-//TODO: Javadoc
+/**
+ * Routing error constants
+ */
 public enum RoutingError implements BaseError {
     NO_SUCH_ROUTE,
     ;

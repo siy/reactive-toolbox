@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.reactivetoolbox.core.functional.Tuples.squeeze;
+import static org.reactivetoolbox.core.functional.Tuples.zip;
 
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
@@ -368,7 +368,7 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map(v1 -> squeeze(v1.converter().apply(context)))
+                                    context -> parameters.map(v1 -> Tuples.zip(v1.converter().apply(context)))
                                                          .flatMap(Either::<BaseError, Tuple1<T1>>success)
                                                          .mapSuccess(params -> params.map(handler)));
         }
@@ -393,8 +393,8 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2) -> squeeze(v1.converter().apply(context),
-                                                                                  v2.converter().apply(context)))
+                                    context -> parameters.map((v1, v2) -> Tuples.zip(v1.converter().apply(context),
+                                                                                     v2.converter().apply(context)))
                                                          .flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
@@ -427,9 +427,9 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3) -> squeeze(v1.converter().apply(context),
-                                                                                      v2.converter().apply(context),
-                                                                                      v3.converter().apply(context)))
+                                    context -> parameters.map((v1, v2, v3) -> Tuples.zip(v1.converter().apply(context),
+                                                                                         v2.converter().apply(context),
+                                                                                         v3.converter().apply(context)))
                                                          .flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
@@ -464,10 +464,10 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4) -> squeeze(v1.converter().apply(context),
-                                                                                          v2.converter().apply(context),
-                                                                                          v3.converter().apply(context),
-                                                                                          v4.converter().apply(context)))
+                                    context -> parameters.map((v1, v2, v3, v4) -> Tuples.zip(v1.converter().apply(context),
+                                                                                             v2.converter().apply(context),
+                                                                                             v3.converter().apply(context),
+                                                                                             v4.converter().apply(context)))
                                                          .flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
@@ -505,11 +505,11 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5) -> squeeze(v1.converter().apply(context),
-                                                                                              v2.converter().apply(context),
-                                                                                              v3.converter().apply(context),
-                                                                                              v4.converter().apply(context),
-                                                                                              v5.converter().apply(context)))
+                                    context -> parameters.map((v1, v2, v3, v4, v5) -> Tuples.zip(v1.converter().apply(context),
+                                                                                                 v2.converter().apply(context),
+                                                                                                 v3.converter().apply(context),
+                                                                                                 v4.converter().apply(context),
+                                                                                                 v5.converter().apply(context)))
                                                          .flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
@@ -549,12 +549,12 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5, v6) -> squeeze(v1.converter().apply(context),
-                                                                                                  v2.converter().apply(context),
-                                                                                                  v3.converter().apply(context),
-                                                                                                  v4.converter().apply(context),
-                                                                                                  v5.converter().apply(context),
-                                                                                                  v6.converter().apply(context)))
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6) -> Tuples.zip(v1.converter().apply(context),
+                                                                                                     v2.converter().apply(context),
+                                                                                                     v3.converter().apply(context),
+                                                                                                     v4.converter().apply(context),
+                                                                                                     v5.converter().apply(context),
+                                                                                                     v6.converter().apply(context)))
                                                          .flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
@@ -584,13 +584,13 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7) -> squeeze(v1.converter().apply(context),
-                                                                                                      v2.converter().apply(context),
-                                                                                                      v3.converter().apply(context),
-                                                                                                      v4.converter().apply(context),
-                                                                                                      v5.converter().apply(context),
-                                                                                                      v6.converter().apply(context),
-                                                                                                      v7.converter().apply(context)))
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7) -> Tuples.zip(v1.converter().apply(context),
+                                                                                                         v2.converter().apply(context),
+                                                                                                         v3.converter().apply(context),
+                                                                                                         v4.converter().apply(context),
+                                                                                                         v5.converter().apply(context),
+                                                                                                         v6.converter().apply(context),
+                                                                                                         v7.converter().apply(context)))
                                                          .flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
@@ -627,14 +627,14 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8) -> squeeze(v1.converter().apply(context),
-                                                                                                          v2.converter().apply(context),
-                                                                                                          v3.converter().apply(context),
-                                                                                                          v4.converter().apply(context),
-                                                                                                          v5.converter().apply(context),
-                                                                                                          v6.converter().apply(context),
-                                                                                                          v7.converter().apply(context),
-                                                                                                          v8.converter().apply(context)))
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8) -> Tuples.zip(v1.converter().apply(context),
+                                                                                                             v2.converter().apply(context),
+                                                                                                             v3.converter().apply(context),
+                                                                                                             v4.converter().apply(context),
+                                                                                                             v5.converter().apply(context),
+                                                                                                             v6.converter().apply(context),
+                                                                                                             v7.converter().apply(context),
+                                                                                                             v8.converter().apply(context)))
                                                          .flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
@@ -672,15 +672,15 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8, v9) -> squeeze(v1.converter().apply(context),
-                                                                                                              v2.converter().apply(context),
-                                                                                                              v3.converter().apply(context),
-                                                                                                              v4.converter().apply(context),
-                                                                                                              v5.converter().apply(context),
-                                                                                                              v6.converter().apply(context),
-                                                                                                              v7.converter().apply(context),
-                                                                                                              v8.converter().apply(context),
-                                                                                                              v9.converter().apply(context)))
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8, v9) -> zip(v1.converter().apply(context),
+                                                                                                          v2.converter().apply(context),
+                                                                                                          v3.converter().apply(context),
+                                                                                                          v4.converter().apply(context),
+                                                                                                          v5.converter().apply(context),
+                                                                                                          v6.converter().apply(context),
+                                                                                                          v7.converter().apply(context),
+                                                                                                          v8.converter().apply(context),
+                                                                                                          v9.converter().apply(context)))
                                                          .flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }

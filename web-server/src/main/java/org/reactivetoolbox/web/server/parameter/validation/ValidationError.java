@@ -18,7 +18,9 @@ package org.reactivetoolbox.web.server.parameter.validation;
 
 import org.reactivetoolbox.core.async.BaseError;
 
-//TODO: Javadoc
+/**
+ * Common validation errors
+ */
 public enum ValidationError implements BaseError {
     STRING_IS_NULL, STRING_IS_EMPTY,
     STRING_TOO_SHORT,
