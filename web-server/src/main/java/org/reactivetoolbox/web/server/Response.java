@@ -19,9 +19,22 @@ package org.reactivetoolbox.web.server;
 /**
  * Generalized HTTP request response interface
  */
-//TODO: add Javadoc to methods
 public interface Response {
+    /**
+     * Set response header value
+     *
+     * @param name
+     *        Header name
+     * @param value
+     *        Header value
+     * @return <code>this</code> for fluent call chaining
+     */
     Response setHeader(String name, String value);
 
+    /**
+     * Return full context to which this response belongs.
+     *
+     * @return Request context.
+     */
     RequestContext context();
 }

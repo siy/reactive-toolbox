@@ -25,23 +25,87 @@ import java.util.Map;
 /**
  * Generalized HTTP request interface
  */
-//TODO: finish docs
 public interface Request {
+    /**
+     * Set parameter values retrieved from request path.
+     *
+     * @param pairs
+     *        List of name-value pairs for parameters
+     * @return <code>this</code> for fluent call chaining
+     */
     Request pathParameters(final List<Pair<String, String>> pairs);
 
+    /**
+     * Return full context to which this request belongs.
+     *
+     * @return Request context.
+     */
     RequestContext context();
 
+    /**
+     * Get value of path parameter.
+     *
+     * @param name
+     *        Parameter name
+     * @return Result of parameter search wrapped into {@link Option}
+     */
     Option<String> pathParameter(final String name);
 
+    /**
+     * Get parameter from query string. If multiple values with same name
+     * provided, then first one is returned.
+     *
+     * @param name
+     *        Parameter name
+     * @return Result of parameter search wrapped into {@link Option}
+     */
     Option<String> queryParameter(String name);
 
+    /**
+     * Retrieve all values for parameter provided in request query string. If no such parameter exists then empty list
+     * is returned.
+     *
+     * @param name
+     *        Parameter name
+     * @return List of all values associated with this parameter name
+     */
     List<String> queryParameters(String name);
 
+    /**
+     * Return all request parameters passed in query string.
+     *
+     * @return Map where keys are parameter names and values are lists of parameter values
+     */
     Map<String, List<String>> queryParameters();
 
+    /**
+     * Get value of specified request header.
+     *
+     * @param name
+     *        Header name
+     * @return Header value wrapped into {@link Option}
+     */
     Option<String> header(String name);
 
+    /**
+     * Get value retrieved from body (usually a form). Note that once this call is made, body may not be accessible
+     * anymore, as this call triggers reading and parsing of full request body. The call to {@link #body()} will
+     * return empty {@link Option} since body value is not available.
+     * Retrieving other names parameters should be fine.
+     *
+     * @param name
+     *        Parameter name
+     * @return Body parameter value wrapped into {@link Option}
+     * @see #body()
+     */
     Option<String> bodyParameter(String name);
 
+    /**
+     * Retrieve full body of the request. Use with care, as this call will load whole request into memory. This might
+     * be quite a lot if request, for example, contains uploaded file.
+     *
+     * @return Whole request body wrapped into {@link Option}
+     * @see #bodyParameter(String)
+     */
     Option<String> body();
 }
