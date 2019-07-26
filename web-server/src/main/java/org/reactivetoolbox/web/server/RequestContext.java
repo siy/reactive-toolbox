@@ -19,13 +19,14 @@ package org.reactivetoolbox.web.server;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.Path;
-import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
+import org.reactivetoolbox.web.server.parameter.conversion.ValueConverter;
 
 import java.nio.ByteBuffer;
 
 /**
  * HTTP Request context abstraction
  */
+//TODO: add support for input/output encoding
 public interface RequestContext {
     Request request();
 
@@ -33,7 +34,7 @@ public interface RequestContext {
 
     Path path();
 
-    <T> ConverterFactory.ValueConverter<T> valueConverter(final Class<T> type);
+    <T> ValueConverter<T> valueConverter(final Class<T> type);
 
     <T> Option<T> contextComponent(Class<T> type);
 

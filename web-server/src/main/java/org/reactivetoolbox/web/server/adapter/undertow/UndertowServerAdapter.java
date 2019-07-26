@@ -38,9 +38,14 @@ import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.Response;
 import org.reactivetoolbox.web.server.ServerError;
 import org.reactivetoolbox.web.server.adapter.ServerAdapter;
-import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory.ValueConverter;
+import org.reactivetoolbox.web.server.parameter.conversion.ValueConverter;
+import org.reactivetoolbox.web.server.parameter.conversion.simple.SimpleValueConverters;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -247,9 +252,9 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public <T> ValueConverter<T> valueConverter(final Class<T> type) {
-            //TODO: finish it
-            return null;
+            return (ValueConverter<T>) CONVERTERS.get(type);
         }
 
         @Override
@@ -268,7 +273,28 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         @Override
         public FN1<ByteBuffer, Object> resultSerializer() {
             //TODO: finish it
-            return null;
+            return UndertowServerAdapter::serializer;
         }
+    }
+
+    //TODO: rework it with pooled direct ByteBuffers
+    private static ByteBuffer serializer(final Object output) {
+        if (output instanceof String || output instanceof Number || output instanceof Temporal) {
+            return ByteBuffer.wrap(output.toString().getBytes(StandardCharsets.UTF_8);
+        }
+
+        //TODO: add other cases -
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream(4096);
+
+        return ByteBuffer.wrap(baos.toByteArray());
+    }
+
+    private static final Map<Class<?>, ValueConverter<?>> CONVERTERS = new HashMap<>();
+
+    static {
+        CONVERTERS.put(String.class, (ValueConverter<String>) SimpleValueConverters::toString);
+        CONVERTERS.put(Integer.class, (ValueConverter<Integer>) SimpleValueConverters::toInteger);
+        CONVERTERS.put(Long.class, (ValueConverter<Long>) SimpleValueConverters::toLong);
+        CONVERTERS.put(Double.class, (ValueConverter<Double>) SimpleValueConverters::toDouble);
     }
 }

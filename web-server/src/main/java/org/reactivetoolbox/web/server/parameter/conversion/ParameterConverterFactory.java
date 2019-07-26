@@ -26,9 +26,9 @@ import org.reactivetoolbox.web.server.RequestContext;
 /**
  * Set of convenience methods for composing various value converters
  */
-public interface ConverterFactory {
+public interface ParameterConverterFactory {
     interface StringExtractor extends FN1<Either<? extends BaseError, Option<String>>, RequestContext> {}
-    interface ValueConverter<T> extends FN1<Either<? extends BaseError, Option<T>>, Option<String>> {}
+
     interface NamedStringExtractor extends FN2<Either<? extends BaseError, Option<String>>, RequestContext, String> {}
 
     NamedStringExtractor fromQuery = (context, name) -> Either.success(context.request().queryParameter(name));

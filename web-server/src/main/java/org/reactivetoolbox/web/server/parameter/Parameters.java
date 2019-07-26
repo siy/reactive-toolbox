@@ -18,7 +18,7 @@ import org.reactivetoolbox.web.server.parameter.auth.Authentication;
 import org.reactivetoolbox.web.server.parameter.auth.AuthenticationConverter;
 import org.reactivetoolbox.web.server.parameter.auth.AuthorizationHeaderType;
 import org.reactivetoolbox.web.server.parameter.conversion.Converter;
-import org.reactivetoolbox.web.server.parameter.conversion.ConverterFactory;
+import org.reactivetoolbox.web.server.parameter.conversion.ParameterConverterFactory;
 import org.reactivetoolbox.web.server.parameter.validation.Validator;
 
 /*
@@ -51,7 +51,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inPath(final Class<T> type, final String name) {
-        return new P<>(ConverterFactory.pathParameter(type, name), name);
+        return new P<>(ParameterConverterFactory.pathParameter(type, name), name);
     }
 
     /**
@@ -64,7 +64,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inQuery(final Class<T> type, final String name) {
-        return new P<>(ConverterFactory.queryParameter(type, name), name);
+        return new P<>(ParameterConverterFactory.queryParameter(type, name), name);
     }
 
     /**
@@ -77,7 +77,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inBody(final Class<T> type, final String name) {
-        return new P<>(ConverterFactory.bodyParameter(type, name), name);
+        return new P<>(ParameterConverterFactory.bodyParameter(type, name), name);
     }
 
     /**
@@ -90,7 +90,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inHeader(final Class<T> type, final HeaderName name) {
-        return new P<>(ConverterFactory.headerParameter(type, name.header()), name.header());
+        return new P<>(ParameterConverterFactory.headerParameter(type, name.header()), name.header());
     }
 
     /**
@@ -107,7 +107,7 @@ public class Parameters {
      * @return Request parameter definition
      */
     public static <T> P<Option<T>> inContext(final Class<T> type) {
-        return new P<>(ConverterFactory.inContext(type), (String) null);
+        return new P<>(ParameterConverterFactory.inContext(type), (String) null);
     }
 
     /**
