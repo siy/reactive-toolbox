@@ -20,7 +20,7 @@ import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.functional.Tuples.Tuple1;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -76,7 +76,8 @@ public class Promises {
     @SafeVarargs
     public static <T> Promise<T> any(final Promise<T>... promises) {
         final var result = Promises.<T>give();
-        Arrays.asList(promises).forEach(promise -> promise.then(result::resolve));
+        List.of(promises)
+            .forEach(promise -> promise.then(result::resolve));
         return result;
     }
 

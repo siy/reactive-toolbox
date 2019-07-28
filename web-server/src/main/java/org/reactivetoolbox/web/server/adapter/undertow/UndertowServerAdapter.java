@@ -44,7 +44,6 @@ import org.reactivetoolbox.web.server.parameter.conversion.simple.SimpleValueCon
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -280,7 +279,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
     //TODO: rework it with pooled direct ByteBuffers
     private static ByteBuffer serializer(final Object output) {
         if (output instanceof String || output instanceof Number || output instanceof Temporal) {
-            return ByteBuffer.wrap(output.toString().getBytes(StandardCharsets.UTF_8);
+            return ByteBuffer.wrap(output.toString().getBytes(StandardCharsets.UTF_8));
         }
 
         //TODO: add other cases -

@@ -2,7 +2,6 @@ package org.reactivetoolbox.eventbus;
 
 import org.reactivetoolbox.core.functional.Option;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -16,7 +15,7 @@ public class Routes<T> implements RouteBase<T> {
     private final List<RouteBase<T>> routes;
 
     private Routes(final String root, final RouteBase<T>[] routes) {
-        this(Option.of(root), Arrays.asList(routes));
+        this(Option.of(root), List.of(routes));
     }
 
     private Routes(final Option<String> root, final List<RouteBase<T>> routes) {
