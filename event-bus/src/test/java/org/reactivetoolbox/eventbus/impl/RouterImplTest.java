@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.reactivetoolbox.core.functional.Either.success;
 
-class RouterImplTest {
+public class RouterImplTest {
 
     @Test
     void exactPathCanBeMatched() {

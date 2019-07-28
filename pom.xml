@@ -127,7 +127,15 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.0.0-M3</version>
 				<configuration>
-					<argLine>--enable-preview --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.async=ALL-UNNAMED --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.functional=ALL-UNNAMED --add-opens org.reactivetoolbox.eventbus/org.reactivetoolbox.eventbus=ALL-UNNAMED  --add-opens org.reactivetoolbox.eventbus/org.reactivetoolbox.eventbus.impl=ALL-UNNAMED --add-opens org.reactivetoolbox.web/org.reactivetoolbox.web.server=ALL-UNNAMED</argLine>
+					<argLine>
+						--enable-preview
+						--add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.async=ALL-UNNAMED
+						--add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.functional=ALL-UNNAMED
+						--add-opens org.reactivetoolbox.eventbus/org.reactivetoolbox.eventbus=ALL-UNNAMED
+						--add-opens org.reactivetoolbox.eventbus/org.reactivetoolbox.eventbus.impl=ALL-UNNAMED
+						--add-opens org.reactivetoolbox.web/org.reactivetoolbox.web.server=ALL-UNNAMED
+						--add-opens org.reactivetoolbox.web/org.reactivetoolbox.web.server.parameter.conversion.type=ALL-UNNAMED
+					</argLine>
 				</configuration>
 			</plugin>
 

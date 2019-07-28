@@ -26,7 +26,7 @@ import static org.reactivetoolbox.web.server.parameter.Parameters.inBody;
 import static org.reactivetoolbox.web.server.parameter.Parameters.inPath;
 import static org.reactivetoolbox.web.server.parameter.Parameters.inQuery;
 
-class ServerTest {
+public class ServerTest {
 
     private static class UserProfile {
         public UserProfile(final UserId userId) {
