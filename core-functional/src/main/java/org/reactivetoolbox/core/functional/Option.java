@@ -116,7 +116,7 @@ public class Option<T> {
      *        Type of new value
      * @return transformed instance
      */
-    public <U> Option<U> map(final FN1<U, T> mapper) {
+    public <U> Option<U> map(final FN1<? extends U, ? super T> mapper) {
         return isEmpty() ? empty() : Option.of(mapper.apply(value));
     }
 
@@ -130,7 +130,7 @@ public class Option<T> {
      *        Consumer to pass contained value to
      * @return this instance for fluent call chaining
      */
-    public Option<T> consume(final Consumer<T> consumer) {
+    public Option<T> consume(final Consumer<? super T> consumer) {
         if (isPresent()) {
             consumer.accept(value);
         }
@@ -148,8 +148,9 @@ public class Option<T> {
      *        New type
      * @return Instance of new type
      */
-    public <U> Option<U> flatMap(final FN1<Option<U>, T> mapper) {
-        return isEmpty() ? empty() : mapper.apply(value);
+    @SuppressWarnings("unchecked")
+    public <U> Option<U> flatMap(final FN1<? extends Option<? extends U>, ? super T> mapper) {
+        return isEmpty() ? empty() : (Option<U>)mapper.apply(value);
     }
 
     /**
@@ -160,8 +161,9 @@ public class Option<T> {
      *        Supplier which provides new instance in case if current instance is empty
      * @return first non-empty instance, either current one or one returned by provided supplier
      */
-    public Option<T> or(final Supplier<? extends Option<T>> supplier) {
-        return isPresent() ? this : supplier.get();
+    @SuppressWarnings("unchecked")
+    public Option<T> or(final Supplier<? extends Option<? extends T>> supplier) {
+        return isPresent() ? this : (Option<T>) supplier.get();
     }
 
     /**
@@ -172,8 +174,9 @@ public class Option<T> {
      *        Replacement instance which is returned in case if current instance is empty
      * @return first non-empty instance, either current one or one returned by provided supplier
      */
-    public Option<T> or(final Option<T> replacement) {
-        return isPresent() ? this : replacement;
+    @SuppressWarnings("unchecked")
+    public Option<T> or(final Option<? extends T> replacement) {
+        return isPresent() ? this : (Option<T>) replacement;
     }
 
     /**
@@ -200,7 +203,7 @@ public class Option<T> {
      * @return either value stored in current instance or value returned by provided supplier if current instance
      * is empty
      */
-    public T otherwise(final Supplier<? extends T> supplier) {
+    public T otherwiseGet(final Supplier<? extends T> supplier) {
         return isPresent() ? value : supplier.get();
     }
 

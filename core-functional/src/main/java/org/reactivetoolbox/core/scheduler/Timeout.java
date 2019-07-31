@@ -3,32 +3,22 @@ package org.reactivetoolbox.core.scheduler;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-//TODO: requires rework
-public final class Timeout implements Comparable<Timeout> {
+/**
+ * Task timeout
+ */
+public final class Timeout {
     private final long timeout;
-    private final long timestamp;
 
     private Timeout(final long timeout) {
         this.timeout = timeout;
-        timestamp = System.currentTimeMillis() + timeout;
     }
 
     public static TimeoutBuilder of(final long value) {
         return new TimeoutBuilder(value);
     }
 
-    public long timestamp() {
-        return timestamp;
-    }
-
     public long timeout() {
         return timeout;
-    }
-
-    @Override
-    public int compareTo(final Timeout o) {
-        final long res = timestamp - o.timestamp;
-        return res == 0 ? 0 : res < 0 ? -1 : 1;
     }
 
     @Override
@@ -39,20 +29,23 @@ public final class Timeout implements Comparable<Timeout> {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final Timeout timeout = (Timeout) o;
-        return timestamp == timeout.timestamp;
+        final Timeout timeout1 = (Timeout) o;
+        return timeout == timeout1.timeout;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(timestamp);
+        return Objects.hash(timeout);
     }
 
     @Override
     public String toString() {
-        return "Timestamp=" + timestamp + " (" + timeout + ")";
+        return "Timeout{ timeout=" + timeout + "ms }";
     }
 
+    /**
+     * Fluent interval conversion builder
+     */
     public static final class TimeoutBuilder {
         private final long value;
 
@@ -60,12 +53,40 @@ public final class Timeout implements Comparable<Timeout> {
             this.value = value;
         }
 
+        /**
+         * Create {@link Timeout} instance by interpreting value as milliseconds.
+         *
+         * @return Created instance
+         */
         public Timeout millis() {
             return new Timeout(value);
         }
 
-        public Timeout seconds() {
+        /**
+         * Create {@link Timeout} instance by interpreting value as seconds.
+         *
+         * @return Created instance
+         */
+        public Timeout sec() {
             return new Timeout(TimeUnit.SECONDS.toMillis(value));
+        }
+
+        /**
+         * Create {@link Timeout} instance by interpreting value as minutes.
+         *
+         * @return Created instance
+         */
+        public Timeout min() {
+            return new Timeout(TimeUnit.MINUTES.toMillis(value));
+        }
+
+        /**
+         * Create {@link Timeout} instance by interpreting value as hours.
+         *
+         * @return Created instance
+         */
+        public Timeout hrs() {
+            return new Timeout(TimeUnit.HOURS.toMillis(value));
         }
     }
 }

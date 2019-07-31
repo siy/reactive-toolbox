@@ -604,7 +604,7 @@ public final class Tuples {
         }
 
         @SuppressWarnings("unchecked")
-        public <T> T map(final FN2<T, T1, T2> mapper) {
+        public <T> T map(final FN2<T, ? super T1, ? super T2> mapper) {
             return mapper.apply((T1) values[0], (T2) values[1]);
         }
 

@@ -58,9 +58,6 @@ import static org.reactivetoolbox.core.functional.Either.lift;
  * Implementation of the {@link ServerAdapter} for Undertow (
  */
 public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
-    private static final Either<ServerError, Promise<Either<? extends BaseError, Object>>> ERROR_404 = Either.failure(ServerError.BAD_REQUEST);
-    private static final Either<ServerError, Promise<Either<? extends BaseError, Object>>> ERROR_405 = Either.failure(ServerError.METHOD_NOT_ALLOWED);
-
     private final Undertow server;
     private final Router<RequestContext> router;
     private final Function<Undertow, Either<Throwable, ServerAdapter>> serverStart = lift((server) -> {  server.start(); return this; });
@@ -102,7 +99,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
                                        .map(RequestContext::resultSerializer);
 
         deliver(envelope)
-                .otherwise(ERROR_405)
+                .otherwise(ServerError.METHOD_NOT_ALLOWED.asFailure())
                 .onFailure(failure -> serializeError(exchange, failure))
                 .onSuccess(promise -> promise.then(either -> either.onFailure(failure -> serializeError(exchange, failure))
                                                                    .onSuccess(success -> serializer.consume(fn -> serializeSuccess(exchange, fn, success)))));
@@ -166,7 +163,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
             final Option<List<String>> values = Option.of(exchange.getQueryParameters().get(name))
                                                       .map(ArrayList::new);
 
-            return values.otherwise(Collections::emptyList);
+            return values.otherwiseGet(Collections::emptyList);
         }
 
         @Override
@@ -182,7 +179,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         public Option<String> header(final String name) {
             return Option.of(exchange.getRequestHeaders().get(name))
                          .map(values -> values.stream().findFirst().map(Option::of).orElse(Option.empty()))
-                         .otherwise(Option::empty);
+                         .otherwiseGet(Option::empty);
         }
 
         @Override

@@ -24,7 +24,6 @@ import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.eventbus.RouteBase;
 import org.reactivetoolbox.eventbus.Router;
-import org.reactivetoolbox.eventbus.RoutingError;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +33,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Stream;
+
+import static org.reactivetoolbox.eventbus.RoutingError.NO_SUCH_ROUTE;
 
 /**
  * Basic {@link Router<T>} implementation.
@@ -47,11 +48,11 @@ public final class RouterImpl<T> implements Router<T> {
      */
     @Override
     public <R> Either<? extends BaseError, Promise<Either<? extends BaseError, R>>> deliver(final Envelope<T> event) {
-        final Option<Either<? extends BaseError, Promise<Either<? extends BaseError, R>>>> eitherOption =
-            findRoute(event).map(route -> event.onDelivery(route)
-                                               .flatMap(request -> route.<R>handler().apply(request)));
+        return this.<R>invokeHandler(event).otherwise(NO_SUCH_ROUTE.asFailure());
+    }
 
-        return eitherOption.otherwise(() -> Either.failure(RoutingError.NO_SUCH_ROUTE));
+    private <R> Option<Either<? extends BaseError, Promise<Either<? extends BaseError, R>>>> invokeHandler(final Envelope<T> event) {
+        return findRoute(event).map(route -> event.onDelivery(route).flatMap(request -> route.<R>handler().apply(request)));
     }
 
     /**
@@ -89,6 +90,6 @@ public final class RouterImpl<T> implements Router<T> {
                                                         .findFirst()
                                                         .map(Option::of)
                                                         .orElseGet(Option::empty))
-                                     .otherwise(Option::empty));
+                                     .otherwiseGet(Option::empty));
     }
 }

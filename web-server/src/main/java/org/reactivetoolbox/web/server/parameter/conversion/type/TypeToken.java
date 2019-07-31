@@ -22,6 +22,8 @@ import org.reactivetoolbox.core.functional.Either;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import static org.reactivetoolbox.web.server.parameter.conversion.type.TypeError.UNABLE_TO_RECOGNIZE_TYPE;
+
 /**
  * Simple implementation of type token which allows to capture full generic type.
  * <br />
@@ -45,6 +47,6 @@ public abstract class TypeToken<T> {
             return Either.success(((ParameterizedType) type).getActualTypeArguments()[0]);
         }
 
-        return Either.failure(TypeError.UNABLE_TO_RECOGNIZE_TYPE);
+        return UNABLE_TO_RECOGNIZE_TYPE.asFailure();
     }
 }

@@ -9,6 +9,8 @@ import org.reactivetoolbox.eventbus.Route;
 
 import java.util.List;
 
+import static org.reactivetoolbox.web.server.ServerError.BAD_REQUEST;
+
 public class HttpEnvelope implements Envelope<RequestContext> {
     private final RequestContext context;
     private final Path path;
@@ -27,7 +29,7 @@ public class HttpEnvelope implements Envelope<RequestContext> {
         final List<Pair<String, String>> pairs = route.path().extractParameters(path.source());
 
         return (route.path().hasParams() && pairs.isEmpty())
-               ? Either.failure(ServerError.BAD_REQUEST)
+               ? BAD_REQUEST.asFailure()
                : Either.success(context.request().pathParameters(pairs).context());
     }
 

@@ -1,6 +1,7 @@
 package org.reactivetoolbox.web.server;
 
 import org.reactivetoolbox.core.async.BaseError;
+import org.reactivetoolbox.core.functional.Either;
 
 public enum ServerError implements BaseError {
     NOT_YET_RUNNING(500, "Server is not yet running and can't be stopped"),
@@ -17,5 +18,20 @@ public enum ServerError implements BaseError {
     ServerError(final int code, final String message) {
         this.code = code;
         this.message = message;
+    }
+
+    @Override
+    public int code() {
+        return code;
+    }
+
+    @Override
+    public String message() {
+        return message;
+    }
+
+    @Override
+    public <T> Either<ServerError, T> asFailure() {
+        return Either.failure(this);
     }
 }

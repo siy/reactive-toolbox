@@ -129,7 +129,7 @@ public class ParameterType {
             return Either.success(Pair.of(baseType, elementType));
         }
 
-        return Either.failure(TypeError.UNABLE_TO_RECOGNIZE_TYPE);
+        return TypeError.UNABLE_TO_RECOGNIZE_TYPE.asFailure();
     }
 
     private static Class<?> lookupClassRecursively(final Type type) {

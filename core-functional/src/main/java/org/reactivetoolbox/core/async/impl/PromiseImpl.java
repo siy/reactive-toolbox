@@ -3,7 +3,7 @@ package org.reactivetoolbox.core.async.impl;
 import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.scheduler.Timeout;
-import org.reactivetoolbox.core.scheduler.impl.SimpleScheduler;
+import org.reactivetoolbox.core.scheduler.TimeoutScheduler;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 public final class PromiseImpl<T> implements Promise<T> {
     //TODO: provide some way to configure it
     private static final int schedulerSize = Runtime.getRuntime().availableProcessors() * 16;
-    private static final SimpleScheduler scheduler = SimpleScheduler.with(schedulerSize);
+    private static final TimeoutScheduler scheduler = TimeoutScheduler.with(schedulerSize);
 
     private final AtomicMarkableReference<T> value = new AtomicMarkableReference<>(null, false);
     private final BlockingQueue<Consumer<T>> thenActions = new LinkedBlockingQueue<>();
@@ -104,12 +104,10 @@ public final class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> with(final Timeout timeout, final T timeoutResult) {
-        //TODO: consider some way to report failure
         scheduler.request()
-                 .onSuccess(timeoutScheduler -> {
-                     timeoutScheduler.submit(() -> resolve(timeoutResult), timeout);
-                     timeoutScheduler.release();
-                 });
+                 .onSuccess(timeoutScheduler -> timeoutScheduler.submit(timeout,
+                                                                        () -> resolve(timeoutResult))
+                                                                .release());
         return this;
     }
 
@@ -118,12 +116,10 @@ public final class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> with(final Timeout timeout, final Supplier<T> timeoutResultSupplier) {
-        //TODO: consider some way to report failure
         scheduler.request()
-                 .onSuccess(timeoutScheduler -> {
-                     timeoutScheduler.submit(() -> resolve(timeoutResultSupplier.get()), timeout);
-                     timeoutScheduler.release();
-                 });
+                 .onSuccess(timeoutScheduler -> timeoutScheduler.submit(timeout,
+                                                                        () -> resolve(timeoutResultSupplier.get()))
+                                                                .release());
         return this;
     }
 }

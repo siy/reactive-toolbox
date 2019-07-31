@@ -30,6 +30,6 @@ public class RingBuffer<T> {
                 return Either.success(entries.get(index));
             }
         }
-        return Either.failure(SchedulerError.NO_FREE_SLOTS);
+        return SchedulerError.NO_FREE_SLOTS.asFailure();
     }
 }

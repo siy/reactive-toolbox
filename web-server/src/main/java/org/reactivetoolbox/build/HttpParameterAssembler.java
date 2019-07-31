@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.reactivetoolbox.core.functional.Tuples.zip;
-
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -57,14 +55,13 @@ import static org.reactivetoolbox.core.functional.Tuples.zip;
 /**
  * Assembling flow for parameter collection and mapping to request handler.
  */
+//TODO: fix cross-parameter validator
 public class HttpParameterAssembler {
     /**
      * Prepare assembling of zero-parameter route
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
+     * @param path        Route path
+     * @param description Route description
      * @return route prepared for attaching handler
      */
     public static PB0 of(final Path path, final String description) {
@@ -74,12 +71,9 @@ public class HttpParameterAssembler {
     /**
      * Prepare assembling of route with single parameter
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
-     * @param param1
-     *        Parameter definition for parameter #1
+     * @param path        Route path
+     * @param description Route description
+     * @param param1      Parameter definition for parameter #1
      * @return route prepared for attaching handler
      */
     public static <T1> PB1<T1> of(final Path path,
@@ -91,14 +85,10 @@ public class HttpParameterAssembler {
     /**
      * Prepare assembling of route with 2 parameters
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
-     * @param param1
-     *        Parameter definition for parameter #1
-     * @param param2
-     *        Parameter definition for parameter #2
+     * @param path        Route path
+     * @param description Route description
+     * @param param1      Parameter definition for parameter #1
+     * @param param2      Parameter definition for parameter #2
      * @return route prepared for attaching handler
      */
     public static <T1, T2> PB2<T1, T2> of(final Path path,
@@ -111,16 +101,11 @@ public class HttpParameterAssembler {
     /**
      * Prepare assembling of route with 3 parameters
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
-     * @param param1
-     *        Parameter definition for parameter #1
-     * @param param2
-     *        Parameter definition for parameter #2
-     * @param param3
-     *        Parameter definition for parameter #3
+     * @param path        Route path
+     * @param description Route description
+     * @param param1      Parameter definition for parameter #1
+     * @param param2      Parameter definition for parameter #2
+     * @param param3      Parameter definition for parameter #3
      * @return route prepared for attaching handler
      */
     public static <T1, T2, T3> PB3<T1, T2, T3> of(final Path path,
@@ -134,18 +119,12 @@ public class HttpParameterAssembler {
     /**
      * Prepare assembling of route with 4 parameters
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
-     * @param param1
-     *        Parameter definition for parameter #1
-     * @param param2
-     *        Parameter definition for parameter #2
-     * @param param3
-     *        Parameter definition for parameter #3
-     * @param param4
-     *        Parameter definition for parameter #4
+     * @param path        Route path
+     * @param description Route description
+     * @param param1      Parameter definition for parameter #1
+     * @param param2      Parameter definition for parameter #2
+     * @param param3      Parameter definition for parameter #3
+     * @param param4      Parameter definition for parameter #4
      * @return route prepared for attaching handler
      */
     public static <T1, T2, T3, T4> PB4<T1, T2, T3, T4> of(final Path path,
@@ -160,20 +139,13 @@ public class HttpParameterAssembler {
     /**
      * Prepare assembling of route with 5 parameters
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
-     * @param param1
-     *        Parameter definition for parameter #1
-     * @param param2
-     *        Parameter definition for parameter #2
-     * @param param3
-     *        Parameter definition for parameter #3
-     * @param param4
-     *        Parameter definition for parameter #4
-     * @param param5
-     *        Parameter definition for parameter #5
+     * @param path        Route path
+     * @param description Route description
+     * @param param1      Parameter definition for parameter #1
+     * @param param2      Parameter definition for parameter #2
+     * @param param3      Parameter definition for parameter #3
+     * @param param4      Parameter definition for parameter #4
+     * @param param5      Parameter definition for parameter #5
      * @return route prepared for attaching handler
      */
     public static <T1, T2, T3, T4, T5> PB5<T1, T2, T3, T4, T5> of(final Path path,
@@ -189,22 +161,14 @@ public class HttpParameterAssembler {
     /**
      * Prepare assembling of route with 6 parameters
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
-     * @param param1
-     *        Parameter definition for parameter #1
-     * @param param2
-     *        Parameter definition for parameter #2
-     * @param param3
-     *        Parameter definition for parameter #3
-     * @param param4
-     *        Parameter definition for parameter #4
-     * @param param5
-     *        Parameter definition for parameter #5
-     * @param param6
-     *        Parameter definition for parameter #6
+     * @param path        Route path
+     * @param description Route description
+     * @param param1      Parameter definition for parameter #1
+     * @param param2      Parameter definition for parameter #2
+     * @param param3      Parameter definition for parameter #3
+     * @param param4      Parameter definition for parameter #4
+     * @param param5      Parameter definition for parameter #5
+     * @param param6      Parameter definition for parameter #6
      * @return route prepared for attaching handler
      */
     public static <T1, T2, T3, T4, T5, T6> PB6<T1, T2, T3, T4, T5, T6> of(final Path path,
@@ -221,24 +185,15 @@ public class HttpParameterAssembler {
     /**
      * Prepare assembling of route with 7 parameters
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
-     * @param param1
-     *        Parameter definition for parameter #1
-     * @param param2
-     *        Parameter definition for parameter #2
-     * @param param3
-     *        Parameter definition for parameter #3
-     * @param param4
-     *        Parameter definition for parameter #4
-     * @param param5
-     *        Parameter definition for parameter #5
-     * @param param6
-     *        Parameter definition for parameter #6
-     * @param param7
-     *        Parameter definition for parameter #7
+     * @param path        Route path
+     * @param description Route description
+     * @param param1      Parameter definition for parameter #1
+     * @param param2      Parameter definition for parameter #2
+     * @param param3      Parameter definition for parameter #3
+     * @param param4      Parameter definition for parameter #4
+     * @param param5      Parameter definition for parameter #5
+     * @param param6      Parameter definition for parameter #6
+     * @param param7      Parameter definition for parameter #7
      * @return route prepared for attaching handler
      */
     public static <T1, T2, T3, T4, T5, T6, T7> PB7<T1, T2, T3, T4, T5, T6, T7> of(final Path path,
@@ -256,26 +211,16 @@ public class HttpParameterAssembler {
     /**
      * Prepare assembling of route with 8 parameters
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
-     * @param param1
-     *        Parameter definition for parameter #1
-     * @param param2
-     *        Parameter definition for parameter #2
-     * @param param3
-     *        Parameter definition for parameter #3
-     * @param param4
-     *        Parameter definition for parameter #4
-     * @param param5
-     *        Parameter definition for parameter #5
-     * @param param6
-     *        Parameter definition for parameter #6
-     * @param param7
-     *        Parameter definition for parameter #7
-     * @param param8
-     *        Parameter definition for parameter #8
+     * @param path        Route path
+     * @param description Route description
+     * @param param1      Parameter definition for parameter #1
+     * @param param2      Parameter definition for parameter #2
+     * @param param3      Parameter definition for parameter #3
+     * @param param4      Parameter definition for parameter #4
+     * @param param5      Parameter definition for parameter #5
+     * @param param6      Parameter definition for parameter #6
+     * @param param7      Parameter definition for parameter #7
+     * @param param8      Parameter definition for parameter #8
      * @return route prepared for attaching handler
      */
     public static <T1, T2, T3, T4, T5, T6, T7, T8> PB8<T1, T2, T3, T4, T5, T6, T7, T8> of(final Path path,
@@ -294,28 +239,17 @@ public class HttpParameterAssembler {
     /**
      * Prepare assembling of route with 9 parameters
      *
-     * @param path
-     *        Route path
-     * @param description
-     *        Route description
-     * @param param1
-     *        Parameter definition for parameter #1
-     * @param param2
-     *        Parameter definition for parameter #2
-     * @param param3
-     *        Parameter definition for parameter #3
-     * @param param4
-     *        Parameter definition for parameter #4
-     * @param param5
-     *        Parameter definition for parameter #5
-     * @param param6
-     *        Parameter definition for parameter #6
-     * @param param7
-     *        Parameter definition for parameter #7
-     * @param param8
-     *        Parameter definition for parameter #8
-     * @param param9
-     *        Parameter definition for parameter #9
+     * @param path        Route path
+     * @param description Route description
+     * @param param1      Parameter definition for parameter #1
+     * @param param2      Parameter definition for parameter #2
+     * @param param3      Parameter definition for parameter #3
+     * @param param4      Parameter definition for parameter #4
+     * @param param5      Parameter definition for parameter #5
+     * @param param6      Parameter definition for parameter #6
+     * @param param7      Parameter definition for parameter #7
+     * @param param8      Parameter definition for parameter #8
+     * @param param9      Parameter definition for parameter #9
      * @return route prepared for attaching handler
      */
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9> PB9<T1, T2, T3, T4, T5, T6, T7, T8, T9> of(final Path path,
@@ -329,7 +263,9 @@ public class HttpParameterAssembler {
                                                                                                   final P<T7> param7,
                                                                                                   final P<T8> param8,
                                                                                                   final P<T9> param9) {
-        return new PB9<>(path, description, Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8, param9));
+        return new PB9<>(path,
+                         description,
+                         Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8, param9));
     }
 
     private static List<Option<ParameterDescription>> describe(final Tuple parameters) {
@@ -347,7 +283,9 @@ public class HttpParameterAssembler {
         }
 
         public <R> RouteEnricher<R, RequestContext> then(final FN0<Promise<Either<? extends BaseError, R>>> handler) {
-            final RouteDescription routeDescription = HttpRouteDescription.of(path, description, Collections.emptyList());
+            final RouteDescription
+                    routeDescription =
+                    HttpRouteDescription.of(path, description, Collections.emptyList());
 
             return RouteEnricher.of(path, routeDescription, ignored -> Either.success(handler.apply()));
         }
@@ -379,7 +317,7 @@ public class HttpParameterAssembler {
         private final String description;
         private final Tuple2<P<T1>, P<T2>> parameters;
         private FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> validator =
-            (param1, param2) -> Either.success(Tuples.of(param1, param2));
+                (param1, param2) -> Either.success(Tuples.of(param1, param2));
 
         private PB2(final Path path,
                     final String description,
@@ -393,9 +331,11 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2) -> Tuples.zip(v1.converter().apply(context),
-                                                                                     v2.converter().apply(context)))
-                                                         .flatMap(tuple -> tuple.map(validator))
+                                    context -> parameters.map((v1, v2) -> Tuples.<T1, T2>zip(v1.converter()
+                                                                                               .apply(context),
+                                                                                             v2.converter()
+                                                                                               .apply(context)))
+                                                         //.flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
 
@@ -411,9 +351,10 @@ public class HttpParameterAssembler {
         private final Tuple3<P<T1>, P<T2>, P<T3>> parameters;
         private FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> validator = (param1,
                                                                                               param2,
-                                                                                              param3) -> Either.success(Tuples.of(param1,
-                                                                                                                                  param2,
-                                                                                                                                  param3));
+                                                                                              param3) -> Either.success(
+                Tuples.of(param1,
+                          param2,
+                          param3));
 
         private PB3(final Path path,
                     final String description,
@@ -427,10 +368,13 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3) -> Tuples.zip(v1.converter().apply(context),
-                                                                                         v2.converter().apply(context),
-                                                                                         v3.converter().apply(context)))
-                                                         .flatMap(tuple -> tuple.map(validator))
+                                    context -> parameters.map((v1, v2, v3) -> Tuples.<T1, T2, T3>zip(v1.converter()
+                                                                                                       .apply(context),
+                                                                                                     v2.converter()
+                                                                                                       .apply(context),
+                                                                                                     v3.converter()
+                                                                                                       .apply(context)))
+                                                         //.flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
 
@@ -447,10 +391,11 @@ public class HttpParameterAssembler {
         private FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> validator = (param1,
                                                                                                       param2,
                                                                                                       param3,
-                                                                                                      param4) -> Either.success(Tuples.of(param1,
-                                                                                                                                          param2,
-                                                                                                                                          param3,
-                                                                                                                                          param4));
+                                                                                                      param4) -> Either.success(
+                Tuples.of(param1,
+                          param2,
+                          param3,
+                          param4));
 
         private PB4(final Path path,
                     final String description,
@@ -464,11 +409,15 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4) -> Tuples.zip(v1.converter().apply(context),
-                                                                                             v2.converter().apply(context),
-                                                                                             v3.converter().apply(context),
-                                                                                             v4.converter().apply(context)))
-                                                         .flatMap(tuple -> tuple.map(validator))
+                                    context -> parameters.map((v1, v2, v3, v4) -> Tuples.<T1, T2, T3, T4>zip(v1.converter()
+                                                                                                               .apply(context),
+                                                                                                             v2.converter()
+                                                                                                               .apply(context),
+                                                                                                             v3.converter()
+                                                                                                               .apply(context),
+                                                                                                             v4.converter()
+                                                                                                               .apply(context)))
+                                                         //.flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
 
@@ -486,12 +435,13 @@ public class HttpParameterAssembler {
                                                                                                               param2,
                                                                                                               param3,
                                                                                                               param4,
-                                                                                                              param5) -> Either.success(Tuples.of(
-            param1,
-            param2,
-            param3,
-            param4,
-            param5));
+                                                                                                              param5) -> Either
+                .success(Tuples.of(
+                        param1,
+                        param2,
+                        param3,
+                        param4,
+                        param5));
 
         private PB5(final Path path,
                     final String description,
@@ -505,12 +455,17 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5) -> Tuples.zip(v1.converter().apply(context),
-                                                                                                 v2.converter().apply(context),
-                                                                                                 v3.converter().apply(context),
-                                                                                                 v4.converter().apply(context),
-                                                                                                 v5.converter().apply(context)))
-                                                         .flatMap(tuple -> tuple.map(validator))
+                                    context -> parameters.map((v1, v2, v3, v4, v5) -> Tuples.<T1, T2, T3, T4, T5>zip(v1.converter()
+                                                                                                                       .apply(context),
+                                                                                                                     v2.converter()
+                                                                                                                       .apply(context),
+                                                                                                                     v3.converter()
+                                                                                                                       .apply(context),
+                                                                                                                     v4.converter()
+                                                                                                                       .apply(context),
+                                                                                                                     v5.converter()
+                                                                                                                       .apply(context)))
+                                                         //.flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
 
@@ -524,18 +479,20 @@ public class HttpParameterAssembler {
         private final Path path;
         private final String description;
         private final Tuple6<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>, P<T6>> parameters;
-        private FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> validator = (param1,
-                                                                                                                      param2,
-                                                                                                                      param3,
-                                                                                                                      param4,
-                                                                                                                      param5,
-                                                                                                                      param6) -> Either.success(Tuples
-                                                                                                                                                    .of(param1,
-                                                                                                                                                        param2,
-                                                                                                                                                        param3,
-                                                                                                                                                        param4,
-                                                                                                                                                        param5,
-                                                                                                                                                        param6));
+        private FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6>
+                validator =
+                (param1,
+                 param2,
+                 param3,
+                 param4,
+                 param5,
+                 param6) -> Either.success(Tuples
+                                                   .of(param1,
+                                                       param2,
+                                                       param3,
+                                                       param4,
+                                                       param5,
+                                                       param6));
 
         private PB6(final Path path,
                     final String description,
@@ -549,13 +506,14 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5, v6) -> Tuples.zip(v1.converter().apply(context),
-                                                                                                     v2.converter().apply(context),
-                                                                                                     v3.converter().apply(context),
-                                                                                                     v4.converter().apply(context),
-                                                                                                     v5.converter().apply(context),
-                                                                                                     v6.converter().apply(context)))
-                                                         .flatMap(tuple -> tuple.map(validator))
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6) -> Tuples.<T1, T2, T3, T4, T5, T6>zip(
+                                            v1.converter().apply(context),
+                                            v2.converter().apply(context),
+                                            v3.converter().apply(context),
+                                            v4.converter().apply(context),
+                                            v5.converter().apply(context),
+                                            v6.converter().apply(context)))
+                                                         //.flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
 
@@ -569,8 +527,10 @@ public class HttpParameterAssembler {
         private final Path path;
         private final String description;
         private final Tuple7<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>, P<T6>, P<T7>> parameters;
-        private FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> validator = (param1, param2, param3, param4, param5, param6, param7) -> Either
-            .success(Tuples.of(param1, param2, param3, param4, param5, param6, param7));
+        private FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7>
+                validator =
+                (param1, param2, param3, param4, param5, param6, param7) -> Either
+                        .success(Tuples.of(param1, param2, param3, param4, param5, param6, param7));
 
         private PB7(final Path path,
                     final String description,
@@ -584,14 +544,15 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7) -> Tuples.zip(v1.converter().apply(context),
-                                                                                                         v2.converter().apply(context),
-                                                                                                         v3.converter().apply(context),
-                                                                                                         v4.converter().apply(context),
-                                                                                                         v5.converter().apply(context),
-                                                                                                         v6.converter().apply(context),
-                                                                                                         v7.converter().apply(context)))
-                                                         .flatMap(tuple -> tuple.map(validator))
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7) -> Tuples.<T1, T2, T3, T4, T5, T6, T7>zip(
+                                            v1.converter().apply(context),
+                                            v2.converter().apply(context),
+                                            v3.converter().apply(context),
+                                            v4.converter().apply(context),
+                                            v5.converter().apply(context),
+                                            v6.converter().apply(context),
+                                            v7.converter().apply(context)))
+                                                         //.flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
 
@@ -605,15 +566,17 @@ public class HttpParameterAssembler {
         private final Path path;
         private final String description;
         private final Tuple8<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>, P<T6>, P<T7>, P<T8>> parameters;
-        private FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> validator = (param1,
-                                                                                                                                      param2,
-                                                                                                                                      param3,
-                                                                                                                                      param4,
-                                                                                                                                      param5,
-                                                                                                                                      param6,
-                                                                                                                                      param7,
-                                                                                                                                      param8) -> Either
-            .success(Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8));
+        private FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8>
+                validator =
+                (param1,
+                 param2,
+                 param3,
+                 param4,
+                 param5,
+                 param6,
+                 param7,
+                 param8) -> Either
+                        .success(Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8));
 
         private PB8(final Path path,
                     final String description,
@@ -627,15 +590,16 @@ public class HttpParameterAssembler {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
             return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8) -> Tuples.zip(v1.converter().apply(context),
-                                                                                                             v2.converter().apply(context),
-                                                                                                             v3.converter().apply(context),
-                                                                                                             v4.converter().apply(context),
-                                                                                                             v5.converter().apply(context),
-                                                                                                             v6.converter().apply(context),
-                                                                                                             v7.converter().apply(context),
-                                                                                                             v8.converter().apply(context)))
-                                                         .flatMap(tuple -> tuple.map(validator))
+                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8) -> Tuples.<T1, T2, T3, T4, T5, T6, T7, T8>zip(
+                                            v1.converter().apply(context),
+                                            v2.converter().apply(context),
+                                            v3.converter().apply(context),
+                                            v4.converter().apply(context),
+                                            v5.converter().apply(context),
+                                            v6.converter().apply(context),
+                                            v7.converter().apply(context),
+                                            v8.converter().apply(context)))
+                                                         //.flatMap(tuple -> tuple.map(validator))
                                                          .mapSuccess(params -> params.map(handler)));
         }
 
@@ -649,16 +613,18 @@ public class HttpParameterAssembler {
         private final Path path;
         private final String description;
         private final Tuple9<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>, P<T6>, P<T7>, P<T8>, P<T9>> parameters;
-        private FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> validator = (param1,
-                                                                                                                                              param2,
-                                                                                                                                              param3,
-                                                                                                                                              param4,
-                                                                                                                                              param5,
-                                                                                                                                              param6,
-                                                                                                                                              param7,
-                                                                                                                                              param8,
-                                                                                                                                              param9) -> Either
-            .success(Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8, param9));
+        private FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9>
+                validator =
+                (param1,
+                 param2,
+                 param3,
+                 param4,
+                 param5,
+                 param6,
+                 param7,
+                 param8,
+                 param9) -> Either
+                        .success(Tuples.of(param1, param2, param3, param4, param5, param6, param7, param8, param9));
 
         private PB9(final Path path,
                     final String description,
@@ -671,18 +637,23 @@ public class HttpParameterAssembler {
         public <R> RouteEnricher<R, RequestContext> then(final FN9<Promise<Either<? extends BaseError, R>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> handler) {
             final RouteDescription routeDescription = HttpRouteDescription.of(path, description, describe(parameters));
 
-            return RouteEnricher.of(path, routeDescription,
-                                    context -> parameters.map((v1, v2, v3, v4, v5, v6, v7, v8, v9) -> zip(v1.converter().apply(context),
-                                                                                                          v2.converter().apply(context),
-                                                                                                          v3.converter().apply(context),
-                                                                                                          v4.converter().apply(context),
-                                                                                                          v5.converter().apply(context),
-                                                                                                          v6.converter().apply(context),
-                                                                                                          v7.converter().apply(context),
-                                                                                                          v8.converter().apply(context),
-                                                                                                          v9.converter().apply(context)))
-                                                         .flatMap(tuple -> tuple.map(validator))
-                                                         .mapSuccess(params -> params.map(handler)));
+            return RouteEnricher.of(path,
+                                    routeDescription,
+                                    context -> convertAndValidate(context).mapSuccess(params -> params.map(handler)));
+        }
+
+        private Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> convertAndValidate(final RequestContext context) {
+            return parameters.map((v1, v2, v3, v4, v5, v6, v7, v8, v9) -> Tuples.<T1, T2, T3, T4, T5, T6, T7, T8, T9>zip(
+                    v1.converter().apply(context),
+                    v2.converter().apply(context),
+                    v3.converter().apply(context),
+                    v4.converter().apply(context),
+                    v5.converter().apply(context),
+                    v6.converter().apply(context),
+                    v7.converter().apply(context),
+                    v8.converter().apply(context),
+                    v9.converter().apply(context)))
+                             .flatMap(tuple -> tuple.map(validator));
         }
 
         public PB9<T1, T2, T3, T4, T5, T6, T7, T8, T9> and(final FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> validator) {

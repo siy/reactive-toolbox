@@ -31,7 +31,7 @@ import org.reactivetoolbox.eventbus.impl.RouterImpl;
  *
  * @param <T>
  *        Envelope type
- * @see {@link Path}
+ * @see Path
  */
 public interface Router<T> {
     /**

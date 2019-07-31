@@ -98,7 +98,7 @@ class OptionTest {
     @Test
     void otherwiseProvidesValueIfOptionIsEmpty() {
         assertEquals(123, Option.empty().otherwise(123));
-        assertEquals(123, Option.empty().otherwise(() -> 123));
+        assertEquals(123, Option.empty().otherwiseGet(() -> 123));
     }
 
     @Test

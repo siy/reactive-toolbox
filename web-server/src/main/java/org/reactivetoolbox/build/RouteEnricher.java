@@ -49,12 +49,12 @@ public class RouteEnricher<R, T> implements RouteBase<T> {
     public static <R, T> RouteEnricher<R, T> of(final Path path,
                                                 final RouteDescription description,
                                                 final Handler<R, T> handler) {
-        return new RouteEnricher<>(path, description, handler);
+        return new RouteEnricher<R, T>(path, description, handler);
     }
 
-    public RouteEnricher<R, T> after(final Enricher<R, T> enricher) {
+    public RouteEnricher<R, T> after(final Enricher<R, ? super T> enricher) {
         return new RouteEnricher<>(path, description,
-                                   context -> handler.apply(context).mapSuccess(result ->enricher.apply(context, result)));
+                                   context -> handler.apply(context).mapSuccess(result -> enricher.apply(context, result)));
     }
 
     @Override

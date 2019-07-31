@@ -65,7 +65,7 @@ public interface Either<F, S> {
      *        New type for success
      * @return transformed instance
      */
-    <NF, NS> Either<NF, NS> flatMap(final FN1<Either<NF, NS>, S> mapper);
+    <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<? extends NF, ? extends NS>, ? super S> mapper);
 
     /**
      * Transform given instance into another one which has same success type
@@ -78,7 +78,7 @@ public interface Either<F, S> {
      *        New type for failure
      * @return transformed instance
      */
-    <NF> Either<NF, S> mapFailure(final FN1<NF, F> mapper);
+    <NF> Either<NF, S> mapFailure(final FN1<? extends NF, ? super F> mapper);
 
     /**
      * Transform given instance into another one which has same failure type
@@ -90,7 +90,7 @@ public interface Either<F, S> {
      *        New type for success
      * @return transformed instance
      */
-    <NS> Either<F, NS> mapSuccess(final FN1<NS, S> mapper);
+    <NS> Either<F, NS> mapSuccess(final FN1<? extends NS, ? super S> mapper);
 
     /**
      * Expose success value or a replacement provided by caller if instance
@@ -110,7 +110,7 @@ public interface Either<F, S> {
      *        Supplier for replacement. Invoked only if instance contains a failure
      * @return contained success get if there is one ond replacement get otherwise
      */
-    S otherwise(final Supplier<S> supplier);
+    S otherwise(final Supplier<? extends S> supplier);
 
     /**
      * Expose success or throw an {@link IllegalStateException} if instance
@@ -257,17 +257,18 @@ public interface Either<F, S> {
         }
 
         @Override
-        public <NF, NS> Either<NF, NS> flatMap(final FN1<Either<NF, NS>, S> mapper) {
-            return mapper.apply(success);
+        @SuppressWarnings("unchecked")
+        public <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<? extends NF, ? extends NS>, ? super S> mapper) {
+            return (Either<NF, NS>) mapper.apply(success);
         }
 
         @Override
-        public <NF> Either<NF, S> mapFailure(final FN1<NF, F> mapper) {
+        public <NF> Either<NF, S> mapFailure(final FN1<? extends NF, ? super F> mapper) {
             return new Success<>(success);
         }
 
         @Override
-        public <NS> Either<F, NS> mapSuccess(final FN1<NS, S> mapper) {
+        public <NS> Either<F, NS> mapSuccess(final FN1<? extends NS, ? super S> mapper) {
             return new Success<>(mapper.apply(success));
         }
 
@@ -277,7 +278,7 @@ public interface Either<F, S> {
         }
 
         @Override
-        public S otherwise(final Supplier<S> supplier) {
+        public S otherwise(final Supplier<? extends S> supplier) {
             return success;
         }
 
@@ -357,17 +358,17 @@ public interface Either<F, S> {
         //otherwise we'll get runtime class cast exception
         @Override
         @SuppressWarnings("unckecked")
-        public <NF , NS> Either<NF, NS> flatMap(final FN1<Either<NF, NS>, S> mapper) {
+        public <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<? extends NF, ? extends NS>, ? super S> mapper) {
             return new Failure<>((NF) failure);
         }
 
         @Override
-        public <NF> Either<NF, S> mapFailure(final FN1<NF, F> mapper) {
+        public <NF> Either<NF, S> mapFailure(final FN1<? extends NF, ? super F> mapper) {
             return new Failure<>(mapper.apply(failure));
         }
 
         @Override
-        public <NS> Either<F, NS> mapSuccess(final FN1<NS, S> mapper) {
+        public <NS> Either<F, NS> mapSuccess(final FN1<? extends NS, ? super S> mapper) {
             return new Failure<>(failure);
         }
 
@@ -377,7 +378,7 @@ public interface Either<F, S> {
         }
 
         @Override
-        public S otherwise(final Supplier<S> supplier) {
+        public S otherwise(final Supplier<? extends S> supplier) {
             return supplier.get();
         }
 

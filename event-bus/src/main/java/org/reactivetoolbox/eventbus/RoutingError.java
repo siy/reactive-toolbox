@@ -23,10 +23,28 @@ import org.reactivetoolbox.core.functional.Either;
  * Routing error constants
  */
 public enum RoutingError implements BaseError {
-    NO_SUCH_ROUTE,
+    NO_SUCH_ROUTE(404, "No such route"),
     ;
+    private final int code;
+    private final String message;
 
-    public static <T> Either<RoutingError, T> create(final RoutingError error) {
-        return Either.failure(error);
+    RoutingError(final int code, final String message) {
+        this.code = code;
+        this.message = message;
+    }
+
+    @Override
+    public int code() {
+        return code;
+    }
+
+    @Override
+    public String message() {
+        return message;
+    }
+
+    @Override
+    public <T> Either<RoutingError, T> asFailure() {
+        return Either.failure(this);
     }
 }

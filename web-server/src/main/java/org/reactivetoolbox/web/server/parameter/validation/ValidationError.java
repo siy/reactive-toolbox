@@ -17,18 +17,43 @@ package org.reactivetoolbox.web.server.parameter.validation;
  */
 
 import org.reactivetoolbox.core.async.BaseError;
+import org.reactivetoolbox.core.functional.Either;
 
 /**
  * Common validation errors
  */
 public enum ValidationError implements BaseError {
-    STRING_IS_NULL, STRING_IS_EMPTY,
-    STRING_TOO_SHORT,
-    STRING_TOO_LONG,
-    NUMBER_IS_BELOW_LOWER_BOUND,
-    NUMBER_IS_ABOVE_UPPER_BOUND,
-    USER_NOT_LOGGED_IN,
-    USER_HAS_NOT_ENOUGH_PRIVILEGES,
-    WEAK_PASSWORD,
+    STRING_IS_NULL(422, "String parameter is null"),
+    STRING_IS_EMPTY(422, "String parameter is empty string"),
+    STRING_TOO_SHORT(422, "String parameter is too short"),
+    STRING_TOO_LONG(422, "String parameter is too long"),
+    NUMBER_IS_BELOW_LOWER_BOUND(422, "Number is below lower bound"),
+    NUMBER_IS_ABOVE_UPPER_BOUND(422, "Number is above upper bound"),
+    USER_NOT_LOGGED_IN(401, "User is not authenticated"),
+    USER_HAS_NOT_ENOUGH_PRIVILEGES(403, "User is not authorized to perform request"),
+    WEAK_PASSWORD(422, "Provided password is too weak"),
     ;
+
+    private final int code;
+    private final String message;
+
+    ValidationError(final int code, final String message) {
+        this.code = code;
+        this.message = message;
+    }
+
+    @Override
+    public int code() {
+        return code;
+    }
+
+    @Override
+    public String message() {
+        return message;
+    }
+
+    @Override
+    public <T> Either<ValidationError, T> asFailure() {
+        return Either.failure(this);
+    }
 }

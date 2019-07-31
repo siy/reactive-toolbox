@@ -4,8 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.scheduler.SchedulerError;
+import org.reactivetoolbox.core.scheduler.Handle;
 import org.reactivetoolbox.core.scheduler.Timeout;
+import org.reactivetoolbox.core.scheduler.TimeoutScheduler;
 
 import java.util.List;
 import java.util.Random;
@@ -18,8 +19,9 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.reactivetoolbox.core.scheduler.SchedulerError.TIMEOUT;
 
-class SimpleSchedulerTest {
+class TimeoutSchedulerTest {
     private final Random random = new Random();
 
     //Kinda performance/load test, 50_000_000 items are processed in this case
@@ -35,8 +37,8 @@ class SimpleSchedulerTest {
 
     @Test
     void submittedTasksAreProcessed() throws InterruptedException {
-        final var scheduler = SimpleScheduler.with(SCHEDULER_CAPACITY);
-        final var executor = Executors.newFixedThreadPool(N_PROCESSING_THREADS, SimpleScheduler::newDaemonThread);
+        final var scheduler = TimeoutScheduler.with(SCHEDULER_CAPACITY);
+        final var executor = Executors.newFixedThreadPool(N_PROCESSING_THREADS, DaemonThreadFactory.of("Test Task Thread #%d"));
         final var counters = new AtomicLong[N_TASKS];
 
         executor.submit(() -> IntStream.range(0, N_TASKS)
@@ -53,21 +55,21 @@ class SimpleSchedulerTest {
         assertEquals(N_TASKS * N_ITEMS_PER_TASK, List.of(counters).stream().mapToLong(AtomicLong::get).sum());
     }
 
-    private void singleTask(final int n, final SimpleScheduler scheduler, final AtomicLong counter) {
+    private void singleTask(final int n, final TimeoutScheduler scheduler, final AtomicLong counter) {
         scheduler.request()
                  .onFailure(error -> fail())
-                 .onSuccess(timeoutScheduler -> submitTimeoutTask(timeoutScheduler, counter));
+                 .onSuccess(handle -> submitTimeoutTask(handle, counter));
     }
 
-    private void submitTimeoutTask(final SimpleScheduler.TimeoutScheduler timeoutScheduler,
+    private void submitTimeoutTask(final Handle handle,
                                    final AtomicLong counter) {
         for (int i = 0; i < N_ITEMS_PER_TASK; i++) {
             final var promise = Promise.<Either<? extends BaseError, String>>give().then(v -> counter.incrementAndGet());
 
-            timeoutScheduler.submit(() -> promise.resolve(Either.failure(SchedulerError.TIMEOUT)),
-                                    Timeout.of(nextTaskDelay()).millis());
+            handle.submit(Timeout.of(nextTaskDelay()).millis(),
+                          () -> promise.resolve(TIMEOUT.asFailure()));
         }
-        timeoutScheduler.release();
+        handle.release();
     }
 
     private int nextTaskDelay() {

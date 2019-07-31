@@ -6,6 +6,11 @@ import org.reactivetoolbox.core.functional.Option;
 
 import java.util.UUID;
 
+import static org.reactivetoolbox.web.server.parameter.conversion.simple.ConversionError.NOT_AN_INTEGER_NUMBER;
+import static org.reactivetoolbox.web.server.parameter.conversion.simple.ConversionError.NOT_A_DOUBLE_NUMBER;
+import static org.reactivetoolbox.web.server.parameter.conversion.simple.ConversionError.NOT_A_LONG_INTEGER_NUMBER;
+import static org.reactivetoolbox.web.server.parameter.conversion.simple.ConversionError.NOT_A_VALID_UUID;
+
 /**
  * Set of parsing routines for some base types
  */
@@ -40,7 +45,7 @@ public class SimpleValueConverters {
         try {
             return Either.success(Option.of(UUID.fromString(s)));
         } catch (final IllegalArgumentException e) {
-            return Either.failure(ConversionError.NOT_A_VALID_UUID);
+            return NOT_A_VALID_UUID.asFailure();
         }
     }
 
@@ -48,7 +53,7 @@ public class SimpleValueConverters {
         try {
             return Either.success(Option.of(Integer.parseInt(s)));
         } catch (final NumberFormatException e) {
-            return Either.failure(ConversionError.NOT_AN_INTEGER_NUMBER);
+            return NOT_AN_INTEGER_NUMBER.asFailure();
         }
     }
 
@@ -56,7 +61,7 @@ public class SimpleValueConverters {
         try {
             return Either.success(Option.of(Long.parseLong(s)));
         } catch (final NumberFormatException e) {
-            return Either.failure(ConversionError.NOT_A_LONG_INTEGER_NUMBER);
+            return NOT_A_LONG_INTEGER_NUMBER.asFailure();
         }
     }
 
@@ -64,7 +69,7 @@ public class SimpleValueConverters {
         try {
             return Either.success(Option.of(Double.parseDouble(s)));
         } catch (final NumberFormatException e) {
-            return Either.failure(ConversionError.NOT_A_DOUBLE_NUMBER);
+            return NOT_A_DOUBLE_NUMBER.asFailure();
         }
     }
 }

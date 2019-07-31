@@ -27,7 +27,14 @@ import org.reactivetoolbox.web.server.parameter.auth.Role;
 
 import java.util.regex.Pattern;
 
-import static org.reactivetoolbox.core.functional.Either.failure;
+import static org.reactivetoolbox.web.server.parameter.validation.ValidationError.NUMBER_IS_ABOVE_UPPER_BOUND;
+import static org.reactivetoolbox.web.server.parameter.validation.ValidationError.NUMBER_IS_BELOW_LOWER_BOUND;
+import static org.reactivetoolbox.web.server.parameter.validation.ValidationError.STRING_IS_EMPTY;
+import static org.reactivetoolbox.web.server.parameter.validation.ValidationError.STRING_IS_NULL;
+import static org.reactivetoolbox.web.server.parameter.validation.ValidationError.STRING_TOO_LONG;
+import static org.reactivetoolbox.web.server.parameter.validation.ValidationError.STRING_TOO_SHORT;
+import static org.reactivetoolbox.web.server.parameter.validation.ValidationError.USER_NOT_LOGGED_IN;
+import static org.reactivetoolbox.web.server.parameter.validation.ValidationError.WEAK_PASSWORD;
 
 /**
  * Most common validators
@@ -236,7 +243,7 @@ public interface Is {
      */
     static <T> Either<ValidationError, T> notNull(final Option<T> input) {
         return input.map(Either::<ValidationError, T>success)
-                .otherwise(() -> failure(ValidationError.STRING_IS_NULL));
+                .otherwiseGet(STRING_IS_NULL::asFailure);
     }
 
     /**
@@ -250,9 +257,9 @@ public interface Is {
      */
     static Either<ValidationError, String> notNullOrEmpty(final Option<String> input) {
         return input.map(val -> val.isBlank()
-                ? Either.<ValidationError, String>failure(ValidationError.STRING_IS_EMPTY)
+                ? STRING_IS_EMPTY.<String>asFailure()
                 : Either.<ValidationError, String>success(val))
-                .otherwise(() -> failure(ValidationError.STRING_IS_NULL));
+                .otherwiseGet(STRING_IS_NULL::asFailure);
     }
 
     /**
@@ -315,10 +322,10 @@ public interface Is {
     static Either<ValidationError, String> lenBetween(final Option<String> input1, final int minLen, final int maxLen) {
         return notNull(input1)
                 .flatMap(input -> input.length() < minLen
-                        ? failure(ValidationError.STRING_TOO_SHORT)
+                        ? STRING_TOO_SHORT.asFailure()
                         : input.length() > maxLen
                                 ? Either.success(input)
-                                : failure(ValidationError.STRING_TOO_LONG));
+                                : STRING_TOO_LONG.asFailure());
     }
 
     /**
@@ -332,7 +339,7 @@ public interface Is {
      */
     static Either<? extends BaseError, Authentication> loggedIn(final Option<Authentication> authentication) {
         return authentication.map(Authentication::token)
-                .otherwise(() -> failure(ValidationError.USER_NOT_LOGGED_IN));
+                .otherwiseGet(USER_NOT_LOGGED_IN::asFailure);
     }
 
     /**
@@ -353,7 +360,7 @@ public interface Is {
      * @return Validation result
      */
     static Either<? extends BaseError, String> strongPassword(final String string) {
-        return PASSWORD_CHECKER.matcher(string).find() ? Either.success(string) : Either.failure(ValidationError.WEAK_PASSWORD);
+        return PASSWORD_CHECKER.matcher(string).find() ? Either.success(string) : WEAK_PASSWORD.asFailure();
     }
 
     /**
@@ -406,9 +413,9 @@ public interface Is {
         @SuppressWarnings("unchecked")
         public Either<? extends BaseError, T> apply(final T param1) {
             return value(param1).compareTo(min) < 0
-                   ? failure(ValidationError.NUMBER_IS_BELOW_LOWER_BOUND)
+                   ? NUMBER_IS_BELOW_LOWER_BOUND.asFailure()
                    : value(param1).compareTo(max) > 0
-                     ? failure(ValidationError.NUMBER_IS_ABOVE_UPPER_BOUND)
+                     ? NUMBER_IS_ABOVE_UPPER_BOUND.asFailure()
                      : Either.success(param1);
         }
     }
