@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.stream.IntStream.range;
 
+//TODO: requires rework and refactoring
 public class SimpleScheduler {
     private final RingBuffer<OneTimeTask> buffer;
     private final ExecutorService collector;

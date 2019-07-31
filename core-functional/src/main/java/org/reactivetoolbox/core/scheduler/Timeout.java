@@ -3,11 +3,14 @@ package org.reactivetoolbox.core.scheduler;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+//TODO: requires rework
 public final class Timeout implements Comparable<Timeout> {
+    private final long timeout;
     private final long timestamp;
 
-    private Timeout(final long timestamp) {
-        this.timestamp = timestamp;
+    private Timeout(final long timeout) {
+        this.timeout = timeout;
+        timestamp = System.currentTimeMillis() + timeout;
     }
 
     public static TimeoutBuilder of(final long value) {
@@ -16,6 +19,10 @@ public final class Timeout implements Comparable<Timeout> {
 
     public long timestamp() {
         return timestamp;
+    }
+
+    public long timeout() {
+        return timeout;
     }
 
     @Override
@@ -43,7 +50,7 @@ public final class Timeout implements Comparable<Timeout> {
 
     @Override
     public String toString() {
-        return "Timestamp=" + timestamp;
+        return "Timestamp=" + timestamp + " (" + timeout + ")";
     }
 
     public static final class TimeoutBuilder {
@@ -54,11 +61,11 @@ public final class Timeout implements Comparable<Timeout> {
         }
 
         public Timeout millis() {
-            return new Timeout(System.currentTimeMillis() + value);
+            return new Timeout(value);
         }
 
         public Timeout seconds() {
-            return new Timeout(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(value));
+            return new Timeout(TimeUnit.SECONDS.toMillis(value));
         }
     }
 }

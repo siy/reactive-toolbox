@@ -17,7 +17,6 @@ package org.reactivetoolbox.core.functional;
  */
 
 import org.reactivetoolbox.core.functional.Functions.FN1;
-import org.reactivetoolbox.core.functional.Functions.FN2;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -53,19 +52,6 @@ public interface Either<F, S> {
      * Get access to failure wrapped into {@link Option}.
      */
     Option<F> failure();
-
-    /**
-     * This is a convenience method, which can be used to perform final transformation
-     * of this instance into value of single type, for example, at the end of HTTP request
-     * processing, when both successful and failure results should be serialized and sent.
-     *
-     * @param mapper
-     *        Transformation to apply
-     * @param <R>
-     *        Result type
-     * @return transformed value
-     */
-    <R> R funnel(FN2<R, F, S> mapper);
 
     /**
      * Transform given instance into another, using provided mapper.
@@ -338,11 +324,6 @@ public interface Either<F, S> {
                     .add(success.toString())
                     .toString();
         }
-
-        @Override
-        public <R> R funnel(final FN2<R, F, S> mapper) {
-            return mapper.apply(null, success);
-        }
     }
 
     final class Failure<F, S> implements Either<F, S> {
@@ -444,11 +425,6 @@ public interface Either<F, S> {
             return new StringJoiner(", ", Failure.class.getSimpleName() + "[", "]")
                     .add(failure.toString())
                     .toString();
-        }
-
-        @Override
-        public <R> R funnel(final FN2<R, F, S> mapper) {
-            return mapper.apply(failure, null);
         }
     }
 }

@@ -14,43 +14,43 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class EitherTest {
     @Test
     void theInstanceCanBeMapperIntoOtherType() {
-        var original = Either.<String, Integer>success(1);
+        final var original = Either.<String, Integer>success(1);
 
         assertEquals(Either.failure("1"), original.flatMap((right) -> Either.failure(Objects.toString(right))));
     }
 
     @Test
     void theFailureInstanceRemainsUnchanged() {
-        var original = Either.<String, Integer>failure("1");
+        final var original = Either.<String, Integer>failure("1");
 
         assertEquals(Either.failure("1"), original.flatMap((right) -> Either.success(right + right)));
     }
 
     @Test
     void theFailureValueCanBeMapperIntoOtherType() {
-        var original = Either.<Integer, String>failure(1);
+        final var original = Either.<Integer, String>failure(1);
 
         assertEquals(Either.failure("1"), original.mapFailure(Objects::toString));
     }
 
     @Test
     void theSuccessValueCanBeMapperIntoOtherType() {
-        var original = Either.<String, Integer>success(1);
+        final var original = Either.<String, Integer>success(1);
 
         assertEquals(Either.success("1"), original.mapSuccess(Objects::toString));
     }
 
     @Test
     void theSuccessInstanceRemainsUnchangedWhenMappedLeft() {
-        var original = Either.<String, Integer>success(1);
+        final var original = Either.<String, Integer>success(1);
 
         assertEquals(Either.success(1), original.mapFailure(Objects::toString));
     }
 
     @Test
     void theSuccessInstanceDoesCallConsumerInIfSuccess() {
-        var original = Either.<String, Integer>success(1);
-        var holder = new AtomicBoolean(false);
+        final var original = Either.<String, Integer>success(1);
+        final var holder = new AtomicBoolean(false);
 
         original.onSuccess(val -> holder.set(true));
 
@@ -59,8 +59,8 @@ public class EitherTest {
 
     @Test
     void theFailureInstanceDoesNotCallConsumerInIfSuccess() {
-        var original = Either.<Integer, Integer>failure(1);
-        var holder = new AtomicBoolean(false);
+        final var original = Either.<Integer, Integer>failure(1);
+        final var holder = new AtomicBoolean(false);
 
         original.onSuccess(val -> holder.set(true));
 
@@ -69,8 +69,8 @@ public class EitherTest {
 
     @Test
     void theSuccessInstanceDoesNotCallConsumerInIfFailure() {
-        var original = Either.<String, Integer>success(1);
-        var holder = new AtomicBoolean(false);
+        final var original = Either.<String, Integer>success(1);
+        final var holder = new AtomicBoolean(false);
 
         original.onFailure(val -> holder.set(true));
 
@@ -79,8 +79,8 @@ public class EitherTest {
 
     @Test
     void theFailureInstanceDoesCallConsumerInIfSuccess() {
-        var original = Either.<Integer, Integer>failure(1);
-        var holder = new AtomicBoolean(false);
+        final var original = Either.<Integer, Integer>failure(1);
+        final var holder = new AtomicBoolean(false);
 
         original.onFailure(val -> holder.set(true));
 
@@ -89,22 +89,22 @@ public class EitherTest {
 
     @Test
     void ifSuccessThenValueIsReturned() {
-        var original = Either.<Integer, Integer>success(1);
+        final var original = Either.<Integer, Integer>success(1);
 
         assertEquals(1, original.otherwise(2));
     }
 
     @Test
     void ifFailureThenReplacementValueIsReturned() {
-        var original = Either.<Integer, Integer>failure(1);
+        final var original = Either.<Integer, Integer>failure(1);
 
         assertEquals(2, original.otherwise(2));
     }
 
     @Test
     void ifSuccessThenValueIsReturnedAndSupplierIsNotInvoked() {
-        var original = Either.<Integer, Integer>success(1);
-        var holder = new AtomicBoolean(false);
+        final var original = Either.<Integer, Integer>success(1);
+        final var holder = new AtomicBoolean(false);
 
         assertEquals(1, original.otherwise(() -> {
             holder.set(true);
@@ -116,7 +116,7 @@ public class EitherTest {
 
     @Test
     void ifFailureThenReplacementValueIsReturnedAndSupplierIsInvoked() {
-        var original = Either.<Integer, Integer>failure(1);
+        final var original = Either.<Integer, Integer>failure(1);
 
         assertEquals(2, original.otherwise(() -> 2));
     }
@@ -194,6 +194,31 @@ public class EitherTest {
 
         assertTrue(leftResult.isFailure());
         assertEquals("Throwing!", leftResult.failure().get());
+    }
+
+    @Test
+    void statesAreMutuallyExclusive() {
+        final Either<String, String> success = Either.success("success");
+        final Either<String, String> failure = Either.failure("failure");
+
+        assertTrue(success.isSuccess());
+        assertFalse(success.isFailure());
+        assertEquals(Option.of("success"), success.success());
+        assertEquals(Option.empty(), success.failure());
+
+        assertTrue(failure.isFailure());
+        assertFalse(failure.isSuccess());
+        assertEquals(Option.empty(), failure.success());
+        assertEquals(Option.of("failure"), failure.failure());
+    }
+
+    @Test
+    void failureRemainsFailureAfterSuccessMapping() {
+        final Either<String, Integer> failure = Either.<String, Integer>failure("failure");
+
+        final Either<String, String> mapped = failure.mapSuccess(Object::toString);
+
+        assertEquals(failure, mapped);
     }
 
     private String throwingFunction(final Integer input) throws IOException {

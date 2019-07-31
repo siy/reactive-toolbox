@@ -1,10 +1,10 @@
 package org.reactivetoolbox.build;
 
 import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.async.Promises.Promise;
+import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 
-import static org.reactivetoolbox.core.async.Promises.fulfilled;
+import static org.reactivetoolbox.core.async.Promise.fulfilled;
 import static org.reactivetoolbox.core.functional.Either.failure;
 import static org.reactivetoolbox.core.functional.Either.success;
 import static org.reactivetoolbox.core.functional.Tuples.Tuple1;

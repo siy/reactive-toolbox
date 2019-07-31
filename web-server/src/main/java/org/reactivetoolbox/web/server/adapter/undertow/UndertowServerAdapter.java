@@ -22,8 +22,7 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.CanonicalPathHandler;
 import io.undertow.util.HttpString;
 import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.async.Promises;
-import org.reactivetoolbox.core.async.Promises.Promise;
+import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
@@ -81,14 +80,14 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
     @Override
     public Promise<Either<? extends BaseError, ServerAdapter>> start() {
-        return Promises.fulfilled(serverStart.apply(server)
-                                             .mapFailure(t -> ServerError.SERVER_FAILED_TO_START));
+        return Promise.fulfilled(serverStart.apply(server)
+                                            .mapFailure(t -> ServerError.SERVER_FAILED_TO_START));
     }
 
     @Override
     public Promise<Either<? extends BaseError, ServerAdapter>> stop() {
-        return Promises.fulfilled(serverStop.apply(server)
-                                            .mapFailure(t -> ServerError.SERVER_FAILED_TO_STOP));
+        return Promise.fulfilled(serverStop.apply(server)
+                                           .mapFailure(t -> ServerError.SERVER_FAILED_TO_STOP));
     }
 
     @Override

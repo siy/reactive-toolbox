@@ -16,7 +16,7 @@ package org.reactivetoolbox.eventbus.impl;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.core.async.Promises.Promise;
+import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.Envelope;

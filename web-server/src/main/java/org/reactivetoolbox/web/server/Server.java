@@ -17,8 +17,7 @@ package org.reactivetoolbox.web.server;
  */
 
 import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.async.Promises;
-import org.reactivetoolbox.core.async.Promises.Promise;
+import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.web.server.adapter.ServerAdapter;
@@ -50,7 +49,7 @@ public class Server {
 
     public Promise<Either<? extends BaseError, Server>> start() {
         if (running.compareAndSet(false, true)) {
-            final var result = Promises.<Either<? extends BaseError, Server>>give();
+            final var result = Promise.<Either<? extends BaseError, Server>>give();
 
             adapter.start()
                    .then(startResult -> result.resolve(startResult.mapSuccess(ad -> this)));
@@ -63,7 +62,7 @@ public class Server {
 
     public Promise<Either<? extends BaseError, Server>> stop() {
         if (running.compareAndSet(true, false)) {
-            final var result = Promises.<Either<? extends BaseError, Server>>give();
+            final var result = Promise.<Either<? extends BaseError, Server>>give();
 
             adapter.stop()
                    .then(stopResult -> result.resolve(stopResult.mapSuccess(ad -> this)));

@@ -17,7 +17,7 @@ package org.reactivetoolbox.eventbus;
  */
 
 import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.async.Promises.Promise;
+import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 

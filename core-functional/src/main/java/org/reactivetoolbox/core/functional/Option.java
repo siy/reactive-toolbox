@@ -221,6 +221,7 @@ public class Option<T> {
      * @return value stored in this instance
      * @throws IllegalStateException if instance is empty
      */
+    @Deprecated
     public T otherwiseThrow() {
         if (isPresent()) {
             return value;
@@ -236,6 +237,7 @@ public class Option<T> {
      * @return value stored in this instance if instance is not empty or throws exception returned from provided
      * supplier if instance is empty
      */
+    @Deprecated
     public <X extends Throwable> T otherwiseThrow(final Supplier<? extends X> exceptionSupplier) throws X {
         if (isPresent()) {
             return value;

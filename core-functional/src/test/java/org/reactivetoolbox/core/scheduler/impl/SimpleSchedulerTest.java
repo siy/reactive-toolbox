@@ -2,7 +2,7 @@ package org.reactivetoolbox.core.scheduler.impl;
 
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.async.Promises;
+import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.scheduler.SchedulerError;
 import org.reactivetoolbox.core.scheduler.Timeout;
@@ -22,13 +22,15 @@ import static org.junit.jupiter.api.Assertions.fail;
 class SimpleSchedulerTest {
     private final Random random = new Random();
 
-    //Kinda performance test
+    //Kinda performance/load test, 50_000_000 items are processed in this case
 //    private static final int N_ITEMS_PER_TASK = 500;
 //    private static final int N_TASKS = 100_000;
 //    private static final int N_PROCESSING_THREADS = 8;
     private static final int N_ITEMS_PER_TASK = 10;
     private static final int N_TASKS = 1_000;
     private static final int N_PROCESSING_THREADS = 8;
+    private static final int SINGLE_TASK_DELAY_MAX = 95;
+    private static final int SINGLE_TASK_DELAY_MIN = 5;
     private static final int SCHEDULER_CAPACITY = N_PROCESSING_THREADS * 4;
 
     @Test
@@ -46,9 +48,7 @@ class SimpleSchedulerTest {
         executor.shutdown();
         assertTrue(executor.awaitTermination(60, TimeUnit.SECONDS));
 
-        //Delays are distributed between 0-990ms, 1000ms after last task means that in worst case task
-        //timeout remains between +- 10ms tolerance bounds.
-        Thread.sleep(1000);
+        Thread.sleep(200);
 
         assertEquals(N_TASKS * N_ITEMS_PER_TASK, List.of(counters).stream().mapToLong(AtomicLong::get).sum());
     }
@@ -62,12 +62,16 @@ class SimpleSchedulerTest {
     private void submitTimeoutTask(final SimpleScheduler.TimeoutScheduler timeoutScheduler,
                                    final AtomicLong counter) {
         for (int i = 0; i < N_ITEMS_PER_TASK; i++) {
-            final var promise = Promises.<Either<? extends BaseError, String>>give().then(v -> counter.incrementAndGet());
+            final var promise = Promise.<Either<? extends BaseError, String>>give().then(v -> counter.incrementAndGet());
 
             timeoutScheduler.submit(() -> promise.resolve(Either.failure(SchedulerError.TIMEOUT)),
-                                    Timeout.of(random.nextInt(990) + 5).millis());
+                                    Timeout.of(nextTaskDelay()).millis());
         }
         timeoutScheduler.release();
+    }
+
+    private int nextTaskDelay() {
+        return random.nextInt(SINGLE_TASK_DELAY_MAX - SINGLE_TASK_DELAY_MIN) + SINGLE_TASK_DELAY_MIN;
     }
 
     private void countDown(final CountDownLatch gate) {
