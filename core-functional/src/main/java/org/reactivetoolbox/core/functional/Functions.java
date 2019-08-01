@@ -16,6 +16,17 @@ package org.reactivetoolbox.core.functional;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Tuples.Tuple0;
+import org.reactivetoolbox.core.functional.Tuples.Tuple1;
+import org.reactivetoolbox.core.functional.Tuples.Tuple2;
+import org.reactivetoolbox.core.functional.Tuples.Tuple3;
+import org.reactivetoolbox.core.functional.Tuples.Tuple4;
+import org.reactivetoolbox.core.functional.Tuples.Tuple5;
+import org.reactivetoolbox.core.functional.Tuples.Tuple6;
+import org.reactivetoolbox.core.functional.Tuples.Tuple7;
+import org.reactivetoolbox.core.functional.Tuples.Tuple8;
+import org.reactivetoolbox.core.functional.Tuples.Tuple9;
+
 /**
  * Collection of basic functions which accept 0-9 parameters and return single result.
  * Note that these functions is not supposed to throw any exceptions
@@ -24,50 +35,90 @@ public interface Functions {
     @FunctionalInterface
     interface FN0<R> {
         R apply();
+
+        default R forTuple(final Tuple0 input) {
+            return input.map(this);
+        }
     }
 
     @FunctionalInterface
     interface FN1<R, T1> {
         R apply(T1 param1);
+
+        default R forTuple(final Tuple1<T1> input) {
+            return input.map(this);
+        }
     }
 
     @FunctionalInterface
     interface FN2<R, T1, T2> {
         R apply(T1 param1, T2 param2);
+
+        default R forTuple(final Tuple2<T1,T2> input) {
+            return input.map(this);
+        }
     }
 
     @FunctionalInterface
     interface FN3<R, T1, T2, T3> {
         R apply(T1 param1, T2 param2, T3 param3);
+
+        default R forTuple(final Tuple3<T1, T2, T3> input) {
+            return input.map(this);
+        }
     }
 
     @FunctionalInterface
     interface FN4<R, T1, T2, T3, T4> {
         R apply(T1 param1, T2 param2, T3 param3, T4 param4);
+
+        default R forTuple(final Tuple4<T1, T2, T3, T4> input) {
+            return input.map(this);
+        }
     }
 
     @FunctionalInterface
     interface FN5<R, T1, T2, T3, T4, T5> {
         R apply(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5);
+
+        default R forTuple(final Tuple5<T1, T2, T3, T4, T5> input) {
+            return input.map(this);
+        }
     }
 
     @FunctionalInterface
     interface FN6<R, T1, T2, T3, T4, T5, T6> {
         R apply(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6);
+
+        default R forTuple(final Tuple6<T1, T2, T3, T4, T5, T6> input) {
+            return input.map(this);
+        }
     }
 
     @FunctionalInterface
     interface FN7<R, T1, T2, T3, T4, T5, T6, T7> {
         R apply(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6, T7 param7);
+
+        default R forTuple(final Tuple7<T1, T2, T3, T4, T5, T6, T7> input) {
+            return input.map(this);
+        }
     }
 
     @FunctionalInterface
     interface FN8<R, T1, T2, T3, T4, T5, T6, T7, T8> {
         R apply(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6, T7 param7, T8 param8);
+
+        default R forTuple(final Tuple8<T1, T2, T3, T4, T5, T6, T7, T8> input) {
+            return input.map(this);
+        }
     }
 
     @FunctionalInterface
     interface FN9<R, T1, T2, T3, T4, T5, T6, T7, T8, T9> {
         R apply(T1 param1, T2 param2, T3 param3, T4 param4, T5 param5, T6 param6, T7 param7, T8 param8, T9 param9);
+
+        default R forTuple(final Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9> input) {
+            return input.map(this);
+        }
     }
 }

@@ -65,7 +65,7 @@ public interface Either<F, S> {
      *        New type for success
      * @return transformed instance
      */
-    <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<? extends NF, ? extends NS>, ? super S> mapper);
+    <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<NF, NS>, ? super S> mapper);
 
     /**
      * Transform given instance into another one which has same success type
@@ -257,9 +257,8 @@ public interface Either<F, S> {
         }
 
         @Override
-        @SuppressWarnings("unchecked")
-        public <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<? extends NF, ? extends NS>, ? super S> mapper) {
-            return (Either<NF, NS>) mapper.apply(success);
+        public <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<NF, NS>, ? super S> mapper) {
+            return mapper.apply(success);
         }
 
         @Override
@@ -358,7 +357,7 @@ public interface Either<F, S> {
         //otherwise we'll get runtime class cast exception
         @Override
         @SuppressWarnings("unckecked")
-        public <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<? extends NF, ? extends NS>, ? super S> mapper) {
+        public <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<NF, NS>, ? super S> mapper) {
             return new Failure<>((NF) failure);
         }
 

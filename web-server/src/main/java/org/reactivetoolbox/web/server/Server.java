@@ -24,7 +24,7 @@ import org.reactivetoolbox.web.server.adapter.ServerAdapter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.reactivetoolbox.build.HttpRouteTools.readyFail;
+import static org.reactivetoolbox.build.Responses.readyFail;
 
 /**
  * HTTP Server implementation

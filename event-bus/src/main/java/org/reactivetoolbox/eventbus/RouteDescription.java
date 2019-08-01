@@ -1,5 +1,9 @@
 package org.reactivetoolbox.eventbus;
 
+import org.reactivetoolbox.core.functional.Option;
+
 public interface RouteDescription {
-//TODO: finish it
+    Path path();
+
+    RouteDescription path(Option<String> root);
 }

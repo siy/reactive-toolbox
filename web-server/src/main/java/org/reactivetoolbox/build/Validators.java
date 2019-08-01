@@ -24,19 +24,27 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple9;
  */
 public interface Validators {
 
-    interface V2<T1, T2> extends FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> {}
+    interface V2<T1, T2> extends FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> {
+    }
 
-    interface V3 <T1, T2, T3> extends FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> {}
+    interface V3 <T1, T2, T3> extends FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> {
+    }
 
-    interface V4 <T1, T2, T3, T4> extends FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> {}
+    interface V4 <T1, T2, T3, T4> extends FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> {
+    }
 
-    interface V5 <T1, T2, T3, T4, T5> extends FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> {}
+    interface V5 <T1, T2, T3, T4, T5> extends FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> {
+    }
 
-    interface V6 <T1, T2, T3, T4, T5, T6> extends FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> {}
+    interface V6 <T1, T2, T3, T4, T5, T6> extends FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> {
+    }
 
-    interface V7 <T1, T2, T3, T4, T5, T6, T7> extends FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> {}
+    interface V7 <T1, T2, T3, T4, T5, T6, T7> extends FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> {
+    }
 
-    interface V8 <T1, T2, T3, T4, T5, T6, T7, T8> extends FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> {}
+    interface V8 <T1, T2, T3, T4, T5, T6, T7, T8> extends FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> {
+    }
 
-    interface V9 <T1, T2, T3, T4, T5, T6, T7, T8, T9> extends FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> {}
+    interface V9 <T1, T2, T3, T4, T5, T6, T7, T8, T9> extends FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> {
+    }
 }

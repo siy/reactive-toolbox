@@ -15,8 +15,7 @@ import org.reactivetoolbox.web.server.parameter.validation.Is;
 import java.util.UUID;
 
 import static org.reactivetoolbox.build.HttpRouteAssembler.when;
-import static org.reactivetoolbox.build.HttpRouteTools.readyOk;
-import static org.reactivetoolbox.build.HttpRouteTools.valid;
+import static org.reactivetoolbox.build.Responses.readyOk;
 import static org.reactivetoolbox.eventbus.Routes.with;
 import static org.reactivetoolbox.web.server.HttpMethod.GET;
 import static org.reactivetoolbox.web.server.HttpMethod.POST;
@@ -25,6 +24,7 @@ import static org.reactivetoolbox.web.server.parameter.Parameters.inAuthHeader;
 import static org.reactivetoolbox.web.server.parameter.Parameters.inBody;
 import static org.reactivetoolbox.web.server.parameter.Parameters.inPath;
 import static org.reactivetoolbox.web.server.parameter.Parameters.inQuery;
+import static org.reactivetoolbox.web.server.parameter.validation.Validator.valid;
 
 public class ServerTest {
 

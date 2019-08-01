@@ -18,7 +18,6 @@ package org.reactivetoolbox.build;
 
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.Handler;
-import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Route;
 import org.reactivetoolbox.eventbus.RouteBase;
 import org.reactivetoolbox.eventbus.RouteDescription;
@@ -34,32 +33,28 @@ import java.util.stream.Stream;
  * @see Enricher
  */
 public class RouteEnricher<R, T> implements RouteBase<T> {
-    private final Path path;
     private final RouteDescription description;
     private final Handler<R, T> handler;
 
-    private RouteEnricher(final Path path,
-                          final RouteDescription description,
+    private RouteEnricher(final RouteDescription description,
                           final Handler<R, T> handler) {
-        this.path = path;
         this.description = description;
         this.handler = handler;
     }
 
-    public static <R, T> RouteEnricher<R, T> of(final Path path,
-                                                final RouteDescription description,
+    public static <R, T> RouteEnricher<R, T> of(final RouteDescription description,
                                                 final Handler<R, T> handler) {
-        return new RouteEnricher<R, T>(path, description, handler);
+        return new RouteEnricher<R, T>(description, handler);
     }
 
     public RouteEnricher<R, T> after(final Enricher<R, ? super T> enricher) {
-        return new RouteEnricher<>(path, description,
+        return new RouteEnricher<>(description,
                                    context -> handler.apply(context).mapSuccess(result -> enricher.apply(context, result)));
     }
 
     @Override
     public Stream<Route<T>> stream() {
-        return Stream.of(Route.of(path, handler));
+        return Stream.of(Route.of(description.path(), handler));
     }
 
     @Override
@@ -69,6 +64,6 @@ public class RouteEnricher<R, T> implements RouteBase<T> {
 
     @Override
     public RouteBase<T> root(final Option<String> root) {
-        return new RouteEnricher<>(path.root(root), description, handler);
+        return new RouteEnricher<>(description.path(root), handler);
     }
 }
