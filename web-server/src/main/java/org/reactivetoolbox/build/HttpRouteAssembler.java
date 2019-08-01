@@ -16,16 +16,16 @@ package org.reactivetoolbox.build;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.build.HttpParameterAssembler.PB0;
-import org.reactivetoolbox.build.HttpParameterAssembler.PB1;
-import org.reactivetoolbox.build.HttpParameterAssembler.PB2;
-import org.reactivetoolbox.build.HttpParameterAssembler.PB3;
-import org.reactivetoolbox.build.HttpParameterAssembler.PB4;
-import org.reactivetoolbox.build.HttpParameterAssembler.PB5;
-import org.reactivetoolbox.build.HttpParameterAssembler.PB6;
-import org.reactivetoolbox.build.HttpParameterAssembler.PB7;
-import org.reactivetoolbox.build.HttpParameterAssembler.PB8;
-import org.reactivetoolbox.build.HttpParameterAssembler.PB9;
+import org.reactivetoolbox.build.Parameters.PB0;
+import org.reactivetoolbox.build.Parameters.PB1;
+import org.reactivetoolbox.build.Parameters.PB2;
+import org.reactivetoolbox.build.Parameters.PB3;
+import org.reactivetoolbox.build.Parameters.PB4;
+import org.reactivetoolbox.build.Parameters.PB5;
+import org.reactivetoolbox.build.Parameters.PB6;
+import org.reactivetoolbox.build.Parameters.PB7;
+import org.reactivetoolbox.build.Parameters.PB8;
+import org.reactivetoolbox.build.Parameters.PB9;
 import org.reactivetoolbox.core.functional.Tuples;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.web.server.HttpMethod;

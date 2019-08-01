@@ -10,16 +10,16 @@ import org.reactivetoolbox.build.Handlers.Handler6;
 import org.reactivetoolbox.build.Handlers.Handler7;
 import org.reactivetoolbox.build.Handlers.Handler8;
 import org.reactivetoolbox.build.Handlers.Handler9;
+import org.reactivetoolbox.build.Validators.V2;
+import org.reactivetoolbox.build.Validators.V3;
+import org.reactivetoolbox.build.Validators.V4;
+import org.reactivetoolbox.build.Validators.V5;
+import org.reactivetoolbox.build.Validators.V6;
+import org.reactivetoolbox.build.Validators.V7;
+import org.reactivetoolbox.build.Validators.V8;
+import org.reactivetoolbox.build.Validators.V9;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions.FN2;
-import org.reactivetoolbox.core.functional.Functions.FN3;
-import org.reactivetoolbox.core.functional.Functions.FN4;
-import org.reactivetoolbox.core.functional.Functions.FN5;
-import org.reactivetoolbox.core.functional.Functions.FN6;
-import org.reactivetoolbox.core.functional.Functions.FN7;
-import org.reactivetoolbox.core.functional.Functions.FN8;
-import org.reactivetoolbox.core.functional.Functions.FN9;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.functional.Tuples;
 import org.reactivetoolbox.core.functional.Tuples.Tuple;
@@ -62,24 +62,11 @@ import static org.reactivetoolbox.core.functional.Either.success;
  */
 
 /**
- * Assembling flow for parameter collection and mapping to request handler.
+ * Classes which hold parameter batches during assembling request processing flow
  */
-public class HttpParameterAssembler {
+public interface Parameters {
 
-    /* Cross parameters validator interface. Note thar for 0 and 1 parameter routes there is no such validators. */
-
-    public interface V2<T1, T2> extends FN2<Either<? extends BaseError, Tuple2<T1, T2>>, T1, T2> {}
-    public interface V3 <T1, T2, T3> extends FN3<Either<? extends BaseError, Tuple3<T1, T2, T3>>, T1, T2, T3> {}
-    public interface V4 <T1, T2, T3, T4> extends FN4<Either<? extends BaseError, Tuple4<T1, T2, T3, T4>>, T1, T2, T3, T4> {}
-    public interface V5 <T1, T2, T3, T4, T5> extends FN5<Either<? extends BaseError, Tuple5<T1, T2, T3, T4, T5>>, T1, T2, T3, T4, T5> {}
-    public interface V6 <T1, T2, T3, T4, T5, T6> extends FN6<Either<? extends BaseError, Tuple6<T1, T2, T3, T4, T5, T6>>, T1, T2, T3, T4, T5, T6> {}
-    public interface V7 <T1, T2, T3, T4, T5, T6, T7> extends FN7<Either<? extends BaseError, Tuple7<T1, T2, T3, T4, T5, T6, T7>>, T1, T2, T3, T4, T5, T6, T7> {}
-    public interface V8 <T1, T2, T3, T4, T5, T6, T7, T8> extends FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, T1, T2, T3, T4, T5, T6, T7, T8> {}
-    public interface V9 <T1, T2, T3, T4, T5, T6, T7, T8, T9> extends FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, T1, T2, T3, T4, T5, T6, T7, T8, T9> {}
-
-    /* Containers for parameter batches */
-
-    public static class PB0 {
+    class PB0 {
         private final Path path;
         private final String description;
 
@@ -95,7 +82,7 @@ public class HttpParameterAssembler {
         }
     }
 
-    public static class PB1<T1> {
+    class PB1<T1> {
         private final Path path;
         private final String description;
         private final Tuple1<P<T1>> parameters;
@@ -116,7 +103,7 @@ public class HttpParameterAssembler {
         }
     }
 
-    public static class PB2<T1, T2> {
+    class PB2<T1, T2> {
         private final Path path;
         private final String description;
         private final Tuple2<P<T1>, P<T2>> parameters;
@@ -150,7 +137,7 @@ public class HttpParameterAssembler {
         }
     }
 
-    public static class PB3<T1, T2, T3> {
+    class PB3<T1, T2, T3> {
         private final Path path;
         private final String description;
         private final Tuple3<P<T1>, P<T2>, P<T3>> parameters;
@@ -185,7 +172,7 @@ public class HttpParameterAssembler {
         }
     }
 
-    public static class PB4<T1, T2, T3, T4> {
+    class PB4<T1, T2, T3, T4> {
         private final Path path;
         private final String description;
         private final Tuple4<P<T1>, P<T2>, P<T3>, P<T4>> parameters;
@@ -221,7 +208,7 @@ public class HttpParameterAssembler {
         }
     }
 
-    public static class PB5<T1, T2, T3, T4, T5> {
+    class PB5<T1, T2, T3, T4, T5> {
         private final Path path;
         private final String description;
         private final Tuple5<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>> parameters;
@@ -258,7 +245,7 @@ public class HttpParameterAssembler {
         }
     }
 
-    public static class PB6<T1, T2, T3, T4, T5, T6> {
+    class PB6<T1, T2, T3, T4, T5, T6> {
         private final Path path;
         private final String description;
         private final Tuple6<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>, P<T6>> parameters;
@@ -296,7 +283,7 @@ public class HttpParameterAssembler {
         }
     }
 
-    public static class PB7<T1, T2, T3, T4, T5, T6, T7> {
+    class PB7<T1, T2, T3, T4, T5, T6, T7> {
         private final Path path;
         private final String description;
         private final Tuple7<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>, P<T6>, P<T7>> parameters;
@@ -335,7 +322,7 @@ public class HttpParameterAssembler {
         }
     }
 
-    public static class PB8<T1, T2, T3, T4, T5, T6, T7, T8> {
+    class PB8<T1, T2, T3, T4, T5, T6, T7, T8> {
         private final Path path;
         private final String description;
         private final Tuple8<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>, P<T6>, P<T7>, P<T8>> parameters;
@@ -375,7 +362,7 @@ public class HttpParameterAssembler {
         }
     }
 
-    public static class PB9<T1, T2, T3, T4, T5, T6, T7, T8, T9> {
+    class PB9<T1, T2, T3, T4, T5, T6, T7, T8, T9> {
         private final Path path;
         private final String description;
         private final Tuple9<P<T1>, P<T2>, P<T3>, P<T4>, P<T5>, P<T6>, P<T7>, P<T8>, P<T9>> parameters;
