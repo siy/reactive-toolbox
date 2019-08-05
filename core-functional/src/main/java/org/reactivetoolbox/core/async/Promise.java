@@ -116,6 +116,18 @@ public interface Promise<T> {
     Promise<T> with(final Timeout timeout, final Supplier<T> timeoutResultSupplier);
 
     /**
+     * Run specified task asynchronously. Current instance of {@link Promise} is passed to the task as a parameter.
+     * Note that it is expected that by the time of invocation of this method, instance has it's timeout already
+     * configured. If this is not the case, then task may run (theoretically) indefinitely.
+     *
+     * @param task
+     *        Task to execute with this promise
+     *
+     * @return Current instance
+     */
+    Promise<T> perform(final Consumer<Promise<T>> task);
+
+    /**
      * Create and empty (unresolved) promise
      *
      * @return created promise

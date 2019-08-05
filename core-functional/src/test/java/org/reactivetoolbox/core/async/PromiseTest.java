@@ -140,6 +140,19 @@ public class PromiseTest {
     }
 
     @Test
+    void taskCanBeExecuted() {
+        final var promise = Promise.<Integer>give().with(Timeout.of(100).millis(), () -> 123);
+
+        assertFalse(promise.ready());
+
+        promise.perform((p) -> p.resolve(345));
+
+        promise.syncWait();
+        assertTrue(promise.ready());
+        assertEquals(Option.of(345), promise.value());
+    }
+
+    @Test
     void anyResolvedPromiseResolvesResultForFirstPromise() {
         final var promise1 = Promise.<Integer>give();
         final var promise2 = Promise.<Integer>give();
