@@ -57,6 +57,23 @@ public final class Pair<L, R> {
     }
 
     /**
+     * Factory method for creation of instances of {@link Pair} with given values.
+     *
+     * @param left
+     *        Left value
+     * @param right
+     *        Right value
+     * @param <L>
+     *        type of left value
+     * @param <R>
+     *        type of right value
+     * @return created instance
+     */
+    public static <L, R> Pair<L, R> pair(final L left, final R right) {
+        return new Pair<>(left, right);
+    }
+
+    /**
      * Get left value in pair
      *
      * @return left value

@@ -3,5 +3,5 @@ package org.reactivetoolbox.json;
 import org.reactivetoolbox.core.functional.Option;
 
 public interface JsonObject {
-    Option<String> get(final String name);
+    Option<JsonObject> get(final String name);
 }

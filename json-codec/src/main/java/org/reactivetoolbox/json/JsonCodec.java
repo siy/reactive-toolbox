@@ -17,7 +17,6 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 import static org.reactivetoolbox.core.functional.Either.success;
 import static org.reactivetoolbox.json.TypeConversionError.UNKNOWN_TYPE;
@@ -45,13 +44,17 @@ public class JsonCodec {
         REGISTRY.put(Instant.class, TypeCodec.of(Instant.class, CoreCodec::instantEncoder, CoreCodec::instantDecoder));
     }
 
-    public static <T> void registerType(final Class<T> type, final TypeCodec<T> codec) {
-        REGISTRY.put(type, codec);
+    public static <T> void registerType(final TypeCodec<T> codec) {
+        REGISTRY.put(codec.type(), codec);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Option<TypeCodec<T>> registerType(final Class<T> type) {
+    public static <T> Option<TypeCodec<T>> codec(final Class<T> type) {
         return Option.of((TypeCodec<T>) REGISTRY.get(type));
+    }
+
+    public static <T> Option<TypeDecoder<T>> decoder(final Class<T> type) {
+        return codec(type).map(TypeCodec::decoder);
     }
 
     public <T> Either<? extends BaseError, Option<T>> decode(final Class<T> type, final Input input) {
@@ -82,7 +85,7 @@ public class JsonCodec {
 
     //TODO: support arrays??
     @SuppressWarnings("unchecked")
-    public <T> Either<? extends BaseError, String> encode(final T value) {
+    public static <T> Either<? extends BaseError, String> encode(final T value) {
         if (value == null) {
             return success("null");
         }
@@ -107,14 +110,18 @@ public class JsonCodec {
         return result.isPresent() ? result.get() : UNKNOWN_TYPE.asFailure();
     }
 
-    public Either<? extends BaseError, String> serializeObject(final List<Pair<String, Supplier<?>>> fields) {
+    public static Either<? extends BaseError, String> encode(final Pair<String, ?>... fields) {
+        return encode(List.of(fields));
+    }
+
+    public static Either<? extends BaseError, String> encode(final List<Pair<String, ?>> fields) {
         return serialize(fields, "{", "}",
                          (joiner, pair) -> encode(pair.left()).onSuccess(s -> joiner.add(s).add("\":"))
-                                                              .flatMap(v -> encode(pair.right().get()))
+                                                              .flatMap(v -> encode(pair.right()))
                                                               .onSuccess(joiner::add));
     }
 
-    private <T> Either<? extends BaseError, String> serialize(final Collection<T> collection,
+    private static <T> Either<? extends BaseError, String> serialize(final Collection<T> collection,
                                                               final String prefix,
                                                               final String suffix,
                                                               final FN2<Either<? extends BaseError, String>, StringJoiner, T> handler) {
@@ -129,5 +136,4 @@ public class JsonCodec {
         }
         return success(joiner.toString());
     }
-
 }
