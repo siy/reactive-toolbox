@@ -29,10 +29,10 @@ import java.util.stream.Stream;
 public enum HttpMethod implements PathKey {
     GET, PUT, PATCH, POST, HEADER;
 
-    private static final Map<String, HttpMethod> lookupMap = new HashMap<>();
+    private static final Map<String, HttpMethod> NAME_TO_METHOD = new HashMap<>();
 
     static {
-        Stream.of(values()).forEach(method -> lookupMap.put(method.key(), method));
+        Stream.of(values()).forEach(method -> NAME_TO_METHOD.put(method.key(), method));
     }
 
     @Override
@@ -43,6 +43,6 @@ public enum HttpMethod implements PathKey {
     public static Option<HttpMethod> fromString(final String name) {
         return Option.of(name)
                      .map(String::toUpperCase)
-                     .flatMap(s -> Option.of(lookupMap.get(s)));
+                     .flatMap(s -> Option.of(NAME_TO_METHOD.get(s)));
     }
 }

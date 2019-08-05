@@ -26,7 +26,6 @@ import java.nio.ByteBuffer;
 /**
  * HTTP Request context abstraction
  */
-//TODO: add support for input/output encoding
 public interface RequestContext {
     Request request();
 

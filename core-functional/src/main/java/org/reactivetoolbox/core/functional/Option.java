@@ -116,7 +116,7 @@ public class Option<T> {
      *        Type of new value
      * @return transformed instance
      */
-    public <U> Option<U> map(final FN1<? extends U, ? super T> mapper) {
+    public <U> Option<U> map(final FN1<U, ? super T> mapper) {
         return isEmpty() ? empty() : Option.of(mapper.apply(value));
     }
 
@@ -203,7 +203,7 @@ public class Option<T> {
      * @return either value stored in current instance or value returned by provided supplier if current instance
      * is empty
      */
-    public T otherwiseGet(final Supplier<? extends T> supplier) {
+    public T otherwiseGet(final Supplier<T> supplier) {
         return isPresent() ? value : supplier.get();
     }
 

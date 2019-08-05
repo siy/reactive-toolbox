@@ -48,6 +48,10 @@ public interface Functions {
         default R forTuple(final Tuple1<T1> input) {
             return input.map(this);
         }
+
+        default FN0<R> bind(final T1 param) {
+            return () -> apply(param);
+        }
     }
 
     @FunctionalInterface
@@ -56,6 +60,10 @@ public interface Functions {
 
         default R forTuple(final Tuple2<T1,T2> input) {
             return input.map(this);
+        }
+
+        default FN1<R, T2> bind(final T1 param) {
+            return (v2) -> apply(param, v2);
         }
     }
 
@@ -66,6 +74,10 @@ public interface Functions {
         default R forTuple(final Tuple3<T1, T2, T3> input) {
             return input.map(this);
         }
+
+        default FN2<R, T2, T3> bind(final T1 param) {
+            return (v2, v3) -> apply(param, v2, v3);
+        }
     }
 
     @FunctionalInterface
@@ -74,6 +86,10 @@ public interface Functions {
 
         default R forTuple(final Tuple4<T1, T2, T3, T4> input) {
             return input.map(this);
+        }
+
+        default FN3<R, T2, T3, T4> bind(final T1 param) {
+            return (v2, v3, v4) -> apply(param, v2, v3, v4);
         }
     }
 
@@ -84,6 +100,10 @@ public interface Functions {
         default R forTuple(final Tuple5<T1, T2, T3, T4, T5> input) {
             return input.map(this);
         }
+
+        default FN4<R, T2, T3, T4, T5> bind(final T1 param) {
+            return (v2, v3, v4, v5) -> apply(param, v2, v3, v4, v5);
+        }
     }
 
     @FunctionalInterface
@@ -92,6 +112,10 @@ public interface Functions {
 
         default R forTuple(final Tuple6<T1, T2, T3, T4, T5, T6> input) {
             return input.map(this);
+        }
+
+        default FN5<R, T2, T3, T4, T5, T6> bind(final T1 param) {
+            return (v2, v3, v4, v5, v6) -> apply(param, v2, v3, v4, v5, v6);
         }
     }
 
@@ -102,6 +126,10 @@ public interface Functions {
         default R forTuple(final Tuple7<T1, T2, T3, T4, T5, T6, T7> input) {
             return input.map(this);
         }
+
+        default FN6<R, T2, T3, T4, T5, T6, T7> bind(final T1 param) {
+            return (v2, v3, v4, v5, v6, v7) -> apply(param, v2, v3, v4, v5, v6, v7);
+        }
     }
 
     @FunctionalInterface
@@ -111,6 +139,10 @@ public interface Functions {
         default R forTuple(final Tuple8<T1, T2, T3, T4, T5, T6, T7, T8> input) {
             return input.map(this);
         }
+
+        default FN7<R, T2, T3, T4, T5, T6, T7, T8> bind(final T1 param) {
+            return (v2, v3, v4, v5, v6, v7, v8) -> apply(param, v2, v3, v4, v5, v6, v7, v8);
+        }
     }
 
     @FunctionalInterface
@@ -119,6 +151,10 @@ public interface Functions {
 
         default R forTuple(final Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9> input) {
             return input.map(this);
+        }
+
+        default FN8<R, T2, T3, T4, T5, T6, T7, T8, T9> bind(final T1 param) {
+            return (v2, v3, v4, v5, v6, v7, v8, v9) -> apply(param, v2, v3, v4, v5, v6, v7, v8, v9);
         }
     }
 }

@@ -42,6 +42,7 @@ public interface Extractors {
     }
 
     static <T1, T2> E2<T1, T2> extract2(final RequestContext context) {
+        //TODO: try to convert to use FNxx::bind
         return (v1, v2) -> zip(v1.converter().apply(context),
                                v2.converter().apply(context));
     }

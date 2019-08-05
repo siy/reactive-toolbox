@@ -20,6 +20,15 @@ import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Option;
 
+/**
+ * Interface for route-based event bus. Unlike traditional broadcasting event but, this one does not perform
+ * broadcasting of events. Instead each event is delivered specifically to particular event handler or
+ * set of event handlers residing on same route. This approach significantly reduces overhead, especially
+ * in cases when actual handlers are remote.
+ *
+ * @see Route
+ * @see Router
+ */
 public interface EventBus {
     /**
      * Send message to listeners. This method immediately returns results of

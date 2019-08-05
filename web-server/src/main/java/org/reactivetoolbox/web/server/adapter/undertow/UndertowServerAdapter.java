@@ -38,7 +38,7 @@ import org.reactivetoolbox.web.server.Response;
 import org.reactivetoolbox.web.server.ServerError;
 import org.reactivetoolbox.web.server.adapter.ServerAdapter;
 import org.reactivetoolbox.web.server.parameter.conversion.ValueConverter;
-import org.reactivetoolbox.web.server.parameter.conversion.simple.SimpleValueConverters;
+import org.reactivetoolbox.web.server.parameter.conversion.simple.CoreValueConverters;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -89,6 +89,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
     @Override
     public void handleRequest(final HttpServerExchange exchange) throws Exception {
+        //TODO: check if this is actually necessary
         if (exchange.isInIoThread()) {
             exchange.dispatch(this);
             return;
@@ -287,9 +288,10 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
     private static final Map<Class<?>, ValueConverter<?>> CONVERTERS = new HashMap<>();
 
     static {
-        CONVERTERS.put(String.class, (ValueConverter<String>) SimpleValueConverters::toString);
-        CONVERTERS.put(Integer.class, (ValueConverter<Integer>) SimpleValueConverters::toInteger);
-        CONVERTERS.put(Long.class, (ValueConverter<Long>) SimpleValueConverters::toLong);
-        CONVERTERS.put(Double.class, (ValueConverter<Double>) SimpleValueConverters::toDouble);
+        CONVERTERS.put(Boolean.class, (ValueConverter<Boolean>) CoreValueConverters::toBoolean);
+        CONVERTERS.put(String.class, (ValueConverter<String>) CoreValueConverters::toString);
+        CONVERTERS.put(Integer.class, (ValueConverter<Integer>) CoreValueConverters::toInteger);
+        CONVERTERS.put(Long.class, (ValueConverter<Long>) CoreValueConverters::toLong);
+        CONVERTERS.put(Double.class, (ValueConverter<Double>) CoreValueConverters::toDouble);
     }
 }

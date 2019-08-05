@@ -593,6 +593,11 @@ public final class Tuples {
         public <T2> Tuple2<T1, T2> append(final T2 value) {
             return new Tuple2<>((T1) values[0], value);
         }
+
+        @SuppressWarnings("unchecked")
+        public <R1> Tuple1<R1> map(final Tuple1<FN1<R1, ? super T1>> mapper) {
+            return of(((FN1<R1, ? super T1>) mapper.values[0]).apply((T1) values[0]));
+        }
     }
 
     /**
@@ -611,6 +616,18 @@ public final class Tuples {
         @SuppressWarnings("unchecked")
         public <T3> Tuple3<T1, T2, T3> append(final T3 value) {
             return new Tuple3<>((T1) values[0], (T2) values[1], value);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <R1, R2> Tuple2<R1, R2> map(final Tuple2<FN1<R1, ? super T1>, FN1<R2, ? super T2>> mapper) {
+            return of(((FN1<R1, ? super T1>) mapper.values[0]).apply((T1) values[0]),
+                      ((FN1<R2, ? super T2>) mapper.values[1]).apply((T2) values[1]));
+        }
+
+        @SuppressWarnings("unchecked")
+        public <R1, R2> Tuple2<R1, R2> map(final FN1<R1, ? super T1> mapper1, final FN1<R2, ? super T2> mapper2) {
+            return of(mapper1.apply((T1) values[0]),
+                      mapper2.apply((T2) values[1]));
         }
     }
 
@@ -631,6 +648,14 @@ public final class Tuples {
         public <T4> Tuple4<T1, T2, T3, T4> append(final T4 value) {
             return new Tuple4<>((T1) values[0], (T2) values[1], (T3) values[2], value);
         }
+
+        @SuppressWarnings("unchecked")
+        public <R1, R2, R3> Tuple3<R1, R2, R3> map(
+                final Tuple3<FN1<R1, ? super T1>, FN1<R2, ? super T2>, FN1<R3, ? super T3>> mapper) {
+            return of(((FN1<R1, ? super T1>) mapper.values[0]).apply((T1) values[0]),
+                      ((FN1<R2, ? super T2>) mapper.values[1]).apply((T2) values[1]),
+                      ((FN1<R3, ? super T3>) mapper.values[2]).apply((T3) values[2]));
+        }
     }
 
     /**
@@ -650,6 +675,15 @@ public final class Tuples {
         public <T5> Tuple5<T1, T2, T3, T4, T5> append(final T5 value) {
             return new Tuple5<>((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], value);
         }
+
+        @SuppressWarnings("unchecked")
+        public <R1, R2, R3, R4> Tuple4<R1, R2, R3, R4> map(
+                final Tuple4<FN1<R1, ? super T1>, FN1<R2, ? super T2>, FN1<R3, ? super T3>, FN1<R4, ? super T4>> mapper) {
+            return of(((FN1<R1, ? super T1>) mapper.values[0]).apply((T1) values[0]),
+                      ((FN1<R2, ? super T2>) mapper.values[1]).apply((T2) values[1]),
+                      ((FN1<R3, ? super T3>) mapper.values[2]).apply((T3) values[2]),
+                      ((FN1<R4, ? super T4>) mapper.values[3]).apply((T4) values[3]));
+        }
     }
 
     /**
@@ -668,6 +702,17 @@ public final class Tuples {
         @SuppressWarnings("unchecked")
         public <T6> Tuple6<T1, T2, T3, T4, T5, T6> append(final T6 value) {
             return new Tuple6<>((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4], value);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <R1, R2, R3, R4, R5> Tuple5<R1, R2, R3, R4, R5> map(
+                final Tuple5<FN1<R1, ? super T1>, FN1<R2, ? super T2>, FN1<R3, ? super T3>, FN1<R4, ? super T4>,
+                        FN1<R5, ? super T5>> mapper) {
+            return of(((FN1<R1, ? super T1>) mapper.values[0]).apply((T1) values[0]),
+                      ((FN1<R2, ? super T2>) mapper.values[1]).apply((T2) values[1]),
+                      ((FN1<R3, ? super T3>) mapper.values[2]).apply((T3) values[2]),
+                      ((FN1<R4, ? super T4>) mapper.values[3]).apply((T4) values[3]),
+                      ((FN1<R5, ? super T5>) mapper.values[4]).apply((T5) values[4]));
         }
     }
 
@@ -689,6 +734,18 @@ public final class Tuples {
         public <T7> Tuple7<T1, T2, T3, T4, T5, T6, T7> append(final T7 value) {
             return new Tuple7<>((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4], (T6) values[5], value);
         }
+
+        @SuppressWarnings("unchecked")
+        public <R1, R2, R3, R4, R5, R6> Tuple6<R1, R2, R3, R4, R5, R6> map(
+                final Tuple6<FN1<R1, ? super T1>, FN1<R2, ? super T2>, FN1<R3, ? super T3>, FN1<R4, ? super T4>,
+                        FN1<R5, ? super T5>, FN1<R6, ? super T6>> mapper) {
+            return of(((FN1<R1, ? super T1>) mapper.values[0]).apply((T1) values[0]),
+                      ((FN1<R2, ? super T2>) mapper.values[1]).apply((T2) values[1]),
+                      ((FN1<R3, ? super T3>) mapper.values[2]).apply((T3) values[2]),
+                      ((FN1<R4, ? super T4>) mapper.values[3]).apply((T4) values[3]),
+                      ((FN1<R5, ? super T5>) mapper.values[4]).apply((T5) values[4]),
+                      ((FN1<R6, ? super T6>) mapper.values[5]).apply((T6) values[5]));
+        }
     }
 
     /**
@@ -709,6 +766,19 @@ public final class Tuples {
         public <T8> Tuple8<T1, T2, T3, T4, T5, T6, T7, T8> append(final T8 value) {
             return new Tuple8<>((T1) values[0],
                                 (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4], (T6) values[5], (T7) values[6], value);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <R1, R2, R3, R4, R5, R6, R7> Tuple7<R1, R2, R3, R4, R5, R6, R7> map(
+                final Tuple7<FN1<R1, ? super T1>, FN1<R2, ? super T2>, FN1<R3, ? super T3>, FN1<R4, ? super T4>,
+                        FN1<R5, ? super T5>, FN1<R6, ? super T6>, FN1<R7, ? super T7>> mapper) {
+            return of(((FN1<R1, ? super T1>) mapper.values[0]).apply((T1) values[0]),
+                      ((FN1<R2, ? super T2>) mapper.values[1]).apply((T2) values[1]),
+                      ((FN1<R3, ? super T3>) mapper.values[2]).apply((T3) values[2]),
+                      ((FN1<R4, ? super T4>) mapper.values[3]).apply((T4) values[3]),
+                      ((FN1<R5, ? super T5>) mapper.values[4]).apply((T5) values[4]),
+                      ((FN1<R6, ? super T6>) mapper.values[5]).apply((T6) values[5]),
+                      ((FN1<R7, ? super T7>) mapper.values[6]).apply((T7) values[6]));
         }
     }
 
@@ -732,6 +802,20 @@ public final class Tuples {
             return new Tuple9<>((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3],
                                 (T5) values[4], (T6) values[5], (T7) values[6], (T8) values[7], value);
         }
+
+        @SuppressWarnings("unchecked")
+        public <R1, R2, R3, R4, R5, R6, R7, R8> Tuple8<R1, R2, R3, R4, R5, R6, R7, R8> map(
+                final Tuple8<FN1<R1, ? super T1>, FN1<R2, ? super T2>, FN1<R3, ? super T3>, FN1<R4, ? super T4>,
+                        FN1<R5, ? super T5>, FN1<R6, ? super T6>, FN1<R7, ? super T7>, FN1<R8, ? super T8>> mapper) {
+            return of(((FN1<R1, ? super T1>) mapper.values[0]).apply((T1) values[0]),
+                      ((FN1<R2, ? super T2>) mapper.values[1]).apply((T2) values[1]),
+                      ((FN1<R3, ? super T3>) mapper.values[2]).apply((T3) values[2]),
+                      ((FN1<R4, ? super T4>) mapper.values[3]).apply((T4) values[3]),
+                      ((FN1<R5, ? super T5>) mapper.values[4]).apply((T5) values[4]),
+                      ((FN1<R6, ? super T6>) mapper.values[5]).apply((T6) values[5]),
+                      ((FN1<R7, ? super T7>) mapper.values[6]).apply((T7) values[6]),
+                      ((FN1<R8, ? super T8>) mapper.values[7]).apply((T8) values[7]));
+        }
     }
 
     /**
@@ -747,6 +831,22 @@ public final class Tuples {
         public <T> T map(final FN9<T, T1, T2, T3, T4, T5, T6, T7, T8, T9> mapper) {
             return mapper.apply((T1) values[0], (T2) values[1], (T3) values[2], (T4) values[3], (T5) values[4],
                                 (T6) values[5], (T7) values[6], (T8) values[7], (T9) values[8]);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <R1, R2, R3, R4, R5, R6, R7, R8, R9> Tuple9<R1, R2, R3, R4, R5, R6, R7, R8, R9> map(
+                final Tuple9<FN1<R1, ? super T1>, FN1<R2, ? super T2>, FN1<R3, ? super T3>, FN1<R4, ? super T4>,
+                        FN1<R5, ? super T5>, FN1<R6, ? super T6>, FN1<R7, ? super T7>, FN1<R8, ? super T8>,
+                        FN1<R9, ? super T9>> mapper) {
+            return of(((FN1<R1, ? super T1>) mapper.values[0]).apply((T1) values[0]),
+                      ((FN1<R2, ? super T2>) mapper.values[1]).apply((T2) values[1]),
+                      ((FN1<R3, ? super T3>) mapper.values[2]).apply((T3) values[2]),
+                      ((FN1<R4, ? super T4>) mapper.values[3]).apply((T4) values[3]),
+                      ((FN1<R5, ? super T5>) mapper.values[4]).apply((T5) values[4]),
+                      ((FN1<R6, ? super T6>) mapper.values[5]).apply((T6) values[5]),
+                      ((FN1<R7, ? super T7>) mapper.values[6]).apply((T7) values[6]),
+                      ((FN1<R8, ? super T8>) mapper.values[7]).apply((T8) values[7]),
+                      ((FN1<R9, ? super T9>) mapper.values[8]).apply((T9) values[8]));
         }
     }
 }
