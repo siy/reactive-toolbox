@@ -4,7 +4,6 @@ import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,19 +23,17 @@ public class JsonCodec {
         SERIALIZERS.put(Float.class, Object::toString);
         SERIALIZERS.put(Double.class, Object::toString);
         SERIALIZERS.put(BigDecimal.class, Object::toString);
+        //TODO: finish it
 //        SERIALIZERS.put(LocalDateTime.class, );
 //        SERIALIZERS.put(ZonedDateTime.class, );
 //        SERIALIZERS.put(Instant.class, );
+        //TODO: add collections and map
     }
 
     private JsonCodec() {}
 
     public static <T> void register(final Class<T> type, final FN1<String, ? super T> serializer) {
         SERIALIZERS.put(type, serializer);
-    }
-
-    public static <T, F> void register(final Class<T> type, final List<Field<?>> fields, final FN1<T, ParsedObject> factory) {
-
     }
 
     @SuppressWarnings("unchecked")

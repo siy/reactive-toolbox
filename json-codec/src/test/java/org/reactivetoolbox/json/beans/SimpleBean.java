@@ -2,26 +2,23 @@ package org.reactivetoolbox.json.beans;
 
 import org.reactivetoolbox.json.StringAssembler;
 
-import java.util.List;
-
-import static org.reactivetoolbox.json.Field.field;
 import static org.reactivetoolbox.json.JsonCodec.register;
 
 public class SimpleBean {
     static {
         register(SimpleBean.class, SimpleBean::serialize);
 
-        final var fields = List.of(field("name", String.class).and(),
-                                   field("value", String.class).required());
-
-        //List form
-        register(SimpleBean.class, fields, (obj) -> SimpleBean.of((String) obj.get(0),
-                                                                  (String) obj.get(1)));
-
-        //Tuple form
-        register(SimpleBean.class, fields(field("name", String.class).required(),
-                                          field("value", String.class).required()),
-                 (obj) -> obj.map(SimpleBean::of));
+//        final var fields = List.of(field("name", String.class).and(),
+//                                   field("value", String.class).required());
+//
+//        //List form
+//        register(SimpleBean.class, fields, (obj) -> SimpleBean.of((String) obj.get(0),
+//                                                                  (String) obj.get(1)));
+//
+//        //Tuple form
+//        register(SimpleBean.class, fields(field("name", String.class).required(),
+//                                          field("value", String.class).required()),
+//                 (obj) -> obj.map(SimpleBean::of));
 
 //        register(SimpleBean.class,
 //                 field("name", String.class/*, SimpleBean::getName).and(required())*/),
