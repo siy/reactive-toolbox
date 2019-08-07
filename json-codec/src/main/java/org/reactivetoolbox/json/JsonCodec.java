@@ -1,139 +1,50 @@
 package org.reactivetoolbox.json;
 
-import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions.FN2;
+import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.core.functional.Pair;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.reactivetoolbox.core.functional.Either.success;
-import static org.reactivetoolbox.json.TypeConversionError.UNKNOWN_TYPE;
-
-//TODO: finish it
 public class JsonCodec {
-    private static final Map<Class<?>, TypeCodec<?>> REGISTRY = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, FN1<String, ?>> SERIALIZERS = new ConcurrentHashMap<>();
 
     static {
-        REGISTRY.put(Option.class, TypeCodec.of(Option.class, CoreCodec::optionEncoder, CoreCodec::optionDecoder));
-        REGISTRY.put(Optional.class, TypeCodec.of(Optional.class, CoreCodec::optionalEncoder, CoreCodec::optionalDecoder));
-        REGISTRY.put(String.class, TypeCodec.of(String.class, CoreCodec::stringEncoder, CoreCodec::stringDecoder));
-        REGISTRY.put(Boolean.class, TypeCodec.of(Boolean.class, CoreCodec::booleanEncoder, CoreCodec::booleanDecoder));
-        REGISTRY.put(UUID.class, TypeCodec.of(UUID.class, CoreCodec::uuidEncoder, CoreCodec::uuidDecoder));
-
-        REGISTRY.put(Integer.class, TypeCodec.of(Integer.class, CoreCodec::integerEncoder, CoreCodec::integerDecoder));
-        REGISTRY.put(Long.class, TypeCodec.of(Long.class, CoreCodec::longEncoder, CoreCodec::longDecoder));
-
-        REGISTRY.put(Float.class, TypeCodec.of(Float.class, CoreCodec::floatEncoder, CoreCodec::floatDecoder));
-        REGISTRY.put(Double.class, TypeCodec.of(Double.class, CoreCodec::doubleEncoder, CoreCodec::doubleDecoder));
-        REGISTRY.put(BigDecimal.class, TypeCodec.of(BigDecimal.class, CoreCodec::bigDecimalEncoder, CoreCodec::bigDecimalDecoder));
-
-        REGISTRY.put(LocalDateTime.class, TypeCodec.of(LocalDateTime.class, CoreCodec::localDateTimeEncoder, CoreCodec::localDateTimeDecoder));
-        REGISTRY.put(ZonedDateTime.class, TypeCodec.of(ZonedDateTime.class, CoreCodec::zonedDateTimeEncoder, CoreCodec::zonedDateTimeDecoder));
-        REGISTRY.put(Instant.class, TypeCodec.of(Instant.class, CoreCodec::instantEncoder, CoreCodec::instantDecoder));
+        SERIALIZERS.put(Option.class, (Option<Object> v)-> serialize(v.get()).get());
+        SERIALIZERS.put(Optional.class, (Optional<?> v) -> serialize(v.orElse(null)).get());
+        SERIALIZERS.put(String.class, v -> StringAssembler.of('"', '"').plain((String) v).toString());
+        SERIALIZERS.put(Boolean.class, Object::toString);
+        SERIALIZERS.put(UUID.class, v -> StringAssembler.of('"', '"').plain(v.toString()).toString());
+        SERIALIZERS.put(Integer.class, Object::toString);
+        SERIALIZERS.put(Long.class, Object::toString);
+        SERIALIZERS.put(Float.class, Object::toString);
+        SERIALIZERS.put(Double.class, Object::toString);
+        SERIALIZERS.put(BigDecimal.class, Object::toString);
+//        SERIALIZERS.put(LocalDateTime.class, );
+//        SERIALIZERS.put(ZonedDateTime.class, );
+//        SERIALIZERS.put(Instant.class, );
     }
 
-    public static <T> void registerType(final TypeCodec<T> codec) {
-        REGISTRY.put(codec.type(), codec);
+    private JsonCodec() {}
+
+    public static <T> void register(final Class<T> type, final FN1<String, ? super T> serializer) {
+        SERIALIZERS.put(type, serializer);
+    }
+
+    public static <T, F> void register(final Class<T> type, final List<Field<?>> fields, final FN1<T, ParsedObject> factory) {
+
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Option<TypeCodec<T>> codec(final Class<T> type) {
-        return Option.of((TypeCodec<T>) REGISTRY.get(type));
-    }
-
-    public static <T> Option<TypeDecoder<T>> decoder(final Class<T> type) {
-        return codec(type).map(TypeCodec::decoder);
-    }
-
-    public <T> Either<? extends BaseError, Option<T>> decode(final Class<T> type, final Input input) {
-        if (!input.hasNext()) {
-            return success(Option.empty());
-        }
-
-        if (Collection.class.isAssignableFrom(type)) {
-            if (input.next().type() != TokenType.ARRAY_START) {
-                //Expect start of array
-            }
-
-            while (input.next().type() != TokenType.ARRAY_END) {
-                // Read array
-            }
-
-            return null;
-        }
-
-        return null;
-
-//        switch (input.next()) {
-//            case ARRAY_START:
-//                break;
-//                case ARRAY_END
-//        }
-    }
-
-    //TODO: support arrays??
-    @SuppressWarnings("unchecked")
-    public static <T> Either<? extends BaseError, String> encode(final T value) {
-        if (value == null) {
-            return success("null");
-        }
-
-        if (value instanceof Collection) {
-            return serialize((Collection<?>) value, "[", "]",
-                             (joiner, element) -> encode(element).onSuccess(joiner::add));
-        }
-
-        if (value instanceof Map) {
-            return serialize(((Map<?, ?>) value).entrySet(), "[", "]",
-                             (joiner, entry) -> encode(entry.getKey()).onSuccess(s -> joiner.add(s).add("\":"))
-                                                                      .flatMap(v -> encode(entry.getKey()))
-                                                                      .onSuccess(joiner::add));
-        }
-
-        final Option<Either<? extends BaseError, String>>
-                result = Option.of((TypeCodec<T>) REGISTRY.get(value.getClass()))
-                               .map(TypeCodec::encoder)
-                               .map(encoder -> encoder.apply(value));
-
-        return result.isPresent() ? result.get() : UNKNOWN_TYPE.asFailure();
-    }
-
-    public static Either<? extends BaseError, String> encode(final Pair<String, ?>... fields) {
-        return encode(List.of(fields));
-    }
-
-    public static Either<? extends BaseError, String> encode(final List<Pair<String, ?>> fields) {
-        return serialize(fields, "{", "}",
-                         (joiner, pair) -> encode(pair.left()).onSuccess(s -> joiner.add(s).add("\":"))
-                                                              .flatMap(v -> encode(pair.right()))
-                                                              .onSuccess(joiner::add));
-    }
-
-    private static <T> Either<? extends BaseError, String> serialize(final Collection<T> collection,
-                                                              final String prefix,
-                                                              final String suffix,
-                                                              final FN2<Either<? extends BaseError, String>, StringJoiner, T> handler) {
-        final StringJoiner joiner = new StringJoiner(",", prefix, suffix);
-
-        for(final T element : collection) {
-            final var result = handler.apply(joiner, element);
-
-            if (result.isFailure()) {
-                return result;
-            }
-        }
-        return success(joiner.toString());
+    public static <T> Option<String> serialize(final T value) {
+        return Option.of(value)
+                     .map(Object::getClass)
+                     .flatMap(cls -> Option.of((FN1<String, T>) (FN1) SERIALIZERS.get(cls))
+                                           .map(fn -> fn.apply(value)))
+                     .or(() -> Option.of("null"));
     }
 }

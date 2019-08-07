@@ -28,6 +28,7 @@ import org.reactivetoolbox.web.server.parameter.TypeDescription;
  * @param <T>
  *        The type of the parameter value
  */
+//TODO: detach conversion/validation from request context and move them to JSON module
 @FunctionalInterface
 public interface Converter<T> extends FN1<Either<? extends BaseError, T>, RequestContext> {
     default Option<TypeDescription> typeDescription() {

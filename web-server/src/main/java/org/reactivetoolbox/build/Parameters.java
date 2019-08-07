@@ -62,7 +62,6 @@ import static org.reactivetoolbox.core.functional.Either.success;
  * Classes which hold parameter batches during assembling request processing flow
  */
 public interface Parameters {
-
     class PB0 {
         private final DescribedPath describedPath;
 
