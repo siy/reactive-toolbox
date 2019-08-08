@@ -56,24 +56,24 @@ public class CoreValueConverters {
     private static final Set<String> TRUE_VALUES = Set.of("true", "yes", "1");
     private static final Set<String> FALSE_VALUES = Set.of("false", "no", "0");
 
-    private static Either<? extends BaseError, Option<Boolean>> booleanValueOf(final String s) {
-        return Option.of(TRUE_VALUES.contains(s))
-                     .or(() -> Option.of(FALSE_VALUES.contains(s)))
+    private static Either<? extends BaseError, Option<Boolean>> booleanValueOf(final String value) {
+        return Option.of(TRUE_VALUES.contains(value))
+                     .or(() -> Option.of(FALSE_VALUES.contains(value)))
                      .map(v -> Either.<ConversionError, Option<Boolean>>success(Option.of(v)))
                      .otherwise(NOT_A_BOOLEAN.asFailure());
     }
 
-    private static Either<? extends BaseError, Option<UUID>> uuidValueOf(final String s) {
+    private static Either<? extends BaseError, Option<UUID>> uuidValueOf(final String value) {
         try {
-            return Either.success(Option.of(UUID.fromString(s)));
+            return Either.success(Option.of(UUID.fromString(value)));
         } catch (final IllegalArgumentException e) {
             return NOT_A_VALID_UUID.asFailure();
         }
     }
 
-    private static Either<? extends BaseError, Option<Integer>> integerValueOf(final String s) {
+    private static Either<? extends BaseError, Option<Integer>> integerValueOf(final String value) {
         try {
-            return Either.success(Option.of(Integer.parseInt(s)));
+            return Either.success(Option.of(Integer.parseInt(value)));
         } catch (final NumberFormatException e) {
             return NOT_AN_INTEGER_NUMBER.asFailure();
         }
@@ -87,9 +87,9 @@ public class CoreValueConverters {
         }
     }
 
-    private static Either<? extends BaseError, Option<Double>> doubleValueOf(final String s) {
+    private static Either<? extends BaseError, Option<Double>> doubleValueOf(final String value) {
         try {
-            return Either.success(Option.of(Double.parseDouble(s)));
+            return Either.success(Option.of(Double.parseDouble(value)));
         } catch (final NumberFormatException e) {
             return NOT_A_DOUBLE_NUMBER.asFailure();
         }

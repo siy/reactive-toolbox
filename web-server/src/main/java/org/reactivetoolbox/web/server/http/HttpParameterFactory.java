@@ -1,4 +1,4 @@
-package org.reactivetoolbox.web.server.parameter.conversion;
+package org.reactivetoolbox.web.server.http;
 
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
@@ -21,15 +21,16 @@ import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Functions.FN2;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.web.server.RequestContext;
+import org.reactivetoolbox.web.server.parameter.conversion.Converter;
 
 /**
- * Set of convenience methods for composing various value converters
+ * Set of convenience methods for composing various value converters for HTTP request parameters and HTTP request
+ * context variables.
  */
-public interface ParameterConverterFactory {
-    interface StringExtractor extends FN1<Either<? extends BaseError, Option<String>>, RequestContext> {}
+public interface HttpParameterFactory {
+    interface StringExtractor extends FN1<Either<? extends BaseError, Option<String>>, HttpProcessingContext> {}
 
-    interface NamedStringExtractor extends FN2<Either<? extends BaseError, Option<String>>, RequestContext, String> {}
+    interface NamedStringExtractor extends FN2<Either<? extends BaseError, Option<String>>, HttpProcessingContext, String> {}
 
     NamedStringExtractor fromQuery = (context, name) -> Either.success(context.request().queryParameter(name));
     NamedStringExtractor fromPath = (context, name) -> Either.success(context.request().pathParameter(name));
@@ -41,7 +42,9 @@ public interface ParameterConverterFactory {
     }
 
     static <T> Converter<Option<T>> composeConverter(final StringExtractor stringExtractor, final Class<T> type) {
-        return (context) -> stringExtractor.apply(context).flatMap((value) -> context.valueConverter(type).apply(value));
+        return (context) -> stringExtractor.apply((HttpProcessingContext) context)
+                                           .flatMap((value) -> context.valueConverter(type)
+                                                                      .apply(value));
     }
 
     static <T> Converter<Option<T>> pathParameter(final Class<T> type, final String name) {
@@ -61,7 +64,7 @@ public interface ParameterConverterFactory {
     }
 
     static <T> Converter<Option<T>> inContext(final Class<T> type) {
-        return (context) -> Either.success(context.contextComponent(type));
+        return (context) -> Either.success(((HttpProcessingContext) context).contextComponent(type));
     }
 
     static <T> Converter<Option<T>> fullBody(final Class<T> type) {

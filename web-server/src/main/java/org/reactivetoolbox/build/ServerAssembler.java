@@ -20,35 +20,35 @@ import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.RouteBase;
 import org.reactivetoolbox.eventbus.Router;
-import org.reactivetoolbox.web.server.RequestContext;
 import org.reactivetoolbox.web.server.Server;
 import org.reactivetoolbox.web.server.adapter.ServerAdapter;
+import org.reactivetoolbox.web.server.http.HttpProcessingContext;
 
 /**
  * HTTP server fluent assembler.
  */
 public class ServerAssembler {
-    private final Router<RequestContext> router;
+    private final Router<HttpProcessingContext> router;
 
-    private ServerAssembler(final Router<RequestContext> router) {
+    private ServerAssembler(final Router<HttpProcessingContext> router) {
         this.router = router;
     }
 
-    public static ServerAssembler with(final Router<RequestContext> router) {
+    public static ServerAssembler with(final Router<HttpProcessingContext> router) {
         return new ServerAssembler(router);
     }
 
     @SafeVarargs
-    public static ServerAssembler with(final RouteBase<RequestContext>... routes) {
+    public static ServerAssembler with(final RouteBase<HttpProcessingContext>... routes) {
         return new ServerAssembler(Router.of(Option.empty(), routes));
     }
 
     @SafeVarargs
-    public static ServerAssembler with(final String root, final RouteBase<RequestContext>... routes) {
+    public static ServerAssembler with(final String root, final RouteBase<HttpProcessingContext>... routes) {
         return new ServerAssembler(Router.of(Option.of(root), routes));
     }
 
-    public Server build(final FN1<ServerAdapter, Router<RequestContext>> factory) {
+    public Server build(final FN1<ServerAdapter, Router<HttpProcessingContext>> factory) {
         return Server.of(router, factory.apply(router));
     }
 }

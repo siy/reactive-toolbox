@@ -21,6 +21,7 @@ import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.eventbus.Router;
 import org.reactivetoolbox.web.server.adapter.ServerAdapter;
+import org.reactivetoolbox.web.server.http.HttpProcessingContext;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -30,20 +31,20 @@ import static org.reactivetoolbox.build.Responses.readyFail;
  * HTTP Server implementation
  */
 public class Server {
-    private final Router<RequestContext> router;
+    private final Router<HttpProcessingContext> router;
     private final ServerAdapter adapter;
     private final AtomicBoolean running = new AtomicBoolean();
 
-    private Server(final Router<RequestContext> router, final ServerAdapter adapter) {
+    private Server(final Router<HttpProcessingContext> router, final ServerAdapter adapter) {
         this.router = router;
         this.adapter = adapter;
     }
 
-    public static Server of(final Router<RequestContext> router, final ServerAdapter adapter) {
+    public static Server of(final Router<HttpProcessingContext> router, final ServerAdapter adapter) {
         return new Server(router, adapter);
     }
 
-    public Router<RequestContext> router() {
+    public Router<HttpProcessingContext> router() {
         return router;
     }
 

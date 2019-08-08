@@ -1,4 +1,4 @@
-package org.reactivetoolbox.web.server;
+package org.reactivetoolbox.web.server.http;
 
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
@@ -15,6 +15,8 @@ package org.reactivetoolbox.web.server;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import org.reactivetoolbox.web.server.parameter.conversion.ProcessingContext;
 
 /**
  * Generalized HTTP request response interface
@@ -36,5 +38,5 @@ public interface Response {
      *
      * @return Request context.
      */
-    RequestContext context();
+    ProcessingContext context();
 }

@@ -1,4 +1,4 @@
-package org.reactivetoolbox.web.server;
+package org.reactivetoolbox.web.server.http;
 
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko

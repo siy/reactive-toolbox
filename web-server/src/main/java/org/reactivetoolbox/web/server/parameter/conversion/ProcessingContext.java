@@ -1,4 +1,4 @@
-package org.reactivetoolbox.web.server;
+package org.reactivetoolbox.web.server.parameter.conversion;
 
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
@@ -16,26 +16,10 @@ package org.reactivetoolbox.web.server;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.core.functional.Functions.FN1;
-import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.eventbus.Path;
-import org.reactivetoolbox.web.server.parameter.conversion.ValueConverter;
-
-import java.nio.ByteBuffer;
-
 /**
  * HTTP Request context abstraction
  */
-public interface RequestContext {
-    Request request();
-
-    Response response();
-
-    Path path();
+public interface ProcessingContext {
 
     <T> ValueConverter<T> valueConverter(final Class<T> type);
-
-    <T> Option<T> contextComponent(Class<T> type);
-
-    FN1<ByteBuffer, Object> resultSerializer();
 }

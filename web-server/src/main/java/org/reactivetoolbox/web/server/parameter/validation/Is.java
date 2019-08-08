@@ -19,11 +19,10 @@ package org.reactivetoolbox.web.server.parameter.validation;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.web.server.RequestContext;
-import org.reactivetoolbox.web.server.parameter.Parameters;
-import org.reactivetoolbox.web.server.parameter.Parameters.P;
 import org.reactivetoolbox.web.server.parameter.auth.Authentication;
 import org.reactivetoolbox.web.server.parameter.auth.Role;
+import org.reactivetoolbox.web.server.parameter.conversion.ProcessingContext;
+import org.reactivetoolbox.web.server.parameter.conversion.var.Var;
 
 import java.util.regex.Pattern;
 
@@ -55,9 +54,9 @@ public interface Is {
     static <T> Validator<T, Option<T>> required() {
         return new Validator<>() {
             @Override
-            public P<T> modify(final P<Option<T>> input) {
-                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
-                                     input.description()
+            public Var<T> modify(final Var<Option<T>> input) {
+                return Var.of((ProcessingContext context) -> input.converter().apply(context).flatMap(this::apply),
+                              input.description()
                                           .map(d -> d.mandatory(true))
                                           .map(d -> d.addValidationComment("Required parameter")));
             }
@@ -81,9 +80,9 @@ public interface Is {
     static Validator<String, Option<String>> notNullOrEmpty() {
         return new Validator<>() {
             @Override
-            public P<String> modify(final P<Option<String>> input) {
-                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
-                                     input.description()
+            public Var<String> modify(final Var<Option<String>> input) {
+                return Var.of((ProcessingContext context) -> input.converter().apply(context).flatMap(this::apply),
+                              input.description()
                                           .map(d -> d.mandatory(true))
                                           .map(d -> d.addValidationComment("Can't be empty")));
             }
@@ -108,9 +107,9 @@ public interface Is {
     static Validator<String, Option<String>> lenBetween(final int min, final int max) {
         return new Validator<>() {
             @Override
-            public P<String> modify(final P<Option<String>> input) {
-                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
-                                     input.description()
+            public Var<String> modify(final Var<Option<String>> input) {
+                return Var.of((ProcessingContext context) -> input.converter().apply(context).flatMap(this::apply),
+                              input.description()
                                           .map(d -> d.mandatory(true))
                                           .map(d -> d.addValidationComment("Must have len between " + min + " and " + max)));
             }
@@ -143,9 +142,9 @@ public interface Is {
     static Validator<String, String> strongPassword() {
         return new Validator<>() {
             @Override
-            public P<String> modify(final P<String> input) {
-                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
-                                     input.description()
+            public Var<String> modify(final Var<String> input) {
+                return Var.of((ProcessingContext context) -> input.converter().apply(context).flatMap(this::apply),
+                              input.description()
                                           .map(d -> d.mandatory(true))
                                           .map(d -> d.addValidationComment("Must contain at least one: upper case letter, "
                                                                            + "lower case letter, digit and special character")));
@@ -162,9 +161,9 @@ public interface Is {
     static Validator<String, String> email() {
         return new Validator<>() {
             @Override
-            public P<String> modify(final P<String> input) {
-                return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
-                                     input.description()
+            public Var<String> modify(final Var<String> input) {
+                return Var.of((ProcessingContext context) -> input.converter().apply(context).flatMap(this::apply),
+                              input.description()
                                           .map(d -> d.mandatory(true))
                                           .map(d -> d.addValidationComment("Must be a correctly formatted e-mail address.")));
             }
@@ -401,9 +400,9 @@ public interface Is {
         }
 
         @Override
-        public P<T> modify(final P<T> input) {
-            return Parameters.of((RequestContext context) -> input.converter().apply(context).flatMap(this::apply),
-                                 input.description()
+        public Var<T> modify(final Var<T> input) {
+            return Var.of((ProcessingContext context) -> input.converter().apply(context).flatMap(this::apply),
+                          input.description()
                                       .map(d -> d.addValidationComment("Value must be between " + min + " and " + max)));
         }
 

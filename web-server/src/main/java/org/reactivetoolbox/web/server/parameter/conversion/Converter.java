@@ -4,8 +4,6 @@ import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.web.server.RequestContext;
-import org.reactivetoolbox.web.server.parameter.TypeDescription;
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -28,9 +26,8 @@ import org.reactivetoolbox.web.server.parameter.TypeDescription;
  * @param <T>
  *        The type of the parameter value
  */
-//TODO: detach conversion/validation from request context and move them to JSON module
 @FunctionalInterface
-public interface Converter<T> extends FN1<Either<? extends BaseError, T>, RequestContext> {
+public interface Converter<T> extends FN1<Either<? extends BaseError, T>, ProcessingContext> {
     default Option<TypeDescription> typeDescription() {
         return Option.empty();
     }

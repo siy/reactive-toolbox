@@ -12,9 +12,8 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple6;
 import org.reactivetoolbox.core.functional.Tuples.Tuple7;
 import org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import org.reactivetoolbox.core.functional.Tuples.Tuple9;
-import org.reactivetoolbox.web.server.RequestContext;
-import org.reactivetoolbox.web.server.parameter.Parameters;
-import org.reactivetoolbox.web.server.parameter.Parameters.P;
+import org.reactivetoolbox.web.server.parameter.conversion.ProcessingContext;
+import org.reactivetoolbox.web.server.parameter.conversion.var.Var;
 
 import static org.reactivetoolbox.core.functional.Either.success;
 import static org.reactivetoolbox.core.functional.Tuples.of;
@@ -96,10 +95,10 @@ public interface Validator<R, T> extends FN1<Either<? extends BaseError, R>, T> 
         return success(of(v1, v2, v3, v4, v5, v6, v7, v8, v9));
     }
 
-    default P<R> modify(final P<T> input) {
-        return Parameters.of((RequestContext context) -> input.converter()
-                                                              .apply(context)
-                                                              .flatMap(this::apply),
-                             input.description());
+    default Var<R> modify(final Var<T> input) {
+        return Var.of((ProcessingContext context) -> input.converter()
+                                                          .apply(context)
+                                                          .flatMap(this::apply),
+                      input.description());
     }
 }

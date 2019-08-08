@@ -14,16 +14,16 @@ import org.reactivetoolbox.web.server.parameter.validation.Is;
 
 import java.util.UUID;
 
-import static org.reactivetoolbox.build.HttpRouteAssembler.when;
 import static org.reactivetoolbox.build.Responses.readyOk;
 import static org.reactivetoolbox.eventbus.Routes.with;
-import static org.reactivetoolbox.web.server.HttpMethod.GET;
-import static org.reactivetoolbox.web.server.HttpMethod.POST;
-import static org.reactivetoolbox.web.server.HttpMethod.PUT;
-import static org.reactivetoolbox.web.server.parameter.Parameters.inAuthHeader;
-import static org.reactivetoolbox.web.server.parameter.Parameters.inBody;
-import static org.reactivetoolbox.web.server.parameter.Parameters.inPath;
-import static org.reactivetoolbox.web.server.parameter.Parameters.inQuery;
+import static org.reactivetoolbox.web.server.http.HttpMethod.GET;
+import static org.reactivetoolbox.web.server.http.HttpMethod.POST;
+import static org.reactivetoolbox.web.server.http.HttpMethod.PUT;
+import static org.reactivetoolbox.web.server.http.HttpRequestParameters.inAuthHeader;
+import static org.reactivetoolbox.web.server.http.HttpRequestParameters.inBody;
+import static org.reactivetoolbox.web.server.http.HttpRequestParameters.inPath;
+import static org.reactivetoolbox.web.server.http.HttpRequestParameters.inQuery;
+import static org.reactivetoolbox.web.server.http.HttpRouteAssembler.when;
 import static org.reactivetoolbox.web.server.parameter.validation.Validator.valid;
 
 public class ServerTest {

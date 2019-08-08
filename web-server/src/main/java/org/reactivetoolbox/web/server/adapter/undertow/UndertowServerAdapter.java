@@ -30,13 +30,14 @@ import org.reactivetoolbox.core.functional.Pair;
 import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Router;
-import org.reactivetoolbox.web.server.HttpEnvelope;
-import org.reactivetoolbox.web.server.HttpMethod;
-import org.reactivetoolbox.web.server.Request;
-import org.reactivetoolbox.web.server.RequestContext;
-import org.reactivetoolbox.web.server.Response;
 import org.reactivetoolbox.web.server.ServerError;
 import org.reactivetoolbox.web.server.adapter.ServerAdapter;
+import org.reactivetoolbox.web.server.http.HttpEnvelope;
+import org.reactivetoolbox.web.server.http.HttpMethod;
+import org.reactivetoolbox.web.server.http.HttpProcessingContext;
+import org.reactivetoolbox.web.server.http.Request;
+import org.reactivetoolbox.web.server.http.Response;
+import org.reactivetoolbox.web.server.parameter.conversion.ProcessingContext;
 import org.reactivetoolbox.web.server.parameter.conversion.ValueConverter;
 import org.reactivetoolbox.web.server.parameter.conversion.simple.CoreValueConverters;
 
@@ -59,11 +60,11 @@ import static org.reactivetoolbox.core.functional.Either.lift;
  */
 public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
     private final Undertow server;
-    private final Router<RequestContext> router;
+    private final Router<HttpProcessingContext> router;
     private final Function<Undertow, Either<Throwable, ServerAdapter>> serverStart = lift((server) -> {  server.start(); return this; });
     private final Function<Undertow, Either<Throwable, ServerAdapter>> serverStop = lift((server) -> { server.start(); return this; });
 
-    private UndertowServerAdapter(final Router<RequestContext> router) {
+    private UndertowServerAdapter(final Router<HttpProcessingContext> router) {
         this.router = router;
         server = Undertow.builder()
                          .addHttpListener(8080, "0.0.0.0")
@@ -71,7 +72,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
                          .build();
     }
 
-    public static ServerAdapter with(final Router<RequestContext> router) {
+    public static ServerAdapter with(final Router<HttpProcessingContext> router) {
         return new UndertowServerAdapter(router);
     }
 
@@ -97,7 +98,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
         final var envelope = toEnvelope(exchange);
         final var serializer = envelope.map(Envelope::payload)
-                                       .map(RequestContext::resultSerializer);
+                                       .map(HttpProcessingContext::resultSerializer);
 
         deliver(envelope)
                 .otherwise(ServerError.METHOD_NOT_ALLOWED.asFailure())
@@ -116,23 +117,23 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
                 .send(failureResult.message());
     }
 
-    private Option<Either<? extends BaseError, Promise<Either<? extends BaseError, Object>>>> deliver(final Option<Envelope<RequestContext>> envelope) {
+    private Option<Either<? extends BaseError, Promise<Either<? extends BaseError, Object>>>> deliver(final Option<Envelope<HttpProcessingContext>> envelope) {
         return envelope.map(router::deliver);
     }
 
-    private Option<Envelope<RequestContext>> toEnvelope(final HttpServerExchange exchange) {
+    private Option<Envelope<HttpProcessingContext>> toEnvelope(final HttpServerExchange exchange) {
         return HttpMethod.fromString(exchange.getRequestMethod().toString())
                          .map(method -> Path.of(exchange.getRelativePath(), method))
-                         .map(path -> HttpEnvelope.of(path, new UndertowRequestContext(path, exchange)));
+                         .map(path -> HttpEnvelope.of(path, new UndertowProcessingContext(path, exchange)));
     }
 
     private static class UndertowRequest implements Request {
         private final Map<String, String> pathParameters = new HashMap<>();
         private final HttpServerExchange exchange;
-        private final RequestContext context;
+        private final HttpProcessingContext context;
 
         public UndertowRequest(final HttpServerExchange exchange,
-                               final RequestContext context) {
+                               final HttpProcessingContext context) {
             this.exchange = exchange;
             this.context = context;
         }
@@ -144,7 +145,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         }
 
         @Override
-        public RequestContext context() {
+        public HttpProcessingContext context() {
             return context;
         }
 
@@ -198,10 +199,10 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
     private static class UndertowResponse implements Response {
         private final HttpServerExchange exchange;
-        private final RequestContext context;
+        private final HttpProcessingContext context;
 
         public UndertowResponse(final HttpServerExchange exchange,
-                                final RequestContext context) {
+                                final HttpProcessingContext context) {
             this.exchange = exchange;
             this.context = context;
         }
@@ -214,18 +215,18 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         }
 
         @Override
-        public RequestContext context() {
+        public HttpProcessingContext context() {
             return context;
         }
     }
 
-    private static class UndertowRequestContext implements RequestContext {
+    private static class UndertowProcessingContext implements HttpProcessingContext {
         private final Path path;
         private final HttpServerExchange exchange;
         private final UndertowRequest request;
         private final UndertowResponse response;
 
-        private UndertowRequestContext(final Path path, final HttpServerExchange exchange) {
+        private UndertowProcessingContext(final Path path, final HttpServerExchange exchange) {
             this.path = path;
             this.exchange = exchange;
             request = new UndertowRequest(exchange, this);
@@ -256,7 +257,8 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         @Override
         @SuppressWarnings("unchecked")
         public <T> Option<T> contextComponent(final Class<T> type) {
-            if (type == RequestContext.class) {
+            if (type == ProcessingContext.class ||
+                type == HttpProcessingContext.class) {
                 return Option.of((T) this);
             } else if (type == Request.class) {
                 return Option.of((T) request);
