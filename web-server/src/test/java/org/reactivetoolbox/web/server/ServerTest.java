@@ -7,9 +7,9 @@ import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.web.server.adapter.undertow.UndertowServerAdapter;
-import org.reactivetoolbox.web.server.parameter.auth.Authentication;
-import org.reactivetoolbox.web.server.parameter.auth.AuthorizationHeaderType;
-import org.reactivetoolbox.web.server.parameter.auth.UserId;
+import org.reactivetoolbox.web.server.auth.Authentication;
+import org.reactivetoolbox.web.server.auth.AuthorizationHeaderType;
+import org.reactivetoolbox.web.server.auth.UserId;
 import org.reactivetoolbox.web.server.parameter.validation.Is;
 
 import java.util.UUID;
@@ -107,11 +107,11 @@ public class ServerTest {
             //Simplest entrypoint description, independently attached to root
             when(GET, "/")
                 .description("Root request")
-                .withoutParameters()
+                .withNoParameters()
                 .then(() -> readyOk("Hello world!")),
             when(GET, "/health")
                 .description("Healtcheck entrypoint")
-                .withoutParameters()
+                .withNoParameters()
                 .then(() -> readyOk("{\"status\":\"UP\"}"))
         ).build(UndertowServerAdapter::with);
     }

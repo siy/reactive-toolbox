@@ -1,4 +1,4 @@
-package org.reactivetoolbox.web.server.parameter.auth;
+package org.reactivetoolbox.web.server.auth;
 
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.web.server.parameter.validation.Validator;

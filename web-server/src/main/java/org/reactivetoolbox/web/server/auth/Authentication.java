@@ -1,4 +1,4 @@
-package org.reactivetoolbox.web.server.parameter.auth;
+package org.reactivetoolbox.web.server.auth;
 
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko

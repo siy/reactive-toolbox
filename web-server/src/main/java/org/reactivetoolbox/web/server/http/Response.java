@@ -16,8 +16,6 @@ package org.reactivetoolbox.web.server.http;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.web.server.parameter.conversion.ProcessingContext;
-
 /**
  * Generalized HTTP request response interface
  */
@@ -38,5 +36,5 @@ public interface Response {
      *
      * @return Request context.
      */
-    ProcessingContext context();
+    HttpProcessingContext context();
 }

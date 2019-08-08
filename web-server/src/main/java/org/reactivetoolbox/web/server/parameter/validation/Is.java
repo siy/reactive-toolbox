@@ -19,8 +19,8 @@ package org.reactivetoolbox.web.server.parameter.validation;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.web.server.parameter.auth.Authentication;
-import org.reactivetoolbox.web.server.parameter.auth.Role;
+import org.reactivetoolbox.web.server.auth.Authentication;
+import org.reactivetoolbox.web.server.auth.Role;
 import org.reactivetoolbox.web.server.parameter.conversion.ProcessingContext;
 import org.reactivetoolbox.web.server.parameter.conversion.var.Var;
 

@@ -1,7 +1,6 @@
 package org.reactivetoolbox.web.server.http;
 
 import org.reactivetoolbox.build.DescribedPath;
-import org.reactivetoolbox.build.Extractors;
 import org.reactivetoolbox.build.Handlers.Handler0;
 import org.reactivetoolbox.build.Handlers.Handler1;
 import org.reactivetoolbox.build.Handlers.Handler2;
@@ -35,6 +34,7 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple6;
 import org.reactivetoolbox.core.functional.Tuples.Tuple7;
 import org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import org.reactivetoolbox.core.functional.Tuples.Tuple9;
+import org.reactivetoolbox.web.server.parameter.conversion.Extractors;
 import org.reactivetoolbox.web.server.parameter.conversion.var.Var;
 import org.reactivetoolbox.web.server.parameter.conversion.var.VarDescription;
 

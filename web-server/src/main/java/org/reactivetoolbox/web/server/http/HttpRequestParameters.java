@@ -1,12 +1,9 @@
 package org.reactivetoolbox.web.server.http;
 
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.web.server.parameter.HeaderName;
-import org.reactivetoolbox.web.server.parameter.Headers;
-import org.reactivetoolbox.web.server.parameter.auth.Authentication;
-import org.reactivetoolbox.web.server.parameter.auth.AuthenticationConverter;
-import org.reactivetoolbox.web.server.parameter.auth.AuthorizationHeaderType;
-import org.reactivetoolbox.web.server.parameter.conversion.ProcessingContext;
+import org.reactivetoolbox.web.server.auth.Authentication;
+import org.reactivetoolbox.web.server.auth.AuthenticationConverter;
+import org.reactivetoolbox.web.server.auth.AuthorizationHeaderType;
 import org.reactivetoolbox.web.server.parameter.conversion.var.Var;
 
 /*
@@ -85,7 +82,7 @@ public class HttpRequestParameters {
      * Define parameter which will hold information from request context.
      * The {@code type} parameter can be one of the following classes:
      * <ul>
-     *     <li>{@link ProcessingContext} - for full request processing context</li>
+     *     <li>{@link HttpProcessingContext} - for full request processing context</li>
      *     <li>{@link Request} - for request part of the context</li>
      *     <li>{@link Response} - for response part of the context</li>
      * </ul>

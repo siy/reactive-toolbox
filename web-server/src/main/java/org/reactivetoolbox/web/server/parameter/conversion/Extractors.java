@@ -1,4 +1,4 @@
-package org.reactivetoolbox.build;
+package org.reactivetoolbox.web.server.parameter.conversion;
 
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
@@ -20,7 +20,6 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple6;
 import org.reactivetoolbox.core.functional.Tuples.Tuple7;
 import org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import org.reactivetoolbox.core.functional.Tuples.Tuple9;
-import org.reactivetoolbox.web.server.parameter.conversion.ProcessingContext;
 import org.reactivetoolbox.web.server.parameter.conversion.var.Var;
 
 import static org.reactivetoolbox.core.functional.Tuples.zip;
@@ -36,13 +35,11 @@ public interface Extractors {
     interface E8<T1, T2, T3, T4, T5, T6, T7, T8> extends FN8<Either<? extends BaseError, Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>>, Var<T1>, Var<T2>, Var<T3>, Var<T4>, Var<T5>, Var<T6>, Var<T7>, Var<T8>> { }
     interface E9<T1, T2, T3, T4, T5, T6, T7, T8, T9> extends FN9<Either<? extends BaseError, Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>, Var<T1>, Var<T2>, Var<T3>, Var<T4>, Var<T5>, Var<T6>, Var<T7>, Var<T8>, Var<T9>> { }
 
-
     static <T1> E1<T1> extract1(final ProcessingContext context) {
         return (v1) -> zip(v1.converter().apply(context));
     }
 
     static <T1, T2> E2<T1, T2> extract2(final ProcessingContext context) {
-        //TODO: try to convert to use FNxx::bind
         return (v1, v2) -> zip(v1.converter().apply(context),
                                v2.converter().apply(context));
     }

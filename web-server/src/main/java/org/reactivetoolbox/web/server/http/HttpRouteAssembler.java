@@ -53,7 +53,7 @@ public class HttpRouteAssembler {
         return new HttpRouteAssembler(Path.of(path, method), "(no description)");
     }
 
-    public PB0 withoutParameters() {
+    public PB0 withNoParameters() {
         return new PB0(DescribedPath.of(path, description));
     }
 
