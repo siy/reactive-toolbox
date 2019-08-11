@@ -6,16 +6,18 @@ import org.reactivetoolbox.build.ServerAssembler;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.value.validation.Is;
 import org.reactivetoolbox.web.server.adapter.undertow.UndertowServerAdapter;
+import org.reactivetoolbox.web.server.auth.AuthIs;
 import org.reactivetoolbox.web.server.auth.Authentication;
 import org.reactivetoolbox.web.server.auth.AuthorizationHeaderType;
 import org.reactivetoolbox.web.server.auth.UserId;
-import org.reactivetoolbox.web.server.parameter.validation.Is;
 
 import java.util.UUID;
 
 import static org.reactivetoolbox.build.Responses.readyOk;
 import static org.reactivetoolbox.eventbus.Routes.with;
+import static org.reactivetoolbox.value.validation.Validator.valid;
 import static org.reactivetoolbox.web.server.http.HttpMethod.GET;
 import static org.reactivetoolbox.web.server.http.HttpMethod.POST;
 import static org.reactivetoolbox.web.server.http.HttpMethod.PUT;
@@ -24,7 +26,6 @@ import static org.reactivetoolbox.web.server.http.HttpRequestParameters.inBody;
 import static org.reactivetoolbox.web.server.http.HttpRequestParameters.inPath;
 import static org.reactivetoolbox.web.server.http.HttpRequestParameters.inQuery;
 import static org.reactivetoolbox.web.server.http.HttpRouteAssembler.when;
-import static org.reactivetoolbox.web.server.parameter.validation.Validator.valid;
 
 public class ServerTest {
 
@@ -59,7 +60,7 @@ public class ServerTest {
                           .with(inPath(String.class, "param1").and(Is.required()),
                                 inPath(String.class, "param2").and(Is.required()).description("Second parameter"),
                                 inQuery(Integer.class, "limit").and(Is.required()),
-                                inAuthHeader(AuthorizationHeaderType.JWT).and(Is::loggedIn))
+                                inAuthHeader(AuthorizationHeaderType.JWT).and(AuthIs::loggedIn))
                           .then((param1, param2, limit, user) -> readyOk("[" + param1 + ", " + param2 + ", " + limit + ", " + user.userId() + "]"))
                           //Simple example of request postprocessing, in this case - setting of user-defined headers to response
                           .after((context, result) -> result.then(value -> context.response().setHeader("X-User-Defined", "processed"))),
@@ -69,8 +70,8 @@ public class ServerTest {
                           .with(inPath(String.class, "param1").and(Is.required()),
                                 inPath(UUID.class, "param2").and(Is.required()),
                                 inPath(Integer.class, "param3").and(Is.required()),
-                                inAuthHeader(AuthorizationHeaderType.JWT).and(Is::loggedIn)
-                                                                         .and(Is::belongsToAny, TestRoles.REGULAR, TestRoles.ADMIN))
+                                inAuthHeader(AuthorizationHeaderType.JWT).and(AuthIs::loggedIn)
+                                                                         .and(AuthIs::belongsToAny, TestRoles.REGULAR, TestRoles.ADMIN))
                           // Cross-parameter validation, here does nothing, but can be used to check if overall combination of parameters is valid
                           .and((param1, param2, param3, user) -> valid(param1, param2, param3, user))
                           .then((param1, param2, param3, user) -> readyOk("[" + user.userId() + "]:" + param1 + " " + param2 + " " + param3))),
@@ -78,7 +79,7 @@ public class ServerTest {
                  with("/user",
                       when(PUT, "")
                           .description("Get profile of logged in user")
-                          .with(inAuthHeader(AuthorizationHeaderType.JWT).and(Is::loggedIn).and(Is::belongsToAll, TestRoles.REGULAR))
+                          .with(inAuthHeader(AuthorizationHeaderType.JWT).and(AuthIs::loggedIn).and(AuthIs::belongsToAll, TestRoles.REGULAR))
                           .then(userService::getProfile),
 
                       //User login request

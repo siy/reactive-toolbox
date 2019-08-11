@@ -21,7 +21,7 @@ import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Functions.FN2;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.web.server.parameter.conversion.Converter;
+import org.reactivetoolbox.value.conversion.Converter;
 
 /**
  * Set of convenience methods for composing various value converters for HTTP request parameters and HTTP request

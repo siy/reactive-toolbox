@@ -1,7 +1,7 @@
 package org.reactivetoolbox.web.server.auth;
 
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.web.server.parameter.validation.Validator;
+import org.reactivetoolbox.value.validation.Validator;
 
 public class AuthenticationConverter {
     public static Validator<Option<Authentication>, Option<String>> create(final AuthorizationHeaderType header) {

@@ -9,7 +9,7 @@
   <dependencies>
   		<dependency>
 			<groupId>org.reactive-toolbox</groupId>
-			<artifactId>core-functional</artifactId>
+			<artifactId>core</artifactId>
 		</dependency>
   </dependencies>
 </project>

@@ -34,9 +34,9 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple6;
 import org.reactivetoolbox.core.functional.Tuples.Tuple7;
 import org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import org.reactivetoolbox.core.functional.Tuples.Tuple9;
-import org.reactivetoolbox.web.server.parameter.conversion.Extractors;
-import org.reactivetoolbox.web.server.parameter.conversion.var.Var;
-import org.reactivetoolbox.web.server.parameter.conversion.var.VarDescription;
+import org.reactivetoolbox.value.conversion.Extractors;
+import org.reactivetoolbox.value.conversion.var.Var;
+import org.reactivetoolbox.value.conversion.var.VarDescription;
 
 import java.util.Collections;
 import java.util.List;
