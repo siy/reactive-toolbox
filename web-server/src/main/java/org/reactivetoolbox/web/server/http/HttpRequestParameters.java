@@ -1,7 +1,7 @@
 package org.reactivetoolbox.web.server.http;
 
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.value.conversion.var.Var;
+import org.reactivetoolbox.value.conversion.Var;
 import org.reactivetoolbox.web.server.auth.Authentication;
 import org.reactivetoolbox.web.server.auth.AuthenticationConverter;
 import org.reactivetoolbox.web.server.auth.AuthorizationHeaderType;

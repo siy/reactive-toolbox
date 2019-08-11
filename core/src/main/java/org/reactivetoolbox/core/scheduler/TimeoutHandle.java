@@ -1,5 +1,4 @@
-package org.reactivetoolbox.value.conversion;
-
+package org.reactivetoolbox.core.scheduler;
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -16,13 +15,23 @@ package org.reactivetoolbox.value.conversion;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions.FN1;
-import org.reactivetoolbox.core.functional.Option;
-
 /**
- * Convenience interface for single value converter.
+ * {@link TimeoutScheduler} interface for task submission.
  */
-@FunctionalInterface
-public interface ValueConverter<T> extends FN1<Either<? extends BaseError, Option<T>>, Option<String>> {}
+public interface TimeoutHandle {
+    /**
+     * Submit task for execution after specified timeout
+     *
+     * @param timeout
+     *        Execution timeout
+     * @param runnable
+     *        Task to execute
+     * @return Current instance
+     */
+    TimeoutHandle submit(Timeout timeout, Runnable runnable);
+
+    /**
+     * Release handle. Once handle is released, no tasks can be submitted.
+     */
+    void release();
+}

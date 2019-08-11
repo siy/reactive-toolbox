@@ -20,7 +20,7 @@ import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.value.conversion.ProcessingContext;
-import org.reactivetoolbox.value.conversion.var.Var;
+import org.reactivetoolbox.value.conversion.Var;
 
 import java.util.regex.Pattern;
 

@@ -1,9 +1,5 @@
 package org.reactivetoolbox.value.conversion;
 
-import org.reactivetoolbox.core.async.BaseError;
-import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Functions.FN1;
-import org.reactivetoolbox.core.functional.Option;
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -19,6 +15,11 @@ import org.reactivetoolbox.core.functional.Option;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import org.reactivetoolbox.core.async.BaseError;
+import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.core.functional.Functions.FN1;
+import org.reactivetoolbox.core.functional.Option;
 
 /**
  * Interface for parameter converters

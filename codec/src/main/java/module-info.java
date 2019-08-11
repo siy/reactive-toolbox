@@ -4,6 +4,5 @@ module org.reactivetoolbox.codec {
     exports org.reactivetoolbox.value.conversion;
     exports org.reactivetoolbox.value.conversion.type;
     exports org.reactivetoolbox.value.conversion.simple;
-    exports org.reactivetoolbox.value.conversion.var;
     exports org.reactivetoolbox.value.validation;
 }

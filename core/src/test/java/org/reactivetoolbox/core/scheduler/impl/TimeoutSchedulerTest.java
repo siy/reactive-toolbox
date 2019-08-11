@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.scheduler.Handle;
 import org.reactivetoolbox.core.scheduler.Timeout;
+import org.reactivetoolbox.core.scheduler.TimeoutHandle;
 import org.reactivetoolbox.core.scheduler.TimeoutScheduler;
 
 import java.util.List;
@@ -61,15 +61,15 @@ class TimeoutSchedulerTest {
                  .onSuccess(handle -> submitTimeoutTask(handle, counter));
     }
 
-    private void submitTimeoutTask(final Handle handle,
+    private void submitTimeoutTask(final TimeoutHandle timeoutHandle,
                                    final AtomicLong counter) {
         for (int i = 0; i < N_ITEMS_PER_TASK; i++) {
             final var promise = Promise.<Either<? extends BaseError, String>>give().then(v -> counter.incrementAndGet());
 
-            handle.submit(Timeout.of(nextTaskDelay()).millis(),
-                          () -> promise.resolve(TIMEOUT.asFailure()));
+            timeoutHandle.submit(Timeout.of(nextTaskDelay()).millis(),
+                                 () -> promise.resolve(TIMEOUT.asFailure()));
         }
-        handle.release();
+        timeoutHandle.release();
     }
 
     private int nextTaskDelay() {

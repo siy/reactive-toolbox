@@ -1,4 +1,7 @@
-package org.reactivetoolbox.core.scheduler;
+package org.reactivetoolbox.core.scheduler.impl;
+
+import org.reactivetoolbox.core.scheduler.Timeout;
+import org.reactivetoolbox.core.scheduler.Timestamp;
 
 /**
  * Container for the task which should be executed at some point in time in future.

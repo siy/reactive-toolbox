@@ -1,8 +1,25 @@
 package org.reactivetoolbox.value.validation;
 
+/*
+ * Copyright (c) 2017-2019 Sergiy Yevtushenko
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
+import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.core.functional.Tuples.Tuple1;
 import org.reactivetoolbox.core.functional.Tuples.Tuple2;
 import org.reactivetoolbox.core.functional.Tuples.Tuple3;
@@ -13,11 +30,21 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple7;
 import org.reactivetoolbox.core.functional.Tuples.Tuple8;
 import org.reactivetoolbox.core.functional.Tuples.Tuple9;
 import org.reactivetoolbox.value.conversion.ProcessingContext;
-import org.reactivetoolbox.value.conversion.var.Var;
+import org.reactivetoolbox.value.conversion.Var;
 
 import static org.reactivetoolbox.core.functional.Either.success;
 import static org.reactivetoolbox.core.functional.Tuples.of;
 
+/**
+ * Convenience interface for value validation functions. Note that validator can convert
+ * value type during validation. Most notable use of this ability is the stripping off {@link Option}
+ * and convert to regular value after null-check.
+ *
+ * @param <R>
+ *        Return type
+ * @param <T>
+ *        Input type
+ */
 @FunctionalInterface
 public interface Validator<R, T> extends FN1<Either<? extends BaseError, R>, T> {
     static <T1> Either<? extends BaseError, Tuple1<T1>> valid(final T1 v1) {

@@ -1,13 +1,4 @@
 package org.reactivetoolbox.core.functional;
-
-import org.reactivetoolbox.core.functional.Functions.FN1;
-
-import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -23,6 +14,14 @@ import java.util.stream.Stream;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import org.reactivetoolbox.core.functional.Functions.FN1;
+
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Implementation of basic immutable container for value which may or may not be present

@@ -18,7 +18,7 @@ package org.reactivetoolbox.web.server.http;
 
 import org.reactivetoolbox.build.DescribedPath;
 import org.reactivetoolbox.eventbus.Path;
-import org.reactivetoolbox.value.conversion.var.Var;
+import org.reactivetoolbox.value.conversion.Var;
 import org.reactivetoolbox.value.validation.Validator;
 import org.reactivetoolbox.web.server.http.HttpParameters.PB0;
 import org.reactivetoolbox.web.server.http.HttpParameters.PB1;

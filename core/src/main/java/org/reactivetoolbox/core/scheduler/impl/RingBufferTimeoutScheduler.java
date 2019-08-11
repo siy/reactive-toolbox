@@ -2,8 +2,7 @@ package org.reactivetoolbox.core.scheduler.impl;
 
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.scheduler.Handle;
-import org.reactivetoolbox.core.scheduler.OneTimeTask;
+import org.reactivetoolbox.core.scheduler.TimeoutHandle;
 import org.reactivetoolbox.core.scheduler.TimeoutScheduler;
 import org.reactivetoolbox.core.scheduler.Timestamp;
 
@@ -27,7 +26,7 @@ public class RingBufferTimeoutScheduler implements TimeoutScheduler {
         collector = Executors.newFixedThreadPool(bufferSize/4,
                                                  DaemonThreadFactory.of("Timeout Scheduler Thread #%d"));
         range(0, size/4)
-                .forEach(n -> collector.submit(this::taskProcessor));
+                .forEach(n -> collector.execute(this::taskProcessor));
     }
 
     public static TimeoutScheduler with(final int size) {
@@ -35,9 +34,9 @@ public class RingBufferTimeoutScheduler implements TimeoutScheduler {
     }
 
     @Override
-    public Either<? extends BaseError, Handle> request() {
+    public Either<? extends BaseError, TimeoutHandle> request() {
         return buffer.request()
-                     .mapSuccess(BufferEntryHandle::of);
+                     .mapSuccess(BufferEntryTimeoutHandle::of);
     }
 
     private void taskProcessor() {

@@ -3,7 +3,7 @@ package org.reactivetoolbox.build;
 import org.reactivetoolbox.core.functional.Option;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.RouteDescription;
-import org.reactivetoolbox.value.conversion.var.VarDescription;
+import org.reactivetoolbox.value.conversion.VarDescription;
 
 import java.util.List;
 

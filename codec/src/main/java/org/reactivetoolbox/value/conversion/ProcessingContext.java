@@ -17,9 +17,9 @@ package org.reactivetoolbox.value.conversion;
  */
 
 /**
- * HTTP Request context abstraction
+ * Request processing context abstraction. The intent of this interface is to
+ * concentrate all dependencies necessary to process specific request.
  */
 public interface ProcessingContext {
-
     <T> ValueConverter<T> valueConverter(final Class<T> type);
 }
