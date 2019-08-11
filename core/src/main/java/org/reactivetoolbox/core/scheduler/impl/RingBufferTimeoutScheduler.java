@@ -20,7 +20,7 @@ public class RingBufferTimeoutScheduler implements TimeoutScheduler {
     private final ExecutorService collector;
 
     private RingBufferTimeoutScheduler(final int size) {
-        final int bufferSize = (size > 4 ? size : 4) * 4;
+        final int bufferSize = Math.max(size, 4) * 4;
 
         buffer = RingBuffer.with(bufferSize);
         collector = Executors.newFixedThreadPool(bufferSize/4,

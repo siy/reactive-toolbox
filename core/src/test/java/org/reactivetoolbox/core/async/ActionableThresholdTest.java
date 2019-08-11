@@ -30,7 +30,7 @@ class ActionableThresholdTest {
     @Test
     void subsequentEventsDontTriggerAction() {
         final AtomicInteger counter = new AtomicInteger(0);
-        final ActionableThreshold threshold = ActionableThreshold.of(3, () -> counter.incrementAndGet());
+        final ActionableThreshold threshold = ActionableThreshold.of(3, counter::incrementAndGet);
 
         assertEquals(0, counter.get());
 

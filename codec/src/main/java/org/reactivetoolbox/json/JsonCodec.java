@@ -57,7 +57,7 @@ public class JsonCodec {
     public static <T> Option<String> serialize(final T value) {
         return Option.of(value)
                      .map(Object::getClass)
-                     .flatMap(cls -> Option.of((FN1<String, T>) (FN1) SERIALIZERS.get(cls))
+                     .flatMap(cls -> Option.of((FN1<String, T>)SERIALIZERS.get(cls))
                                            .map(fn -> fn.apply(value)))
                      .or(() -> Option.of("null"));
     }

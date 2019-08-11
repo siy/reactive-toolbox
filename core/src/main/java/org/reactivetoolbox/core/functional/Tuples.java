@@ -41,10 +41,8 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with single get.
+     * Factory method for tuple with zero values.
      *
-     * @param param1
-     *        Value to store in tuple.
      * @return created tuple newInstance.
      */
     public static Tuple0 of() {
@@ -52,7 +50,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with single get.
+     * Factory method for tuple with single value.
      *
      * @param param1
      *        Value to store in tuple.
@@ -63,7 +61,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with two values with different type.
+     * Factory method for tuple with two values of different types.
      *
      * @param param1
      *        Value to store in tuple.
@@ -76,7 +74,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with three values with different type.
+     * Factory method for tuple with three values of different types.
      *
      * @param param1
      *        Value to store in tuple.
@@ -91,7 +89,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with four values with different type.
+     * Factory method for tuple with four values of different types.
      *
      * @param param1
      *        Value to store in tuple.
@@ -109,7 +107,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with five values with different type.
+     * Factory method for tuple with five values of different types.
      *
      * @param param1
      *        Value to store in tuple.
@@ -129,7 +127,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with six values with different type.
+     * Factory method for tuple with six values of different types.
      *
      * @param param1
      *        Value to store in tuple.
@@ -151,7 +149,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with seven values with different type.
+     * Factory method for tuple with seven values of different types.
      *
      * @param param1
      *        Value to store in tuple.
@@ -176,7 +174,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with eight values with different type.
+     * Factory method for tuple with eight values of different types.
      *
      * @param param1
      *        Value to store in tuple.
@@ -203,7 +201,7 @@ public final class Tuples {
     }
 
     /**
-     * Factory method for tuple with nine values with different type.
+     * Factory method for tuple with nine values of different types.
      *
      * @param param1
      *        Value to store in tuple.
@@ -553,7 +551,7 @@ public final class Tuples {
          *
          * @return {@link Stream} of values contained in tuple
          */
-        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @SuppressWarnings("unchecked")
         public <R> Stream<R> stream() {
             return Stream.of(values).map(v -> (R) v);
         }

@@ -76,7 +76,7 @@ class TimeoutSchedulerTest {
         return random.nextInt(SINGLE_TASK_DELAY_MAX - SINGLE_TASK_DELAY_MIN) + SINGLE_TASK_DELAY_MIN;
     }
 
-    private void countDown(final CountDownLatch gate) {
+    void countDown(final CountDownLatch gate) {
         gate.countDown();
     }
 }

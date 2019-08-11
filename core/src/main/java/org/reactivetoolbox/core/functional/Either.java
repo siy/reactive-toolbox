@@ -113,28 +113,6 @@ public interface Either<F, S> {
     S otherwise(final Supplier<? extends S> supplier);
 
     /**
-     * Expose success or throw an {@link IllegalStateException} if instance
-     * contains failure
-     *
-     * @return contained success value
-     * @throws IllegalStateException if current instance contains failure
-     */
-    @Deprecated
-    S otherwiseThrow();
-
-    /**
-     * Expose success value or throw user-provided exception
-     *
-     * @param error
-     *        Exception supplier
-     * @param <E>
-     *        Type of thrown exception
-     * @return contained success get
-     */
-    @Deprecated
-    <E extends RuntimeException> S otherwiseThrow(final Supplier<E> error);
-
-    /**
      * Convenience method to get access to success value without affecting current instance
      *
      * @param consumer
@@ -282,16 +260,6 @@ public interface Either<F, S> {
         }
 
         @Override
-        public S otherwiseThrow() {
-            return success;
-        }
-
-        @Override
-        public <E extends RuntimeException> S otherwiseThrow(final Supplier<E> error) {
-            return success;
-        }
-
-        @Override
         public Either<F, S> onSuccess(final Consumer<S> consumer) {
             consumer.accept(success);
             return this;
@@ -356,7 +324,7 @@ public interface Either<F, S> {
         //Note that for failure we can't actually transform the value, so error types of both instances should be compatible
         //otherwise we'll get runtime class cast exception
         @Override
-        @SuppressWarnings("unckecked")
+        @SuppressWarnings("unchecked")
         public <NF, NS> Either<NF, NS> flatMap(final FN1<? extends Either<NF, NS>, ? super S> mapper) {
             return new Failure<>((NF) failure);
         }
@@ -379,18 +347,6 @@ public interface Either<F, S> {
         @Override
         public S otherwise(final Supplier<? extends S> supplier) {
             return supplier.get();
-        }
-
-        @Override
-        public S otherwiseThrow() {
-            throw (failure instanceof Throwable)
-                    ? new IllegalStateException((Throwable) failure)
-                    : new IllegalStateException("'Either' does not contain success get");
-        }
-
-        @Override
-        public <E extends RuntimeException> S otherwiseThrow(final Supplier<E> error) {
-            throw error.get();
         }
 
         @Override

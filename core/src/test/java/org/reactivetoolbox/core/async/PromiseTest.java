@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class PromiseTest {
+class PromiseTest {
     private final Executor executor = Executors.newSingleThreadExecutor();
 
     @Test
@@ -40,7 +40,7 @@ public class PromiseTest {
         final var promise = Promise.<Integer>give();
         final var holder = new AtomicInteger(-1);
 
-        promise.then(value -> holder.set(value));
+        promise.then(holder::set);
         promise.resolve(1);
 
         assertEquals(1, holder.get());
@@ -52,7 +52,7 @@ public class PromiseTest {
         final var holder = new AtomicInteger(-1);
 
         promise.resolve(1);
-        promise.then(value -> holder.set(value));
+        promise.then(holder::set);
 
         assertEquals(1, holder.get());
     }
@@ -110,9 +110,7 @@ public class PromiseTest {
 
         executor.execute(() -> {safeSleep(200); promise.resolve(1);});
 
-        promise.syncWait(Timeout.of(10).millis());
-
-        assertFalse(promise.ready());
+        assertFalse(promise.syncWait(Timeout.of(10).millis()).ready());
     }
 
     @Test
@@ -133,9 +131,7 @@ public class PromiseTest {
 
         assertFalse(promise.ready());
 
-        promise.syncWait();
-
-        assertTrue(promise.ready());
+        assertTrue(promise.syncWait().ready());
         assertEquals(Option.of(123), promise.value());
     }
 
@@ -145,10 +141,10 @@ public class PromiseTest {
 
         assertFalse(promise.ready());
 
-        promise.perform((p) -> p.resolve(345));
+        promise.perform((p) -> p.resolve(345))
+               .then(val -> assertEquals(345, val));
 
-        promise.syncWait();
-        assertTrue(promise.ready());
+        assertTrue(promise.syncWait().ready());
         assertEquals(Option.of(345), promise.value());
     }
 

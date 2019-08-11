@@ -24,9 +24,9 @@ import java.util.stream.Stream;
  * The route in the router. It contains routing path (potentially with pattern) and handler assigned to this route.
  *
  * @param <T>
- * @see {@link Router}
- * @see {@link Envelope}
- * @see {@link RouteBase}
+ * @see Router
+ * @see Envelope
+ * @see RouteBase
  */
 public class Route<T> implements RouteBase<T> {
     private final Path path;

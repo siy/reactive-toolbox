@@ -44,7 +44,7 @@ public class RouteEnricher<R, T> implements RouteBase<T> {
 
     public static <R, T> RouteEnricher<R, T> of(final RouteDescription description,
                                                 final Handler<R, T> handler) {
-        return new RouteEnricher<R, T>(description, handler);
+        return new RouteEnricher<>(description, handler);
     }
 
     public RouteEnricher<R, T> after(final Enricher<R, ? super T> enricher) {

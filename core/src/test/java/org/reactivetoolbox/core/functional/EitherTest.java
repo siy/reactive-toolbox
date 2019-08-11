@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class EitherTest {
+class EitherTest {
     @Test
     void theInstanceCanBeMapperIntoOtherType() {
         final var original = Either.<String, Integer>success(1);
@@ -214,7 +214,7 @@ public class EitherTest {
 
     @Test
     void failureRemainsFailureAfterSuccessMapping() {
-        final Either<String, Integer> failure = Either.<String, Integer>failure("failure");
+        final Either<String, Integer> failure = Either.failure("failure");
 
         final Either<String, String> mapped = failure.mapSuccess(Object::toString);
 

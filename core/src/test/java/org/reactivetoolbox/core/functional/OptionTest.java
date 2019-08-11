@@ -102,6 +102,7 @@ class OptionTest {
     }
 
     @Test
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     void optionCanBeStreamed() {
         assertTrue(Option.empty().stream().findFirst().isEmpty());
         assertEquals(123, Option.of(123).stream().findFirst().get());

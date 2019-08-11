@@ -21,7 +21,7 @@ package org.reactivetoolbox.eventbus;
  * with the same path but different purpose, for example to distinguish HTTP routes for
  * different HTTP methods.
  *
- * @see {@link Path}
+ * @see Path
  */
 public interface PathKey {
     /**

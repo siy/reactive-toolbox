@@ -87,7 +87,8 @@ public interface Path {
     }
 
     Pattern MULTISLASH = Pattern.compile("/+");
-    Pattern PARAMETER_PATTERN = Pattern.compile("(?:\\/)(\\{\\w+\\})");
+    //Pattern PARAMETER_PATTERN = Pattern.compile("(?:\\/)(\\{\\w+\\})");
+    Pattern PARAMETER_PATTERN = Pattern.compile("(?:/)(\\{\\w+})");
 
     private static boolean containsParameters(final String stringPath) {
         return PARAMETER_PATTERN.matcher(stringPath).find();

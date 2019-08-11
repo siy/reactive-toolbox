@@ -56,7 +56,7 @@ public class RouterImplTest {
 
         router.deliver(StringEnvelope.of("/one/two", "Value"))
                 .onSuccess(success -> fail("Received unexpected " + success))
-                .onSuccess(failure -> assertEquals(RoutingError.NO_SUCH_ROUTE, failure));
+                .onSuccess(failure -> assertEquals(RoutingError.NO_SUCH_ROUTE.asFailure(), failure));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class RouterImplTest {
             this.target = Path.of(target);
         }
 
-        public static final StringEnvelope of(final String target, final String payload) {
+        static StringEnvelope of(final String target, final String payload) {
             return new StringEnvelope(target, payload);
         }
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BufferEntry<T> {
+class BufferEntry<T> {
     private final AtomicBoolean locked = new AtomicBoolean();
     private final List<T> elements = new ArrayList<>();
 

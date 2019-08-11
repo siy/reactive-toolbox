@@ -43,7 +43,7 @@ public class SimpleEventBus implements EventBus {
     public <R, T> Either<RoutingError, Promise<R>> send(final Envelope<T> event) {
         return Option.of(routers.get(event.getClass()))
                     .map(router -> router.<R>deliver(event))
-                    .otherwiseGet(() -> NO_SUCH_ROUTE.<Promise<R>>asFailure());
+                    .otherwiseGet(NO_SUCH_ROUTE::<Promise<R>>asFailure);
     }
 
     /**

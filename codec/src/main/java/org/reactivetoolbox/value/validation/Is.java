@@ -301,9 +301,9 @@ public interface Is {
      *
      * @param input1
      *        Input parameter
-     * @param min
+     * @param minLen
      *        Inclusive lower bound
-     * @param max
+     * @param maxLen
      *        Inclusive upper bound
      * @return Validation result
      */

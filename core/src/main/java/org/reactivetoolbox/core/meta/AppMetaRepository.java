@@ -35,9 +35,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * <br>
  * Interface is designed with usual use case in mind: <code>start-configure-run-shutdown</code>. To support it
  * repository starts in <b>open</b> state, which allows adding necessary configuration into repository via
- * {@link #put(Class, T)} calls. In this state no {@link #get(Class)} calls are allowed. Once configuration of
+ * {@link #put(Class, Object)} calls. In this state no {@link #get(Class)} calls are allowed. Once configuration of
  * the repository is finished, application calls {@link #seal()} method. In <b>sealed</b> state, {@link #get(Class)}
- * calls are allowed, but any attempt to call {@link #put(Class, T)} will throw an {@link IllegalStateException}.
+ * calls are allowed, but any attempt to call {@link #put(Class, Object)} will throw an {@link IllegalStateException}.
  * Beside enforcing proper life cycle, this approach also enables use of non-synchronized data structures for
  * storing data at run-time which minimizes possible performance impact.
  */
