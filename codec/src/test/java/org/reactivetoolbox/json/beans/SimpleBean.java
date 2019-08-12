@@ -1,29 +1,19 @@
 package org.reactivetoolbox.json.beans;
 
 import org.reactivetoolbox.json.StringAssembler;
+import org.reactivetoolbox.value.validation.Is;
 
 import static org.reactivetoolbox.json.JsonCodec.register;
+import static org.reactivetoolbox.json.ObjectAssembler.field;
+import static org.reactivetoolbox.json.ObjectAssembler.fields;
 
 public class SimpleBean {
     static {
         register(SimpleBean.class, SimpleBean::serialize);
-
-//        final var fields = List.of(field("name", String.class).and(),
-//                                   field("value", String.class).required());
-//
-//        //List form
-//        register(SimpleBean.class, fields, (obj) -> SimpleBean.of((String) obj.get(0),
-//                                                                  (String) obj.get(1)));
-//
-//        //Tuple form
-//        register(SimpleBean.class, fields(field("name", String.class).required(),
-//                                          field("value", String.class).required()),
-//                 (obj) -> obj.map(SimpleBean::of));
-
-//        register(SimpleBean.class,
-//                 field("name", String.class/*, SimpleBean::getName).and(required())*/),
-//                 field("value", String.class/*, SimpleBean::getValue).and(required())*/));
-//        register(SimpleBean.class, (SimpleBean v) -> );
+        register(SimpleBean.class, fields(SimpleBean.class,
+                                          field(String.class, "name").and(Is::notNull),
+                                          field(String.class, "value").and(Is::notNull))
+                .deserializer());
     }
 
     private final String name;

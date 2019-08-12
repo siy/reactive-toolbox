@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 //TODO: JavaDoc
 public class JsonCodec {
-    private static final Map<Class<?>, FN1<String, ?>> SERIALIZERS = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Serializer<?>> SERIALIZERS = new ConcurrentHashMap<>();
 
     static {
         SERIALIZERS.put(Option.class, (Option<Object> v)-> serialize(v.get()).get());
@@ -49,8 +49,13 @@ public class JsonCodec {
 
     private JsonCodec() {}
 
-    public static <T> void register(final Class<T> type, final FN1<String, ? super T> serializer) {
+    public static <T> void register(final Class<T> type, final Serializer<T> serializer) {
         SERIALIZERS.put(type, serializer);
+    }
+
+    public static <T> void register(final Class<T> type, final Deserializer<T> deserializer) {
+        //SERIALIZERS.put(type, serializer);
+        //TODO: finish it
     }
 
     @SuppressWarnings("unchecked")

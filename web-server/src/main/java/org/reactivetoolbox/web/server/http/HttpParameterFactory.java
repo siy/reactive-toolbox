@@ -30,21 +30,20 @@ import org.reactivetoolbox.value.conversion.Converter;
 public interface HttpParameterFactory {
     interface StringExtractor extends FN1<Either<? extends BaseError, Option<String>>, HttpProcessingContext> {}
 
-    interface NamedStringExtractor extends FN2<Either<? extends BaseError, Option<String>>, HttpProcessingContext, String> {}
+    interface NamedStringExtractor extends FN2<Either<? extends BaseError, Option<String>>, String, HttpProcessingContext> {}
 
-    NamedStringExtractor fromQuery = (context, name) -> Either.success(context.request().queryParameter(name));
-    NamedStringExtractor fromPath = (context, name) -> Either.success(context.request().pathParameter(name));
-    NamedStringExtractor fromHeader = (context, name) -> Either.success(context.request().header(name));
-    NamedStringExtractor fromBody = (context, name) -> Either.success(context.request().bodyParameter(name));
+    NamedStringExtractor fromQuery = (name, context) -> Either.success(context.request().queryParameter(name));
+    NamedStringExtractor fromPath = (name, context) -> Either.success(context.request().pathParameter(name));
+    NamedStringExtractor fromHeader = (name, context) -> Either.success(context.request().header(name));
+    NamedStringExtractor fromBody = (name, context) -> Either.success(context.request().bodyParameter(name));
 
     static StringExtractor forName(final NamedStringExtractor extractor, final String name) {
-        return (context) -> extractor.apply(context, name);
+        return extractor.bind(name)::apply;
     }
 
     static <T> Converter<Option<T>> composeConverter(final StringExtractor stringExtractor, final Class<T> type) {
         return (context) -> stringExtractor.apply((HttpProcessingContext) context)
-                                           .flatMap((value) -> context.valueConverter(type)
-                                                                      .apply(value));
+                                           .flatMap((value) -> context.valueConverter(type).apply(value));
     }
 
     static <T> Converter<Option<T>> pathParameter(final Class<T> type, final String name) {

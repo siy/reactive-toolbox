@@ -29,7 +29,7 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple9;
 
 /**
  * Collection of basic functions which accept 0-9 parameters and return single result.
- * Note that these functions is not supposed to throw any exceptions
+ * Note that these functions are not supposed to throw any exceptions
  */
 public interface Functions {
     @FunctionalInterface

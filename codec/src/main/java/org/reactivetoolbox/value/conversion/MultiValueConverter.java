@@ -16,21 +16,15 @@ package org.reactivetoolbox.value.conversion;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.async.BaseError;
+import org.reactivetoolbox.core.functional.Either;
+import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
- * Request processing context abstraction. The intent of this interface is to
- * concentrate all dependencies necessary to process specific request.
+ * Convenience interface for single value converter.
  */
-public interface ProcessingContext {
-    <T> ValueConverter<T> valueConverter(final Class<T> type);
-
-    Option<String> first(String name);
-
-    <T, C extends Collection<T>> MultiValueConverter<C> valueConverter(final Class<C> containerType, final Class<T> elementType);
-
-    Option<List<String>> all(String name);
-}
+@FunctionalInterface
+public interface MultiValueConverter<T> extends FN1<Either<? extends BaseError, Option<T>>, Option<List<String>>> {}

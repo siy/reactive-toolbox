@@ -30,6 +30,7 @@ import org.reactivetoolbox.core.functional.Pair;
 import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Router;
+import org.reactivetoolbox.value.conversion.MultiValueConverter;
 import org.reactivetoolbox.value.conversion.ProcessingContext;
 import org.reactivetoolbox.value.conversion.ValueConverter;
 import org.reactivetoolbox.value.conversion.simple.CoreValueConverters;
@@ -46,6 +47,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -252,6 +254,25 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         @SuppressWarnings("unchecked")
         public <T> ValueConverter<T> valueConverter(final Class<T> type) {
             return (ValueConverter<T>) CONVERTERS.get(type);
+        }
+
+        @Override
+        public Option<String> first(final String name) {
+            //TODO: finish it
+            return null;
+        }
+
+        @Override
+        public <T, C extends Collection<T>> MultiValueConverter<C> valueConverter(final Class<C> containerType,
+                                                                                  final Class<T> elementType) {
+            //TODO: finish it
+            return null;
+        }
+
+        @Override
+        public Option<List<String>> all(final String name) {
+            //TODO: finish it
+            return null;
         }
 
         @Override
