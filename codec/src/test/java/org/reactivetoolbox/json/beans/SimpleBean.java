@@ -13,7 +13,7 @@ public class SimpleBean {
         register(SimpleBean.class, fields(SimpleBean.class,
                                           field(String.class, "name").and(Is::notNull),
                                           field(String.class, "value").and(Is::notNull))
-                .deserializer());
+                .deserializer(SimpleBean::of));
     }
 
     private final String name;

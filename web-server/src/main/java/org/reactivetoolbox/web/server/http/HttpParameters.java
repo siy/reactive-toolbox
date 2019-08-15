@@ -107,8 +107,6 @@ public interface HttpParameters {
         }
 
         public <R> RouteEnricher<R, HttpProcessingContext> then(final Handler2<R, T1, T2> handler) {
-
-
             return RouteEnricher.of(HttpRouteDescription.of(describedPath, describe(parameters)),
                                     context -> parameters.map(Extractors.extract2(context))
                                                          .flatMap(validator::forTuple)
