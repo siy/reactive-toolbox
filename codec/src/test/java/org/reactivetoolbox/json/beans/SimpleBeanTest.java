@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class SimpleBeanTest {
     @Test
     void beanCanBeSerialized() {
-        assertEquals("{\"name\":\"one\",\"value\":\"two\"}", SimpleBean.serialize(SimpleBean.of("one", "two")));
+        final SimpleBean v = SimpleBean.of("one", "two");
+        assertEquals("{\"name\":\"one\",\"value\":\"two\"}", SimpleBean.serialize(v));
     }
 }

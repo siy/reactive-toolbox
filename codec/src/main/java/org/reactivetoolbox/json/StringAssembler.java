@@ -16,6 +16,10 @@ package org.reactivetoolbox.json;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.functional.Functions.FN1;
+
+import java.util.Collection;
+
 //TODO: add escaping, JavaDoc
 public class StringAssembler {
     private final StringBuilder builder;
@@ -26,8 +30,16 @@ public class StringAssembler {
         builder = new StringBuilder(256).append(prefix);
     }
 
-    public static StringAssembler of(final char prefix, final char suffix) {
+    public static StringAssembler assembleWith(final char prefix, final char suffix) {
         return new StringAssembler(prefix, suffix);
+    }
+
+    public static String singleQuoted(final String value) {
+        return new StringBuilder().append('"').append(value).append('"').toString();
+    }
+
+    public static <T> String toStringQuoted(final T value) {
+        return new StringBuilder().append('"').append(value.toString()).append('"').toString();
     }
 
     public StringAssembler plain(final String value) {
@@ -42,7 +54,24 @@ public class StringAssembler {
 
     public StringAssembler quoted(final String name, final String value) {
         builder.append('"').append(name).append('"').append(':')
-                .append('"').append(value).append('"').append(',');
+               .append('"').append(value).append('"').append(',');
+        return this;
+    }
+
+    public <T> StringAssembler quoted(final String name, final Collection<T> values, final FN1<String, T> elementSerializer) {
+        builder.append('"').append(name).append('"').append(':').append('[');
+
+        boolean comma = false;
+        for(final T value : values) {
+            if (!comma) {
+                comma = true;
+            } else {
+                builder.append(',');
+            }
+
+            builder.append(elementSerializer.apply(value));
+        }
+        builder.append(']').append(',');
         return this;
     }
 

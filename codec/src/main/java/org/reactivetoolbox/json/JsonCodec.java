@@ -32,9 +32,9 @@ public class JsonCodec {
     static {
         SERIALIZERS.put(Option.class, (Option<Object> v)-> serialize(v.get()).get());
         SERIALIZERS.put(Optional.class, (Optional<?> v) -> serialize(v.orElse(null)).get());
-        SERIALIZERS.put(String.class, v -> StringAssembler.of('"', '"').plain((String) v).toString());
+        SERIALIZERS.put(String.class, v -> StringAssembler.assembleWith('"', '"').plain((String) v).toString());
         SERIALIZERS.put(Boolean.class, Object::toString);
-        SERIALIZERS.put(UUID.class, v -> StringAssembler.of('"', '"').plain(v.toString()).toString());
+        SERIALIZERS.put(UUID.class, v -> StringAssembler.assembleWith('"', '"').plain(v.toString()).toString());
         SERIALIZERS.put(Integer.class, Object::toString);
         SERIALIZERS.put(Long.class, Object::toString);
         SERIALIZERS.put(Float.class, Object::toString);
@@ -49,11 +49,11 @@ public class JsonCodec {
 
     private JsonCodec() {}
 
-    public static <T> void register(final Class<T> type, final Serializer<T> serializer) {
+    public static <T> void addSerializer(final Class<T> type, final Serializer<T> serializer) {
         SERIALIZERS.put(type, serializer);
     }
 
-    public static <T> void register(final Class<T> type, final Deserializer<T> deserializer) {
+    public static <T> void addDeserializer(final Class<T> type, final Deserializer<T> deserializer) {
         //SERIALIZERS.put(type, serializer);
         //TODO: finish it
     }

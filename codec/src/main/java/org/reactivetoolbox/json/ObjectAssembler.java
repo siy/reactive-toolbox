@@ -23,7 +23,7 @@ import org.reactivetoolbox.core.functional.Tuples.Tuple9;
 import org.reactivetoolbox.value.conversion.Converter;
 import org.reactivetoolbox.value.conversion.Var;
 
-import java.util.Collection;
+import java.util.List;
 
 import static org.reactivetoolbox.core.functional.Tuples.of;
 import static org.reactivetoolbox.value.conversion.Extractors.extract1;
@@ -111,10 +111,9 @@ public interface ObjectAssembler {
         return Var.of(contextValue(type, name), name);
     }
 
-    static <T, C extends Collection<T>> Var<Option<C>> field(final Class<C> containerType,
-                                                             final Class<T> elementType,
-                                                             final String name) {
-        return Var.of(contextValue(containerType, elementType, name), name);
+    static <T> Var<Option<List<T>>> list(final Class<T> elementType,
+                                         final String name) {
+        return Var.of(contextMultiValue(elementType, name), name);
     }
 
     static <T> Converter<Option<T>> contextValue(final Class<T> type, final String name) {
@@ -123,11 +122,11 @@ public interface ObjectAssembler {
     }
 
     //TODO: may be we need better approach for collection type handling
-    static <T, C extends Collection<T>> Converter<Option<C>> contextValue(final Class<C> containerType,
-                                                                          final Class<T> elementType,
-                                                                          final String name) {
+    static <T> Converter<Option<List<T>>> contextMultiValue(final Class<T> elementType,
+                                                            final String name) {
         return (context) -> Either.success(context.all(name))
-                                  .flatMap((value) -> context.valueConverter(containerType, elementType).apply(value));
+                                  .flatMap((value) -> context.multiValueConverter(elementType)
+                                                             .apply(value));
     }
 
     class FB1<T, T1> {

@@ -1,19 +1,23 @@
 package org.reactivetoolbox.json.beans;
 
-import org.reactivetoolbox.json.StringAssembler;
 import org.reactivetoolbox.value.validation.Is;
 
-import static org.reactivetoolbox.json.JsonCodec.register;
+import static org.reactivetoolbox.json.JsonCodec.addDeserializer;
+import static org.reactivetoolbox.json.JsonCodec.addSerializer;
 import static org.reactivetoolbox.json.ObjectAssembler.field;
 import static org.reactivetoolbox.json.ObjectAssembler.fields;
+import static org.reactivetoolbox.json.StringAssembler.assembleWith;
 
 public class SimpleBean {
     static {
-        register(SimpleBean.class, SimpleBean::serialize);
-        register(SimpleBean.class, fields(SimpleBean.class,
-                                          field(String.class, "name").and(Is::notNull),
-                                          field(String.class, "value").and(Is::notNull))
-                .deserializer(SimpleBean::of));
+        addSerializer(SimpleBean.class, v -> assembleWith('{', '}')
+                .quoted("name", v.name)
+                .quoted("value", v.value)
+                .toString());
+        addDeserializer(SimpleBean.class, fields(SimpleBean.class,
+                                                 field(String.class, "name").and(Is::notNull),
+                                                 field(String.class, "value").and(Is::notNull))
+                .deserializer(SimpleBean::new));
     }
 
     private final String name;
@@ -29,9 +33,9 @@ public class SimpleBean {
     }
 
     public static String serialize(final SimpleBean v) {
-        return StringAssembler.of('{', '}')
-                              .quoted("name", v.name)
-                              .quoted("value", v.value)
-                              .toString();
+        return assembleWith('{', '}')
+                .quoted("name", v.name)
+                .quoted("value", v.value)
+                .toString();
     }
 }

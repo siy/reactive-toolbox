@@ -47,7 +47,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -252,19 +251,19 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
         @Override
         @SuppressWarnings("unchecked")
-        public <T> ValueConverter<T> valueConverter(final Class<T> type) {
-            return (ValueConverter<T>) CONVERTERS.get(type);
-        }
-
-        @Override
-        public Option<String> first(final String name) {
+        public <T> MultiValueConverter<List<T>> multiValueConverter(final Class<T> type) {
             //TODO: finish it
             return null;
         }
 
         @Override
-        public <T, C extends Collection<T>> MultiValueConverter<C> valueConverter(final Class<C> containerType,
-                                                                                  final Class<T> elementType) {
+        public <T> ValueConverter<T> valueConverter(final Class<T> type) {
+            //TODO: finish it
+            return null;
+        }
+
+        @Override
+        public Option<String> first(final String name) {
             //TODO: finish it
             return null;
         }

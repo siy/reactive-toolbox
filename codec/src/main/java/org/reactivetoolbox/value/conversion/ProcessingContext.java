@@ -18,7 +18,6 @@ package org.reactivetoolbox.value.conversion;
 
 import org.reactivetoolbox.core.functional.Option;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -30,7 +29,7 @@ public interface ProcessingContext {
 
     Option<String> first(String name);
 
-    <T, C extends Collection<T>> MultiValueConverter<C> valueConverter(final Class<C> containerType, final Class<T> elementType);
+    <T> MultiValueConverter<List<T>> multiValueConverter(final Class<T> elementType);
 
     Option<List<String>> all(String name);
 }
