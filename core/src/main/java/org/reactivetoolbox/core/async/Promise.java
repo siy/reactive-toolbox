@@ -99,7 +99,6 @@ public interface Promise<T> {
      *        Resolution value in case of timeout
      * @return Current instance
      */
-    //TODO: consider some way to report failure
     Promise<T> with(final Timeout timeout, final T timeoutResult);
 
     /**
@@ -112,7 +111,6 @@ public interface Promise<T> {
      *        Supplier of resolution value in case of timeout
      * @return Current instance
      */
-    //TODO: consider some way to report failure
     Promise<T> with(final Timeout timeout, final Supplier<T> timeoutResultSupplier);
 
     /**

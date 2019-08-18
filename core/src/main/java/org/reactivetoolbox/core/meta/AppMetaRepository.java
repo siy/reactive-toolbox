@@ -15,6 +15,8 @@ package org.reactivetoolbox.core.meta;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.scheduler.TaskScheduler;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -91,10 +93,26 @@ public final class AppMetaRepository {
     /**
      * Seal repository. All configured metadata is moved to work storage.
      */
-    public void seal() {
-        if (!meta.isEmpty()) {
+    public AppMetaRepository seal() {
+        if (meta.isEmpty()) {
             meta.putAll(builder);
             builder.clear();
+        }
+        return this;
+    }
+
+    public static AppMetaRepository instance() {
+        return Lazy.INSTANCE;
+    }
+
+    private static final class Lazy {
+        private static final AppMetaRepository INSTANCE = new AppMetaRepository();
+
+        //Pre-load default configuration for built-in classes
+        static {
+            final int workerSchedulerSize = Runtime.getRuntime().availableProcessors();
+
+            INSTANCE.put(TaskScheduler.class, TaskScheduler.with(workerSchedulerSize));
         }
     }
 }

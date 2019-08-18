@@ -1,4 +1,5 @@
 package org.reactivetoolbox.core.scheduler;
+
 /*
  * Copyright (c) 2017-2019 Sergiy Yevtushenko
  *
@@ -16,22 +17,12 @@ package org.reactivetoolbox.core.scheduler;
  */
 
 /**
- * {@link TimeoutScheduler} interface for task submission.
+ * Single task which accepts current time stamp and returns a decision, should
+ * it be scheduled for next execution round or not. If {@link #isDone(long)}
+ * returns <code>true</code> then task is considered finished and not scheduled
+ * for the next round.
  */
-public interface TimeoutHandle {
-    /**
-     * Submit task for execution after specified timeout
-     *
-     * @param timeout
-     *        Execution timeout
-     * @param runnable
-     *        Task to execute
-     * @return Current instance
-     */
-    TimeoutHandle submit(Timeout timeout, Runnable runnable);
-
-    /**
-     * Release handle. Once handle is released, no tasks can be submitted.
-     */
-    void release();
+@FunctionalInterface
+public interface RunnablePredicate {
+    boolean isDone(final long nanoTime);
 }

@@ -19,7 +19,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Task timeout
+ * Task timeout (in milliseconds)
  */
 public final class Timeout {
     private final long timeout;
@@ -34,6 +34,10 @@ public final class Timeout {
 
     public long timeout() {
         return timeout;
+    }
+
+    public long nanos() {
+        return TimeUnit.MILLISECONDS.toNanos(timeout);
     }
 
     @Override

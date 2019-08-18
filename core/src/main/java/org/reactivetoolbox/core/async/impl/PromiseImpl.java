@@ -2,9 +2,9 @@ package org.reactivetoolbox.core.async.impl;
 
 import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Option;
+import org.reactivetoolbox.core.meta.AppMetaRepository;
 import org.reactivetoolbox.core.scheduler.TaskScheduler;
 import org.reactivetoolbox.core.scheduler.Timeout;
-import org.reactivetoolbox.core.scheduler.TimeoutScheduler;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -18,11 +18,7 @@ import java.util.function.Supplier;
  * Implementation of {@link Promise}
  */
 public final class PromiseImpl<T> implements Promise<T> {
-    //TODO: provide some way to configure these values
-    private static final int TIMEOUT_SCHEDULER_SIZE = Runtime.getRuntime().availableProcessors() * 16;
-    private static final int WORKER_SCHEDULER_SIZE = Runtime.getRuntime().availableProcessors() * 16;
-    private static final TimeoutScheduler timeoutScheduler = TimeoutScheduler.with(TIMEOUT_SCHEDULER_SIZE);
-    private static final TaskScheduler taskScheduler = TaskScheduler.with(WORKER_SCHEDULER_SIZE);
+    private static final TaskScheduler taskScheduler = AppMetaRepository.instance().seal().get(TaskScheduler.class);
 
     private final AtomicMarkableReference<T> value = new AtomicMarkableReference<>(null, false);
     private final BlockingQueue<Consumer<T>> thenActions = new LinkedBlockingQueue<>();
@@ -107,10 +103,8 @@ public final class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> with(final Timeout timeout, final T timeoutResult) {
-        timeoutScheduler.request()
-                        .onSuccess(timeoutScheduler -> timeoutScheduler.submit(timeout,
-                                                                        () -> resolve(timeoutResult))
-                                                                .release());
+        taskScheduler.submit(timeout, () -> resolve(timeoutResult));
+
         return this;
     }
 
@@ -119,10 +113,8 @@ public final class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> with(final Timeout timeout, final Supplier<T> timeoutResultSupplier) {
-        timeoutScheduler.request()
-                        .onSuccess(timeoutScheduler -> timeoutScheduler.submit(timeout,
-                                                                        () -> resolve(timeoutResultSupplier.get()))
-                                                                .release());
+        taskScheduler.submit(timeout, () -> resolve(timeoutResultSupplier.get()));
+
         return this;
     }
 
