@@ -56,7 +56,7 @@ public class RouterImplTest {
 
         router.deliver(StringEnvelope.of("/one/two", "Value"))
                 .onSuccess(success -> fail("Received unexpected " + success))
-                .onSuccess(failure -> assertEquals(RoutingError.NO_SUCH_ROUTE.asFailure(), failure));
+                .onFailure(failure -> assertEquals(RoutingError.NO_SUCH_ROUTE, failure));
     }
 
     @Test

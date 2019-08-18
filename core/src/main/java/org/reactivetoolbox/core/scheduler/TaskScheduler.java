@@ -74,6 +74,7 @@ public interface TaskScheduler {
 
     /**
      * Submit task which will be executed by passing specified instance of {@link Promise} as a parameter.
+     * Note that this method does not configure timeout for the task execution.
      *
      * @param promise
      *        {@link Promise} instance to pass as a parameter

@@ -141,7 +141,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
         @Override
         public Request pathParameters(final List<Pair<String, String>> pairs) {
-            pairs.stream().forEach(pair -> pathParameters.put(pair.left(), pair.right()));
+            pairs.forEach(pair -> pathParameters.put(pair.left(), pair.right()));
             return this;
         }
 

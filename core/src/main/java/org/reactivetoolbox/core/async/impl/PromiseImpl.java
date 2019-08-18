@@ -18,8 +18,6 @@ import java.util.function.Supplier;
  * Implementation of {@link Promise}
  */
 public final class PromiseImpl<T> implements Promise<T> {
-    private static final TaskScheduler taskScheduler = AppMetaRepository.instance().seal().get(TaskScheduler.class);
-
     private final AtomicMarkableReference<T> value = new AtomicMarkableReference<>(null, false);
     private final BlockingQueue<Consumer<T>> thenActions = new LinkedBlockingQueue<>();
 
@@ -103,7 +101,7 @@ public final class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> with(final Timeout timeout, final T timeoutResult) {
-        taskScheduler.submit(timeout, () -> resolve(timeoutResult));
+        TaskSchedulerHolder.instance().submit(timeout, () -> resolve(timeoutResult));
 
         return this;
     }
@@ -113,7 +111,7 @@ public final class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> with(final Timeout timeout, final Supplier<T> timeoutResultSupplier) {
-        taskScheduler.submit(timeout, () -> resolve(timeoutResultSupplier.get()));
+        TaskSchedulerHolder.instance().submit(timeout, () -> resolve(timeoutResultSupplier.get()));
 
         return this;
     }
@@ -123,6 +121,14 @@ public final class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> perform(final Consumer<Promise<T>> task) {
-        return taskScheduler.submit(this, task);
+        return TaskSchedulerHolder.instance().submit(this, task);
+    }
+
+    private static final class TaskSchedulerHolder {
+        private static final TaskScheduler taskScheduler = AppMetaRepository.instance().seal().get(TaskScheduler.class);
+
+        static TaskScheduler instance() {
+            return taskScheduler;
+        }
     }
 }
