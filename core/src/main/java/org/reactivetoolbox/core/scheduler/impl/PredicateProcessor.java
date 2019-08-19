@@ -21,7 +21,6 @@ import org.reactivetoolbox.core.scheduler.RunnablePredicate;
 import java.util.Queue;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.LockSupport;
 
 /**
  * Single processing pipeline for {@link RunnablePredicate} tasks. Incoming tasks are placed into incoming queue,
@@ -34,9 +33,7 @@ public class PredicateProcessor {
     private final AtomicReference<Queue<RunnablePredicate>> incomingQueue = new AtomicReference<>(new LinkedTransferQueue<>());
 
     public void submit(final RunnablePredicate runnablePredicate) {
-        while (!incomingQueue.get().offer(runnablePredicate)) {
-            LockSupport.parkNanos(10);
-        }
+        incomingQueue.get().add(runnablePredicate);
     }
 
     public void processTimeoutsOnce() {

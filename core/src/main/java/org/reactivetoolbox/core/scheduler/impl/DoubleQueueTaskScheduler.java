@@ -43,7 +43,11 @@ public class DoubleQueueTaskScheduler implements TaskScheduler {
             executor.execute(() -> {
                 while (!executor.isShutdown()) {
                     processors[n].processTimeoutsOnce();
-                    Thread.yield();
+                    try {
+                        Thread.sleep(0);
+                    } catch (final InterruptedException e){
+                        //Ignore it
+                    }
                 }
             });
         });
