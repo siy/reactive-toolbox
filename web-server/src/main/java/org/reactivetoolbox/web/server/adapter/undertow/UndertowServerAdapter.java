@@ -27,7 +27,6 @@ import org.reactivetoolbox.core.async.Promise;
 import org.reactivetoolbox.core.functional.Either;
 import org.reactivetoolbox.core.functional.Functions.FN1;
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.core.functional.Suppliers;
 import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.RawParameters;
@@ -53,11 +52,13 @@ import java.time.temporal.Temporal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.reactivetoolbox.core.functional.Either.lift;
+import static org.reactivetoolbox.core.functional.Suppliers.lazy;
 
 /**
  * Implementation of the {@link ServerAdapter} for Undertow (
@@ -142,24 +143,22 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
     private static class UndertowRequest implements Request {
         private final HttpServerExchange exchange;
         private final HttpProcessingContext context;
-        private final Supplier<RawParameters> queryParameters;
-        private final Supplier<RawParameters> headerParameters;
-        private final Supplier<RawParameters> bodyParameters;
+        private final Supplier<RawParameters> queryParameters = lazy(this::extractQueryParameters);
+        private final Supplier<RawParameters> headerParameters = lazy(this::extractHeaderParameters);
+        private final Supplier<RawParameters> bodyParameters = lazy(this::extractBodyParameters);
         private RawParameters pathParameters;
 
         public UndertowRequest(final HttpServerExchange exchange,
                                final HttpProcessingContext context) {
             this.exchange = exchange;
             this.context = context;
-            queryParameters = Suppliers.lazy(() -> extractQueryParameters());
-            headerParameters = Suppliers.lazy(() -> extractHeaderParameters());
-            bodyParameters = Suppliers.lazy(() -> extractBodyParameters());
         }
 
         private RawParameters extractBodyParameters() {
             return headerParameters.get()
                                    .first(Headers.CONTENT_TYPE.header())
-                                   .filter(value -> value.equalsIgnoreCase("application/x-www-form-urlencoded"))
+                                   .filter(value -> value.toLowerCase(Locale.US)
+                                                         .startsWith("application/x-www-form-urlencoded"))
                                    .map(unused -> body().map(this::parseBody)
                                                         .map(RawParameters::of)
                                                         .otherwise(RawParameters.of()))
@@ -173,6 +172,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
         private RawParameters extractHeaderParameters() {
             final var parameters = new HashMap<String, List<String>>();
+            // this approach while not so functional, has much less overhead
             exchange.getRequestHeaders()
                     .forEach((HeaderValues value) -> parameters.put(value.getHeaderName().toString(),
                                                                     List.copyOf(value.subList(0, value.size()))));
@@ -181,6 +181,7 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
 
         private RawParameters extractQueryParameters() {
             final var parameters = new HashMap<String, List<String>>();
+            // this approach while not so functional, has much less overhead
             exchange.getQueryParameters().forEach((key, value) -> parameters.put(key, List.copyOf(value)));
             return RawParameters.of(parameters);
         }
