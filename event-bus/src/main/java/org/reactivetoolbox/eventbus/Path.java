@@ -1,10 +1,9 @@
 package org.reactivetoolbox.eventbus;
 
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.core.functional.Pair;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -43,7 +42,7 @@ public interface Path {
 
     String prefix();
 
-    List<Pair<String, String>> extractParameters(final String source);
+    RawParameters extractParameters(final String source);
 
     List<String> parameterNames();
 
@@ -116,13 +115,13 @@ public interface Path {
         }
 
         @Override
-        public List<Pair<String, String>> extractParameters(final String source) {
-            return Collections.emptyList();
+        public RawParameters extractParameters(final String source) {
+            return RawParameters.of();
         }
 
         @Override
         public List<String> parameterNames() {
-            return Collections.emptyList();
+            return List.of();
         }
 
         @Override
@@ -182,30 +181,30 @@ public interface Path {
         }
 
         @Override
-        public List<Pair<String, String>> extractParameters(final String source) {
+        public RawParameters extractParameters(final String source) {
             final var matcher = pathPattern.matcher(normalize(source));
 
             if (!matcher.find()) {
-                return Collections.emptyList();
+                return RawParameters.of();
             }
 
             if (matcher.groupCount() != parameterNames.size()) {
-                return Collections.emptyList();
+                return RawParameters.of();
             }
 
-            final var result = new ArrayList<Pair<String, String>>();
+            final var result = new HashMap<String, List<String>>();
 
             // Every second group contains value
             for(int i = 0; i < parameterNames.size(); i++) {
-                result.add(Pair.of(parameterNames.get(i), matcher.group(i + 1)));
+                result.put(parameterNames.get(i), List.of(matcher.group(i + 1)));
             }
 
-            return result;
+            return RawParameters.of(result);
         }
 
         @Override
         public List<String> parameterNames() {
-            return new ArrayList<>(parameterNames);
+            return List.copyOf(parameterNames);
         }
 
         @Override

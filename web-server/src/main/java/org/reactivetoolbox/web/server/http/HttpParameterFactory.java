@@ -32,10 +32,11 @@ public interface HttpParameterFactory {
 
     interface NamedStringExtractor extends FN2<Either<? extends BaseError, Option<String>>, String, HttpProcessingContext> {}
 
-    NamedStringExtractor fromQuery = (name, context) -> Either.success(context.request().queryParameter(name));
-    NamedStringExtractor fromPath = (name, context) -> Either.success(context.request().pathParameter(name));
-    NamedStringExtractor fromHeader = (name, context) -> Either.success(context.request().header(name));
-    NamedStringExtractor fromBody = (name, context) -> Either.success(context.request().bodyParameter(name));
+    //TODO: add support for cookies
+    NamedStringExtractor fromQuery = (name, context) -> Either.success(context.request().queryParameters().first(name));
+    NamedStringExtractor fromPath = (name, context) -> Either.success(context.request().pathParameters().first(name));
+    NamedStringExtractor fromHeader = (name, context) -> Either.success(context.request().headerParameters().first(name));
+    NamedStringExtractor fromBody = (name, context) -> Either.success(context.request().bodyParameters().first(name));
 
     static StringExtractor forName(final NamedStringExtractor extractor, final String name) {
         return extractor.bind(name)::apply;

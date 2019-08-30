@@ -17,10 +17,7 @@ package org.reactivetoolbox.web.server.http;
  */
 
 import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.core.functional.Pair;
-
-import java.util.List;
-import java.util.Map;
+import org.reactivetoolbox.eventbus.RawParameters;
 
 /**
  * Generalized HTTP request interface
@@ -29,11 +26,11 @@ public interface Request {
     /**
      * Set parameter values retrieved from request path.
      *
-     * @param pairs
-     *        List of name-value pairs for parameters
+     * @param parameters
+     *        Parameters retrieved from request path
      * @return <code>this</code> for fluent call chaining
      */
-    Request pathParameters(final List<Pair<String, String>> pairs);
+    Request pathParameters(final RawParameters parameters);
 
     /**
      * Return full context to which this request belongs.
@@ -43,69 +40,50 @@ public interface Request {
     HttpProcessingContext context();
 
     /**
-     * Get value of path parameter.
+     * Get path parameters.
      *
-     * @param name
-     *        Parameter name
-     * @return Result of parameter search wrapped into {@link Option}
+     * @return instance of {@link RawParameters} corresponding to path parameters
      */
-    Option<String> pathParameter(final String name);
+    RawParameters pathParameters();
 
     /**
-     * Get parameter from query string. If multiple values with same name
-     * provided, then first one is returned.
+     * Get query parameters.
      *
-     * @param name
-     *        Parameter name
-     * @return Result of parameter search wrapped into {@link Option}
+     * @return instance of {@link RawParameters} corresponding to query parameters
      */
-    Option<String> queryParameter(String name);
+    RawParameters queryParameters();
 
     /**
-     * Retrieve all values for parameter provided in request query string. If no such parameter exists then empty list
-     * is returned.
+     * Get header parameters.
      *
-     * @param name
-     *        Parameter name
-     * @return List of all values associated with this parameter name
+     * @return instance of {@link RawParameters} corresponding to header parameters
      */
-    List<String> queryParameters(String name);
+    RawParameters headerParameters();
 
     /**
-     * Return all request parameters passed in query string.
+     * Get parameters encoded in the body as form parameters.
+     * Note that call to this parameter has side effect of reading request
+     * body and parsing it.
      *
-     * @return Map where keys are parameter names and values are lists of parameter values
-     */
-    Map<String, List<String>> queryParameters();
-
-    /**
-     * Get value of specified request header.
-     *
-     * @param name
-     *        Header name
-     * @return Header value wrapped into {@link Option}
-     */
-    Option<String> header(String name);
-
-    /**
-     * Get value retrieved from body (usually a form). Note that once this call is made, body may not be accessible
-     * anymore, as this call triggers reading and parsing of full request body. The call to {@link #body()} will
-     * return empty {@link Option} since body value is not available.
-     * Retrieving other names parameters should be fine.
-     *
-     * @param name
-     *        Parameter name
-     * @return Body parameter value wrapped into {@link Option}
+     * @return instance of {@link RawParameters} corresponding to header parameters
      * @see #body()
      */
-    Option<String> bodyParameter(String name);
+    RawParameters bodyParameters();
 
     /**
-     * Retrieve full body of the request. Use with care, as this call will load whole request into memory. This might
-     * be quite a lot if request, for example, contains uploaded file.
+     * Get cookies from this request
+     *
+     * @return instance of {@link Cookies} with all cookies provided with this request
+     */
+    Cookies cookies();
+
+    /**
+     * Retrieve full body of the request.
+     * Note that call to this method triggers loading of entire request body
+     * into memory.
      *
      * @return Whole request body wrapped into {@link Option}
-     * @see #bodyParameter(String)
+     * @see #bodyParameters
      */
     Option<String> body();
 }

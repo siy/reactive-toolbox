@@ -136,7 +136,7 @@ public interface ObjectAssembler {
             this.fields = of(fields);
         }
 
-        public Deserializer<T> deserializer(final FN1<T, T1> factory) {
+        public Deserializer<T> with(final FN1<T, T1> factory) {
             return (context) -> fields.map(extract1(context))
                                       .mapSuccess(v -> v.map(factory));
         }
@@ -149,7 +149,7 @@ public interface ObjectAssembler {
             fields = of(field1, field2);
         }
 
-        public Deserializer<T> deserializer(final FN2<T, T1, T2> factory) {
+        public Deserializer<T> with(final FN2<T, T1, T2> factory) {
             return (context) -> fields.map(extract2(context))
                                       .mapSuccess(v -> v.map(factory));
         }
@@ -162,7 +162,7 @@ public interface ObjectAssembler {
             fields = of(field1, field2, field3);
         }
 
-        public Deserializer<T> deserializer(final FN3<T, T1, T2, T3> factory) {
+        public Deserializer<T> with(final FN3<T, T1, T2, T3> factory) {
             return (context) -> fields.map(extract3(context))
                                       .mapSuccess(v -> v.map(factory));
         }
@@ -175,7 +175,7 @@ public interface ObjectAssembler {
             fields = of(field1, field2, field3, field4);
         }
 
-        public Deserializer<T> deserializer(final FN4<T, T1, T2, T3, T4> factory) {
+        public Deserializer<T> with(final FN4<T, T1, T2, T3, T4> factory) {
             return (context) -> fields.map(extract4(context))
                                       .mapSuccess(v -> v.map(factory));
         }
@@ -189,7 +189,7 @@ public interface ObjectAssembler {
             fields = of(field1, field2, field3, field4, field5);
         }
 
-        public Deserializer<T> deserializer(final FN5<T, T1, T2, T3, T4, T5> factory) {
+        public Deserializer<T> with(final FN5<T, T1, T2, T3, T4, T5> factory) {
             return (context) -> fields.map(extract5(context))
                                       .mapSuccess(v -> v.map(factory));
         }
@@ -203,7 +203,7 @@ public interface ObjectAssembler {
             fields = of(field1, field2, field3, field4, field5, field6);
         }
 
-        public Deserializer<T> deserializer(final FN6<T, T1, T2, T3, T4, T5, T6> factory) {
+        public Deserializer<T> with(final FN6<T, T1, T2, T3, T4, T5, T6> factory) {
             return (context) -> fields.map(extract6(context))
                                       .mapSuccess(v -> v.map(factory));
         }
@@ -217,7 +217,7 @@ public interface ObjectAssembler {
             fields = of(field1, field2, field3, field4, field5, field6, field7);
         }
 
-        public Deserializer<T> deserializer(final FN7<T, T1, T2, T3, T4, T5, T6, T7> factory) {
+        public Deserializer<T> with(final FN7<T, T1, T2, T3, T4, T5, T6, T7> factory) {
             return (context) -> fields.map(extract7(context))
                                       .mapSuccess(v -> v.map(factory));
         }
@@ -231,7 +231,7 @@ public interface ObjectAssembler {
             fields = of(field1, field2, field3, field4, field5, field6, field7, field8);
         }
 
-        public Deserializer<T> deserializer(final FN8<T, T1, T2, T3, T4, T5, T6, T7, T8> factory) {
+        public Deserializer<T> with(final FN8<T, T1, T2, T3, T4, T5, T6, T7, T8> factory) {
             return (context) -> fields.map(extract8(context))
                                       .mapSuccess(v -> v.map(factory));
         }
@@ -246,7 +246,7 @@ public interface ObjectAssembler {
             fields = of(field1, field2, field3, field4, field5, field6, field7, field8, field9);
         }
 
-        public Deserializer<T> deserializer(final FN9<T, T1, T2, T3, T4, T5, T6, T7, T8, T9> factory) {
+        public Deserializer<T> with(final FN9<T, T1, T2, T3, T4, T5, T6, T7, T8, T9> factory) {
             return (context) -> fields.map(extract9(context))
                                       .mapSuccess(v -> v.map(factory));
         }

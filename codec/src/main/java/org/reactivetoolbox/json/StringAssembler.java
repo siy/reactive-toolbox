@@ -30,6 +30,10 @@ public class StringAssembler {
         builder = new StringBuilder(256).append(prefix);
     }
 
+    public static StringAssembler forObject() {
+        return new StringAssembler('{', '}');
+    }
+
     public static StringAssembler assembleWith(final char prefix, final char suffix) {
         return new StringAssembler(prefix, suffix);
     }

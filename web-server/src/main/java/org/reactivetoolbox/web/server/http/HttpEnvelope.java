@@ -2,12 +2,9 @@ package org.reactivetoolbox.web.server.http;
 
 import org.reactivetoolbox.core.async.BaseError;
 import org.reactivetoolbox.core.functional.Either;
-import org.reactivetoolbox.core.functional.Pair;
 import org.reactivetoolbox.eventbus.Envelope;
 import org.reactivetoolbox.eventbus.Path;
 import org.reactivetoolbox.eventbus.Route;
-
-import java.util.List;
 
 import static org.reactivetoolbox.web.server.ServerError.BAD_REQUEST;
 
@@ -26,11 +23,13 @@ public class HttpEnvelope implements Envelope<HttpProcessingContext> {
 
     @Override
     public Either<? extends BaseError, HttpProcessingContext> onDelivery(final Route<HttpProcessingContext> route) {
-        final List<Pair<String, String>> pairs = route.path().extractParameters(path.source());
+        final var parameters = route.path().extractParameters(path.source());
 
-        return (route.path().hasParams() && pairs.isEmpty())
+        return (route.path().hasParams() && parameters.isEmpty())
                ? BAD_REQUEST.asFailure()
-               : Either.success(context.request().pathParameters(pairs).context());
+               : Either.success(context.request()
+                                       .pathParameters(parameters)
+                                       .context());
     }
 
     @Override

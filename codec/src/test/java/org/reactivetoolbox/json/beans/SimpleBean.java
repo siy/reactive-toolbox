@@ -17,7 +17,7 @@ public class SimpleBean {
         addDeserializer(SimpleBean.class, fields(SimpleBean.class,
                                                  field(String.class, "name").and(Is::notNull),
                                                  field(String.class, "value").and(Is::notNull))
-                .deserializer(SimpleBean::new));
+                .with(SimpleBean::new));
     }
 
     private final String name;

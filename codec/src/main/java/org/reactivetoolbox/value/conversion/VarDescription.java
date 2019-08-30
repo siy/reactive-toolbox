@@ -19,7 +19,6 @@ package org.reactivetoolbox.value.conversion;
 import org.reactivetoolbox.core.functional.Option;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -60,7 +59,7 @@ public class VarDescription {
     }
 
     public List<String> validationComments() {
-        return Collections.unmodifiableList(validationComments);
+        return List.copyOf(validationComments);
     }
 
     public VarDescription addValidationComment(final String comment) {

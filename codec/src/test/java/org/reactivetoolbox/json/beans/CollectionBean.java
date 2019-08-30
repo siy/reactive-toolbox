@@ -13,20 +13,22 @@ import static org.reactivetoolbox.json.JsonCodec.addSerializer;
 import static org.reactivetoolbox.json.ObjectAssembler.field;
 import static org.reactivetoolbox.json.ObjectAssembler.fields;
 import static org.reactivetoolbox.json.ObjectAssembler.list;
+import static org.reactivetoolbox.json.StringAssembler.forObject;
 
 public class CollectionBean {
     static {
-        addDeserializer(CollectionBean.class, fields(CollectionBean.class,
-                                                     field(String.class, "name").and(Is::notNull),
-                                                     list(Integer.class, "indices").and(Is::notNull),
-                                                     list(UUID.class, "ids").and(To::set).and(Is::notNull))
-                .deserializer(CollectionBean::new));
+        addDeserializer(CollectionBean.class,
+                        fields(CollectionBean.class,
+                               field(String.class, "name").and(Is::notNull),
+                               list(Integer.class, "indices").and(Is::notNull),
+                               list(UUID.class, "ids").and(To::set).and(Is::notNull))
+                                .with(CollectionBean::new));
 
-        addSerializer(CollectionBean.class, (v) -> StringAssembler.assembleWith('{', '}')
-                                                                  .quoted("name", v.name)
-                                                                  .quoted("indices", v.indices, Object::toString)
-                                                                  .quoted("ids", v.ids, StringAssembler::toStringQuoted)
-                                                                  .toString());
+        addSerializer(CollectionBean.class,
+                      (v) -> forObject().quoted("name", v.name)
+                                        .quoted("indices", v.indices, Object::toString)
+                                        .quoted("ids", v.ids, StringAssembler::toStringQuoted)
+                                        .toString());
     }
 
     private final String name;

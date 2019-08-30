@@ -14,7 +14,7 @@ public class To {
         return Either.success(input.map(HashSet::new));
     }
 
-    public static <T> Either<? extends BaseError, Option<Set<T>>> linkedHashSet(final Option<List<T>> input) {
+    public static <T> Either<? extends BaseError, Option<Set<T>>> linkedSet(final Option<List<T>> input) {
         return Either.success(input.map(LinkedHashSet::new));
     }
 }
