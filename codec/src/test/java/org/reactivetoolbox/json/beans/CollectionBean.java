@@ -5,6 +5,7 @@ import org.reactivetoolbox.value.conversion.To;
 import org.reactivetoolbox.value.validation.Is;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -43,5 +44,57 @@ public class CollectionBean {
 
     public static CollectionBean of(final String name, final List<Integer> indices, final Set<UUID> ids) {
         return new CollectionBean(name, indices, ids);
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public CollectionBean name(final String name) {
+        return new CollectionBean(name, indices, ids);
+    }
+
+    public List<Integer> indices() {
+        return List.copyOf(indices);
+    }
+
+    public CollectionBean indices(final List<Integer> indices) {
+        return new CollectionBean(name, indices, ids);
+    }
+
+    public Set<UUID> ids() {
+        return Set.copyOf(ids);
+    }
+
+    public CollectionBean ids(final Set<UUID> ids) {
+        return new CollectionBean(name, indices, ids);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final CollectionBean that = (CollectionBean) o;
+        return Objects.equals(name, that.name) &&
+               Objects.equals(indices, that.indices) &&
+               Objects.equals(ids, that.ids);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, indices, ids);
+    }
+
+    @Override
+    public String toString() {
+        return "CollectionBean{" +
+               "name='" + name + '\'' +
+               ", indices=" + indices +
+               ", ids=" + ids +
+               '}';
     }
 }

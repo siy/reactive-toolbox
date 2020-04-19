@@ -146,12 +146,18 @@ public class UndertowServerAdapter implements ServerAdapter, HttpHandler {
         private final Supplier<RawParameters> queryParameters = lazy(this::extractQueryParameters);
         private final Supplier<RawParameters> headerParameters = lazy(this::extractHeaderParameters);
         private final Supplier<RawParameters> bodyParameters = lazy(this::extractBodyParameters);
+        private final Supplier<Option<String>> body = lazy(this::extractBody);
         private RawParameters pathParameters;
 
         public UndertowRequest(final HttpServerExchange exchange,
                                final HttpProcessingContext context) {
             this.exchange = exchange;
             this.context = context;
+        }
+
+        private Option<String> extractBody() {
+            //exchange.
+            return null;
         }
 
         private RawParameters extractBodyParameters() {

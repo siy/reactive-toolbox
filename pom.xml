@@ -34,6 +34,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.release>14</java.release>
+        <java.enable-preview>--enable-preview</java.enable-preview>
 
         <!-- Dependencies versions -->
         <vertx.version>3.6.3</vertx.version>
@@ -43,7 +45,7 @@
         <undertow.version>[2.0.23,)</undertow.version>
 
         <!-- Testing -->
-        <junit.version>5.4.0</junit.version>
+        <junit.version>5.6.2</junit.version>
         <junit.platform.version>1.4.0</junit.platform.version>
         <assertj.version>3.11.1</assertj.version>
 
@@ -100,16 +102,23 @@
         </dependency>
 
         <!-- Testing -->
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.assertj</groupId>-->
+<!--            <artifactId>assertj-core</artifactId>-->
+<!--            <version>${assertj.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
@@ -121,12 +130,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-runner</artifactId>
-            <version>${junit.platform.version}</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -134,7 +137,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.4</version>
+                <version>0.8.5</version>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -158,10 +161,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M3</version>
+                <version>3.0.0-M4</version>
                 <configuration>
                     <argLine>
-                        --enable-preview
+                        --illegal-access=permit
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.async=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.functional=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.scheduler=ALL-UNNAMED
@@ -173,6 +176,7 @@
                         --add-opens org.reactivetoolbox.codec/org.reactivetoolbox.json=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.codec/org.reactivetoolbox.json.beans=ALL-UNNAMED
                         ${jaCoCoArgLine}
+                        ${java.enable-preview}
                         -Xmx1024m
                     </argLine>
                 </configuration>
@@ -194,17 +198,14 @@
                 <configuration>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
-                    <release>12</release>
-                    <!--					<verbose>true</verbose>-->
-                    <compilerArgs>
-                        <arg>--enable-preview</arg>
-                    </compilerArgs>
+                    <release>${java.release}</release>
+                    <compilerArgument>${java.enable-preview}</compilerArgument>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.22.0</version>
+                <version>2.22.1</version>
             </plugin>
         </plugins>
     </build>
