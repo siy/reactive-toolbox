@@ -13,7 +13,7 @@ class ActionableThresholdTest {
     @Test
     void actionIsTriggeredOnceThresholdIsReached() {
         final AtomicBoolean marker = new AtomicBoolean();
-        final ActionableThreshold threshold = ActionableThreshold.of(3, () -> marker.compareAndSet(false, true));
+        final ActionableThreshold threshold = ActionableThreshold.threshold(3, () -> marker.compareAndSet(false, true));
 
         assertFalse(marker.get());
 
@@ -30,7 +30,7 @@ class ActionableThresholdTest {
     @Test
     void subsequentEventsDontTriggerAction() {
         final AtomicInteger counter = new AtomicInteger(0);
-        final ActionableThreshold threshold = ActionableThreshold.of(3, counter::incrementAndGet);
+        final ActionableThreshold threshold = ActionableThreshold.threshold(3, counter::incrementAndGet);
 
         assertEquals(0, counter.get());
 

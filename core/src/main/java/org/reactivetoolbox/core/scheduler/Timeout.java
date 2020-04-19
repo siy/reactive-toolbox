@@ -1,6 +1,6 @@
 package org.reactivetoolbox.core.scheduler;
 /*
- * Copyright (c) 2017-2019 Sergiy Yevtushenko
+ * Copyright (c) 2019 Sergiy Yevtushenko
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ public final class Timeout {
         this.timeout = timeout;
     }
 
-    public static TimeoutBuilder of(final long value) {
+    public static TimeoutBuilder timeout(final long value) {
         return new TimeoutBuilder(value);
     }
 
@@ -45,9 +45,11 @@ public final class Timeout {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+
+        if (!(o instanceof Timeout)) {
             return false;
         }
+
         final Timeout timeout1 = (Timeout) o;
         return timeout == timeout1.timeout;
     }
@@ -86,7 +88,7 @@ public final class Timeout {
          *
          * @return Created instance
          */
-        public Timeout sec() {
+        public Timeout seconds() {
             return new Timeout(TimeUnit.SECONDS.toMillis(value));
         }
 
@@ -95,7 +97,7 @@ public final class Timeout {
          *
          * @return Created instance
          */
-        public Timeout min() {
+        public Timeout minutes() {
             return new Timeout(TimeUnit.MINUTES.toMillis(value));
         }
 
@@ -104,7 +106,7 @@ public final class Timeout {
          *
          * @return Created instance
          */
-        public Timeout hrs() {
+        public Timeout hours() {
             return new Timeout(TimeUnit.HOURS.toMillis(value));
         }
     }

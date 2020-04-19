@@ -1,6 +1,6 @@
 package org.reactivetoolbox.core.meta;
 /*
- * Copyright (c) 2017-2019 Sergiy Yevtushenko
+ * Copyright (c) 2019 Sergiy Yevtushenko
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@ package org.reactivetoolbox.core.meta;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.log.CoreLogger;
+import org.reactivetoolbox.core.log.impl.JdkLogger;
 import org.reactivetoolbox.core.scheduler.TaskScheduler;
 
-import java.util.HashMap;
+import java.time.Clock;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,18 +36,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * In order to make it work reliably, check for presence of necessary parts of meta information
  * should be done in application code at the very beginning of execution in order to prevent
  * application failure when it is already started.
- * <br>
- * Interface is designed with usual use case in mind: <code>start-configure-run-shutdown</code>. To support it
- * repository starts in <b>open</b> state, which allows adding necessary configuration into repository via
- * {@link #put(Class, Object)} calls. In this state no {@link #get(Class)} calls are allowed. Once configuration of
- * the repository is finished, application calls {@link #seal()} method. In <b>sealed</b> state, {@link #get(Class)}
- * calls are allowed, but any attempt to call {@link #put(Class, Object)} will throw an {@link IllegalStateException}.
- * Beside enforcing proper life cycle, this approach also enables use of non-synchronized data structures for
- * storing data at run-time which minimizes possible performance impact.
  */
 public final class AppMetaRepository {
-    private final Map<Class<?>, Object> meta = new HashMap<>();
-    private final Map<Class<?>, Object> builder = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Object> meta = new ConcurrentHashMap<>();
 
     /**
      * Get specified part of meta information.
@@ -53,14 +46,10 @@ public final class AppMetaRepository {
      * @param type
      *        The type of information required
      * @return associated instance
-     * @throws IllegalStateException in case if called in open mode or requested information is missing
+     * @throws IllegalStateException in case if requested information is missing
      */
     @SuppressWarnings("unchecked")
     public <T> T get(final Class<T> type) {
-        if (meta.isEmpty()) {
-            throw new IllegalStateException("Attempt to retrieve " + type.getName() + " while in open state");
-        }
-
         final var result = (T) meta.get(type);
 
         if (result == null) {
@@ -78,26 +67,10 @@ public final class AppMetaRepository {
      * @param instance
      *        Value to store
      * @return <code>this</code> instance for fluent calls
-     * @throws IllegalStateException if called in sealed mode
      */
     public <T> AppMetaRepository put(final Class<T> type, final T instance) {
-        if (!meta.isEmpty()) {
-            throw new IllegalStateException("Attempt to configure " + type.getName() + " in sealed state");
-        }
+        meta.put(type, instance);
 
-        builder.put(type, instance);
-
-        return this;
-    }
-
-    /**
-     * Seal repository. All configured metadata is moved to work storage.
-     */
-    public AppMetaRepository seal() {
-        if (meta.isEmpty()) {
-            meta.putAll(builder);
-            builder.clear();
-        }
         return this;
     }
 
@@ -108,11 +81,13 @@ public final class AppMetaRepository {
     private static final class Lazy {
         private static final AppMetaRepository INSTANCE = new AppMetaRepository();
 
-        //Pre-load default configuration for built-in classes
+        //Pre-load default configuration for use by built-in classes and for general purpose use
         static {
             final int workerSchedulerSize = Runtime.getRuntime().availableProcessors();
 
             INSTANCE.put(TaskScheduler.class, TaskScheduler.with(workerSchedulerSize));
+            INSTANCE.put(CoreLogger.class, new JdkLogger());
+            INSTANCE.put(Clock.class, Clock.systemUTC());
         }
     }
 }

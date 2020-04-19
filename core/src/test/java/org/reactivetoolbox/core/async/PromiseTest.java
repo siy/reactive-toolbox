@@ -1,502 +1,268 @@
 package org.reactivetoolbox.core.async;
 
 import org.junit.jupiter.api.Test;
-import org.reactivetoolbox.core.functional.Option;
-import org.reactivetoolbox.core.functional.Tuples;
-import org.reactivetoolbox.core.scheduler.Timeout;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.reactivetoolbox.core.Errors.TIMEOUT;
+import static org.reactivetoolbox.core.lang.functional.Result.ok;
+import static org.reactivetoolbox.core.scheduler.Timeout.timeout;
 
 
 class PromiseTest {
     private final Executor executor = Executors.newSingleThreadExecutor();
 
     @Test
-    void multipleAssignmentsAreIgnored() {
-        final var promise = Promise.<Integer>give();
+    void multipleResolutionsAreIgnored() {
+        final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
-        promise.resolve(1);
-        promise.resolve(2);
-        promise.resolve(3);
-        promise.resolve(4);
+        promise.ok(1);
+        promise.ok(2);
+        promise.ok(3);
+        promise.ok(4);
 
-        assertTrue(promise.ready());
-        assertEquals(1, promise.value().get());
+        assertEquals(1, holder.get());
     }
 
     @Test
     void fulfilledPromiseIsAlreadyResolved() {
-        assertTrue(Promise.fulfilled(123).ready());
+        final var holder = new AtomicInteger(-1);
+        Promise.readyOk(123).onSuccess(holder::set);
+
+        assertEquals(123, holder.get());
     }
 
     @Test
     void thenActionsAreExecuted() {
-        final var promise = Promise.<Integer>give();
         final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
-        promise.then(holder::set);
-        promise.resolve(1);
+        promise.ok(1);
 
         assertEquals(1, holder.get());
     }
 
     @Test
     void thenActionsAreExecutedEvenIfAddedAfterPromiseResolution() {
-        final var promise = Promise.<Integer>give();
         final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise();
 
-        promise.resolve(1);
-        promise.then(holder::set);
+        promise.ok(1);
+        promise.onSuccess(holder::set);
+
+        assertEquals(1, holder.get());
+    }
+
+    @Test
+    void mapTransformsValue() {
+        final var holder = new AtomicReference<String>();
+        final var promise = Promise.<Integer>promise();
+
+        promise.map(Objects::toString).onSuccess(holder::set);
+
+        promise.ok(1234);
+
+        assertEquals("1234", holder.get());
+    }
+
+    @Test
+    void promiseCanBeResolvedAsynchronouslyWithSuccess() {
+        final var currentTid = Thread.currentThread().getId();
+        final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise()
+                .onSuccess(val -> assertNotEquals(currentTid, Thread.currentThread().getId()))
+                .onSuccess(holder::set);
+
+        promise.asyncOk(1).syncWait(timeout(1).seconds());
+
+        safeSleep(20);
+
+        assertEquals(1, holder.get());
+    }
+
+    @Test
+    void promiseCanBeResolvedAsynchronouslyWithFailure() {
+        final var currentTid = Thread.currentThread().getId();
+        final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise()
+                .onFailure(f -> assertNotEquals(currentTid, Thread.currentThread().getId()))
+                .onFailure(f -> holder.set(1));
+
+        promise.asyncFail(TIMEOUT).syncWait(timeout(1).seconds());
+
+        safeSleep(20);
 
         assertEquals(1, holder.get());
     }
 
     @Test
     void syncWaitIsWaitingForResolution() {
-        final var promise = Promise.<Integer>give();
+        final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
-        assertFalse(promise.ready());
-
-        executor.execute(() -> {safeSleep(20); promise.resolve(1);});
+        executor.execute(() -> {safeSleep(20); promise.ok(1);});
 
         promise.syncWait();
 
-        assertTrue(promise.ready());
-
-        assertEquals(1, promise.value().get());
+        assertEquals(1, holder.get());
     }
 
     @Test
     void syncWaitDoesNotWaitForAlreadyResolved() {
-        final var promise = Promise.<Integer>give();
+        final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
-        assertFalse(promise.ready());
+        assertEquals(-1, holder.get());
 
-        promise.resolve(1);
+        promise.ok(1);
 
         promise.syncWait();
 
-        assertTrue(promise.ready());
-
-        assertEquals(1, promise.value().get());
+        assertEquals(1, holder.get());
     }
 
     @Test
     void syncWaitWithTimeoutIsWaitingForResolution() {
-        final var promise = Promise.<Integer>give();
+        final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
-        assertFalse(promise.ready());
+        assertEquals(-1, holder.get());
 
-        executor.execute(() -> {safeSleep(20); promise.resolve(1);});
+        executor.execute(() -> {safeSleep(20); promise.ok(1);});
 
-        promise.syncWait(Timeout.of(100).millis());
+        assertEquals(-1, holder.get());
 
-        assertTrue(promise.ready());
+        promise.syncWait(timeout(100).millis());
 
-        assertEquals(1, promise.value().get());
+        assertEquals(1, holder.get());
     }
 
     @Test
     void syncWaitWithTimeoutIsWaitingForTimeout() {
-        final var promise = Promise.<Integer>give();
+        final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
-        assertFalse(promise.ready());
+        assertEquals(-1, holder.get());
 
-        executor.execute(() -> {safeSleep(200); promise.resolve(1);});
+        executor.execute(() -> {safeSleep(200); promise.ok(1);});
 
-        assertFalse(promise.syncWait(Timeout.of(10).millis()).ready());
+        promise.syncWait(timeout(10).millis());
+
+        assertEquals(-1, holder.get());
     }
 
     @Test
     void promiseIsResolvedWhenTimeoutExpires() {
-        final var promise = Promise.<Integer>give().with(Timeout.of(100).millis(), 123);
+        final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set).async(timeout(100).millis(), task -> task.ok(123));
 
-        assertFalse(promise.ready());
+        assertEquals(-1, holder.get());
 
         promise.syncWait();
 
-        assertTrue(promise.ready());
-        assertEquals(Option.of(123), promise.value());
-    }
-
-    @Test
-    void promiseIsResolvedWhenTimeoutExpiresAndResultIsProvidedBySupplier() {
-        final var promise = Promise.<Integer>give().with(Timeout.of(100).millis(), () -> 123);
-
-        assertFalse(promise.ready());
-
-        assertTrue(promise.syncWait().ready());
-        assertEquals(Option.of(123), promise.value());
+        assertEquals(123, holder.get());
     }
 
     @Test
     void taskCanBeExecuted() {
-        final var promise = Promise.<Integer>give().with(Timeout.of(100).millis(), () -> 123);
+        final var holder = new AtomicInteger(-1);
+        final var promise = Promise.<Integer>promise()
+                .onSuccess(holder::set)
+                .when(timeout(100).millis(), ok(123));
 
-        assertFalse(promise.ready());
+        assertEquals(-1, holder.get());
 
-        promise.perform((p) -> p.resolve(345))
-               .then(val -> assertEquals(345, val));
+        promise.async(p -> p.ok(345)).syncWait();
 
-        assertTrue(promise.syncWait().ready());
-        assertEquals(Option.of(345), promise.value());
+        assertEquals(345, holder.get());
     }
 
     @Test
     void anyResolvedPromiseResolvesResultForFirstPromise() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var anyPromise = Promise.any(promise1, promise2);
+        final var holder = new AtomicInteger(-1);
+        final var promise1 = Promise.<Integer>promise();
+        final var promise2 = Promise.<Integer>promise();
 
-        assertFalse(anyPromise.ready());
+        Promise.any(promise1, promise2).onSuccess(holder::set);
 
-        promise1.resolve(1);
+        assertEquals(-1, holder.get());
 
-        assertTrue(anyPromise.ready());
-        assertEquals(1, anyPromise.value().get());
+        promise1.ok(1);
+
+        assertEquals(1, holder.get());
     }
 
     @Test
     void anyResolvedPromiseResolvesResultForSecondPromise() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final Promise<Integer> anyPromise = Promise.any(promise1, promise2);
+        final var holder = new AtomicInteger(-1);
+        final var promise1 = Promise.<Integer>promise();
+        final var promise2 = Promise.<Integer>promise();
+        Promise.any(promise1, promise2).onSuccess(holder::set);
 
-        assertFalse(anyPromise.ready());
+        assertEquals(-1, holder.get());
 
-        promise2.resolve(1);
+        promise2.ok(1);
 
-        assertTrue(anyPromise.ready());
-        assertEquals(1, anyPromise.value().get());
+        assertEquals(1, holder.get());
     }
 
     @Test
-    void allResolvesWhenAllPromisesAreResolvedForOnePromise() {
-        final var promise1 = Promise.<Integer>give();
-        final var allPromise = Promise.all(promise1);
+    void onlySuccessResolvesAnySuccess() {
+        final var holder = new AtomicInteger(-1);
+        final var promise1 = Promise.<Integer>promise();
+        final var promise2 = Promise.<Integer>promise();
+        Promise.anySuccess(promise1, promise2).onSuccess(holder::set);
 
-        assertFalse(allPromise.ready());
+        assertEquals(-1, holder.get());
 
-        promise1.resolve(1);
+        promise1.fail(TIMEOUT);
 
-        assertTrue(allPromise.ready());
-        assertEquals(Tuples.of(1), allPromise.value().get());
+        assertEquals(-1, holder.get());
+
+        promise2.ok(1);
+
+        assertEquals(1, holder.get());
     }
 
     @Test
-    void allResolvesWhenAllPromisesAreResolvedFor2Promises() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var allPromise = Promise.all(promise1, promise2);
+    void chainMapResolvesToFailureIfBasePromiseIsResolvedToFailure() {
+        final var holder = new AtomicInteger(-1);
+        final var stringHolder = new AtomicReference<String>();
+        final var promise = Promise.<Integer>promise().onSuccess(s -> holder.set(1))
+                                                      .onFailure(f -> holder.set(2));
 
-        assertFalse(allPromise.ready());
+        final var chain = promise.chainMap(val -> Promise.readyOk(val.toString()))
+                                 .onSuccess(s -> stringHolder.set("success"))
+                                 .onFailure(f -> stringHolder.set("failure"));
 
-        promise1.resolve(1);
+        promise.fail(TIMEOUT);
 
-        assertFalse(allPromise.ready());
-
-        promise2.resolve(2);
-
-        assertTrue(allPromise.ready());
-        assertEquals(Tuples.of(1, 2), allPromise.value().get());
+        assertEquals(2, holder.get());
+        assertEquals("failure", stringHolder.get());
     }
 
     @Test
-    void allResolvesWhenAllPromisesAreResolvedFor3Promises() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var promise3 = Promise.<Integer>give();
-        final var allPromise = Promise.all(promise1, promise2, promise3);
-
-        assertFalse(allPromise.ready());
-
-        promise1.resolve(1);
-
-        assertFalse(allPromise.ready());
-
-        promise2.resolve(2);
-
-        assertFalse(allPromise.ready());
-
-        promise3.resolve(3);
-
-        assertTrue(allPromise.ready());
-
-        assertEquals(Tuples.of(1, 2, 3), allPromise.value().get());
-    }
-
-    @Test
-    void allResolvesWhenAllPromisesAreResolvedFor4Promises() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var promise3 = Promise.<Integer>give();
-        final var promise4 = Promise.<Integer>give();
-        final var allPromise = Promise.all(promise1, promise2, promise3, promise4);
-
-        assertFalse(allPromise.ready());
-
-        promise1.resolve(1);
-
-        assertFalse(allPromise.ready());
-
-        promise2.resolve(2);
-
-        assertFalse(allPromise.ready());
-
-        promise3.resolve(3);
-
-        assertFalse(allPromise.ready());
-
-        promise4.resolve(4);
-
-        assertTrue(allPromise.ready());
-
-        assertEquals(Tuples.of(1, 2, 3, 4), allPromise.value().get());
-    }
-
-    @Test
-    void allResolvesWhenAllPromisesAreResolvedFor5Promises() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var promise3 = Promise.<Integer>give();
-        final var promise4 = Promise.<Integer>give();
-        final var promise5 = Promise.<Integer>give();
-        final var allPromise = Promise.all(promise1, promise2, promise3, promise4, promise5);
-
-        assertFalse(allPromise.ready());
-
-        promise1.resolve(1);
-
-        assertFalse(allPromise.ready());
-
-        promise2.resolve(2);
-
-        assertFalse(allPromise.ready());
-
-        promise3.resolve(3);
-
-        assertFalse(allPromise.ready());
-
-        promise4.resolve(4);
-
-        assertFalse(allPromise.ready());
-
-        promise5.resolve(5);
-
-        assertTrue(allPromise.ready());
-
-        assertEquals(Tuples.of(1, 2, 3, 4, 5), allPromise.value().get());
-    }
-
-    @Test
-    void allResolvesWhenAllPromisesAreResolvedFor6Promises() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var promise3 = Promise.<Integer>give();
-        final var promise4 = Promise.<Integer>give();
-        final var promise5 = Promise.<Integer>give();
-        final var promise6 = Promise.<Integer>give();
-        final var allPromise = Promise.all(promise1, promise2, promise3, promise4, promise5, promise6);
-
-        assertFalse(allPromise.ready());
-
-        promise1.resolve(1);
-
-        assertFalse(allPromise.ready());
-
-        promise2.resolve(2);
-
-        assertFalse(allPromise.ready());
-
-        promise3.resolve(3);
-
-        assertFalse(allPromise.ready());
-
-        promise4.resolve(4);
-
-        assertFalse(allPromise.ready());
-
-        promise5.resolve(5);
-
-        assertFalse(allPromise.ready());
-
-        promise6.resolve(6);
-
-        assertTrue(allPromise.ready());
-
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6), allPromise.value().get());
-    }
-
-    @Test
-    void allResolvesWhenAllPromisesAreResolvedFor7Promises() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var promise3 = Promise.<Integer>give();
-        final var promise4 = Promise.<Integer>give();
-        final var promise5 = Promise.<Integer>give();
-        final var promise6 = Promise.<Integer>give();
-        final var promise7 = Promise.<Integer>give();
-        final var allPromise = Promise.all(promise1, promise2, promise3, promise4, promise5, promise6, promise7);
-
-        assertFalse(allPromise.ready());
-
-        promise1.resolve(1);
-
-        assertFalse(allPromise.ready());
-
-        promise2.resolve(2);
-
-        assertFalse(allPromise.ready());
-
-        promise3.resolve(3);
-
-        assertFalse(allPromise.ready());
-
-        promise4.resolve(4);
-
-        assertFalse(allPromise.ready());
-
-        promise5.resolve(5);
-
-        assertFalse(allPromise.ready());
-
-        promise6.resolve(6);
-
-        assertFalse(allPromise.ready());
-
-        promise7.resolve(7);
-
-        assertTrue(allPromise.ready());
-
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7), allPromise.value().get());
-    }
-
-    @Test
-    void allResolvesWhenAllPromisesAreResolvedFor8Promises() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var promise3 = Promise.<Integer>give();
-        final var promise4 = Promise.<Integer>give();
-        final var promise5 = Promise.<Integer>give();
-        final var promise6 = Promise.<Integer>give();
-        final var promise7 = Promise.<Integer>give();
-        final var promise8 = Promise.<Integer>give();
-        final var allPromise = Promise.all(promise1, promise2, promise3, promise4, promise5, promise6, promise7, promise8);
-
-        assertFalse(allPromise.ready());
-
-        promise1.resolve(1);
-
-        assertFalse(allPromise.ready());
-
-        promise2.resolve(2);
-
-        assertFalse(allPromise.ready());
-
-        promise3.resolve(3);
-
-        assertFalse(allPromise.ready());
-
-        promise4.resolve(4);
-
-        assertFalse(allPromise.ready());
-
-        promise5.resolve(5);
-
-        assertFalse(allPromise.ready());
-
-        promise6.resolve(6);
-
-        assertFalse(allPromise.ready());
-
-        promise7.resolve(7);
-
-        assertFalse(allPromise.ready());
-
-        promise8.resolve(8);
-
-        assertTrue(allPromise.ready());
-
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8), allPromise.value().get());
-    }
-
-    @Test
-    void allResolvesWhenAllPromisesAreResolvedFor9Promises() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var promise3 = Promise.<Integer>give();
-        final var promise4 = Promise.<Integer>give();
-        final var promise5 = Promise.<Integer>give();
-        final var promise6 = Promise.<Integer>give();
-        final var promise7 = Promise.<Integer>give();
-        final var promise8 = Promise.<Integer>give();
-        final var promise9 = Promise.<Integer>give();
-        final var  allPromise = Promise.all(promise1, promise2, promise3, promise4, promise5, promise6, promise7, promise8, promise9);
-
-        assertFalse(allPromise.ready());
-
-        promise1.resolve(1);
-
-        assertFalse(allPromise.ready());
-
-        promise2.resolve(2);
-
-        assertFalse(allPromise.ready());
-
-        promise3.resolve(3);
-
-        assertFalse(allPromise.ready());
-
-        promise4.resolve(4);
-
-        assertFalse(allPromise.ready());
-
-        promise5.resolve(5);
-
-        assertFalse(allPromise.ready());
-
-        promise6.resolve(6);
-
-        assertFalse(allPromise.ready());
-
-        promise7.resolve(7);
-
-        assertFalse(allPromise.ready());
-
-        promise8.resolve(8);
-
-        assertFalse(allPromise.ready());
-
-        promise9.resolve(9);
-
-        assertTrue(allPromise.ready());
-
-        assertEquals(Tuples.of(1, 2, 3, 4, 5, 6, 7, 8, 9), allPromise.value().get());
-    }
-
-    @Test
-    void subsequentResolutionsAreIgnoreByAll() {
-        final var promise1 = Promise.<Integer>give();
-        final var promise2 = Promise.<Integer>give();
-        final var allPromise = Promise.all(promise1, promise2);
-
-        assertFalse(allPromise.ready());
-
-        promise1.resolve(1);
-        promise2.resolve(2);
-
-        assertTrue(allPromise.ready());
-
-        promise1.resolve(3);
-        promise2.resolve(4);
-
-        assertEquals(Tuples.of(1, 2), allPromise.value().get());
+    void chainMapResolvesToSuccessIfBasePromiseIsResolvedToSuccess() {
+        final var holder = new AtomicInteger(-1);
+        final var stringHolder = new AtomicReference<String>();
+        final var promise = Promise.<Integer>promise().onSuccess(s -> holder.set(1))
+                                                      .onFailure(f -> holder.set(2));
+
+        final var chain = promise.chainMap(val -> Promise.readyOk(val.toString()))
+                                 .onSuccess(s -> stringHolder.set("success"))
+                                 .onFailure(f -> stringHolder.set("failure"));
+
+        promise.ok(123);
+
+        assertEquals(1, holder.get());
+        assertEquals("success", stringHolder.get());
     }
 
     private static void safeSleep(final long delay) {

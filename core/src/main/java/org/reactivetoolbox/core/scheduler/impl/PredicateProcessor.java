@@ -1,7 +1,7 @@
 package org.reactivetoolbox.core.scheduler.impl;
 
 /*
- * Copyright (c) 2017-2019 Sergiy Yevtushenko
+ * Copyright (c) 2019 Sergiy Yevtushenko
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

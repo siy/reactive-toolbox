@@ -1,7 +1,7 @@
 package org.reactivetoolbox.core.scheduler.impl;
 
 /*
- * Copyright (c) 2017-2019 Sergiy Yevtushenko
+ * Copyright (c) 2019 Sergiy Yevtushenko
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@ package org.reactivetoolbox.core.scheduler.impl;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.log.CoreLogger;
+import org.reactivetoolbox.core.meta.AppMetaRepository;
 import org.reactivetoolbox.core.scheduler.RunnablePredicate;
 import org.reactivetoolbox.core.scheduler.TaskScheduler;
-import org.reactivetoolbox.core.scheduler.Timeout;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,9 +33,8 @@ public class DoubleQueueTaskScheduler implements TaskScheduler {
     private final ExecutorService executor;
     private final PredicateProcessor[] processors;
     private int counter = 0;
-    private final Timeout defaultTimeout;
 
-    private DoubleQueueTaskScheduler(final int size, final Timeout defaultTimeout) {
+    private DoubleQueueTaskScheduler(final int size) {
         executor = Executors.newFixedThreadPool(size, DaemonThreadFactory.of("Task Scheduler Thread #%d"));
         processors = new PredicateProcessor[size];
 
@@ -46,17 +46,15 @@ public class DoubleQueueTaskScheduler implements TaskScheduler {
                     try {
                         Thread.sleep(0);
                     } catch (final InterruptedException e){
-                        //Ignore it
+                        logger().debug("Exception in scheduler processing loop", e);
                     }
                 }
             });
         });
-
-        this.defaultTimeout = defaultTimeout;
     }
 
-    public static DoubleQueueTaskScheduler with(final int size, final Timeout defaultTimeout) {
-        return new DoubleQueueTaskScheduler(size, defaultTimeout);
+    public static DoubleQueueTaskScheduler with(final int size) {
+        return new DoubleQueueTaskScheduler(size);
     }
 
     @Override
@@ -69,12 +67,21 @@ public class DoubleQueueTaskScheduler implements TaskScheduler {
     }
 
     @Override
-    public Timeout defaultTimeout() {
-        return defaultTimeout;
-    }
-
-    @Override
     public void shutdown() {
         executor.shutdown();
+    }
+
+
+    @Override
+    public CoreLogger logger() {
+        return SingletonHolder.logger();
+    }
+
+    private static final class SingletonHolder {
+        private static final CoreLogger LOGGER = AppMetaRepository.instance().get(CoreLogger.class);
+
+        static CoreLogger logger() {
+            return LOGGER;
+        }
     }
 }

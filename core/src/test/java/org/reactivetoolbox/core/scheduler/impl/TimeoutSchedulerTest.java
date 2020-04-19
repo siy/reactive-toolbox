@@ -14,13 +14,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.reactivetoolbox.core.scheduler.SchedulerError.TIMEOUT;
+import static org.reactivetoolbox.core.Errors.TIMEOUT;
 
 class TimeoutSchedulerTest {
     private final Random random = new Random();
 
-    private static final int N_ITEMS_PER_TASK = 1_000_000;
-    private static final int N_TASKS = 6;
+    private static final int N_ITEMS_PER_TASK = 100_000;
+    private static final int N_TASKS = 4;
     private static final int N_PROCESSING_THREADS = N_TASKS/2;
     private static final int SINGLE_TASK_DELAY_MAX = 95;
     private static final int SINGLE_TASK_DELAY_MIN = 5;
@@ -38,15 +38,15 @@ class TimeoutSchedulerTest {
                 .forEach((n) -> executor.execute(() -> {
                     counters[n] = new AtomicLong();
                     range(0, N_ITEMS_PER_TASK).forEach((k) -> {
-                        Promise.give()
-                               .with(Timeout.of(nextTaskDelay()).millis(), TIMEOUT.asFailure())
-                               .then(v -> counters[n].incrementAndGet());
+                        Promise.promise()
+                               .when(Timeout.timeout(nextTaskDelay()).millis(), TIMEOUT.asResult())
+                               .onResult(v -> counters[n].incrementAndGet());
                     });
                 }));
 
         executor.shutdown();
-        assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
-        // Wait for 2 x max task timeout
+        assertTrue(executor.awaitTermination(15, TimeUnit.SECONDS));
+
         Thread.sleep(200);
 
         assertEquals(N_TASKS * N_ITEMS_PER_TASK, List.of(counters).stream().mapToLong(AtomicLong::get).sum());

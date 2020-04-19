@@ -1,6 +1,23 @@
 package org.reactivetoolbox.core.async;
 
+/*
+ * Copyright (c) 2019 Sergiy Yevtushenko
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Helper class used to track number of events and trigger action once threshold is reached. The action is
@@ -15,6 +32,11 @@ public class ActionableThreshold {
         this.action = action;
     }
 
+    public ActionableThreshold apply(final Consumer<ActionableThreshold> setup) {
+        setup.accept(this);
+        return this;
+    }
+
     /**
      * Create an instance configured for threshold and action.
      *
@@ -25,8 +47,24 @@ public class ActionableThreshold {
      *
      * @return Created instance
      */
-    public static ActionableThreshold of(final int count, final Runnable action) {
+    public static ActionableThreshold threshold(final int count, final Runnable action) {
         return new ActionableThreshold(count, action);
+    }
+
+    /**
+     * Create an instance configured for threshold and action.
+     *
+     * @param count
+     *        Number of events to register
+     * @param setup
+     *        Consumer to invoke once instance of {@link ActionableThreshold} is created
+     * @param action
+     *        Action to perform
+     *
+     * @return Created instance
+     */
+    public static ActionableThreshold threshold(final int count, final Consumer<ActionableThreshold> setup, final Runnable action) {
+        return threshold(count, action).apply(setup);
     }
 
     /**
