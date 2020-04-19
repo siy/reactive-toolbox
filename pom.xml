@@ -9,6 +9,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <modules>
         <module>core</module>
+        <module>http</module>
     </modules>
 
     <packaging>pom</packaging>
@@ -39,6 +40,7 @@
         <java.enable-preview>--enable-preview</java.enable-preview>
 
         <!-- Dependencies versions -->
+        <netty.version>4.1.42.Final</netty.version>
 
         <!-- Testing -->
         <junit.version>5.6.2</junit.version>
@@ -53,23 +55,17 @@
                 <version>${project.version}</version>
             </dependency>
 
-<!--            <dependency>-->
-<!--                <groupId>org.reactive-toolbox</groupId>-->
-<!--                <artifactId>codec</artifactId>-->
-<!--                <version>${project.version}</version>-->
-<!--            </dependency>-->
+            <dependency>
+                <groupId>org.reactive-toolbox</groupId>
+                <artifactId>http</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-<!--            <dependency>-->
-<!--                <groupId>org.reactive-toolbox</groupId>-->
-<!--                <artifactId>web-server</artifactId>-->
-<!--                <version>${project.version}</version>-->
-<!--            </dependency>-->
-
-<!--            <dependency>-->
-<!--                <groupId>org.reactive-toolbox</groupId>-->
-<!--                <artifactId>event-bus</artifactId>-->
-<!--                <version>${project.version}</version>-->
-<!--            </dependency>-->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -139,6 +135,13 @@
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.scheduler.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang.support=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.http/org.reactivetoolbox.codec=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.http/org.reactivetoolbox.codec.json=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router.impl=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.netty=ALL-UNNAMED
                         ${jaCoCoArgLine}
                         ${java.enable-preview}
                         -Xmx1024m
