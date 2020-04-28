@@ -1,7 +1,7 @@
 package org.reactivetoolbox.core.lang.collection;
 
 /*
- * Copyright (c) 2019 Sergiy Yevtushenko
+ * Copyright (c) 2019, 2020 Sergiy Yevtushenko
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ public interface List<E> extends Collection<E> {
     Option<E> first();
 
     /**
-     * Return first {@code N} elements from the list. If there are less elements than requested, then avalable
+     * Return first {@code N} elements from the list. If there are less elements than requested, then available
      * elements returned.
      * @param n
      *        Number of elements to return.
@@ -184,15 +184,15 @@ public interface List<E> extends Collection<E> {
     }
 
     //TODO: need more efficient implementation
-    static <T> List<T> list(final T... elements) {
-        return new List<T>() {
+    static <T> List<T> list(final T[] elements) {
+        return new List<>() {
             @Override
             public <R> List<R> mapN(final FN2<R, Integer, T> mapper) {
                 return ListBuilder.<R>builder(size()).then(builder -> {
-                        for (int i = 0; i < elements.length; i++) {
-                            builder.append(mapper.apply(i, elements[i]));
-                        }
-                    }).build();
+                    for (int i = 0; i < elements.length; i++) {
+                        builder.append(mapper.apply(i, elements[i]));
+                    }
+                }).build();
             }
 
             @Override
@@ -220,8 +220,8 @@ public interface List<E> extends Collection<E> {
 
             @Override
             public List<T> append(final List<T> other) {
-                return ListBuilder.<T>builder(other.size(), elements)
-                               .append(other).build();
+                return ListBuilder.builder(other.size(), elements)
+                        .append(other).build();
             }
 
             @Override
@@ -235,35 +235,35 @@ public interface List<E> extends Collection<E> {
             }
 
             @Override
-            public boolean elementEquals(final T... other) {
+            public boolean elementEquals(final T[] other) {
                 return Arrays.equals(elements, other);
             }
 
             @Override
             public List<T> sort(final Comparator<T> comparator) {
-                final var nelements = Arrays.copyOf(elements, elements.length);
-                Arrays.sort(nelements, comparator);
-                return list(nelements);
+                final var count = Arrays.copyOf(elements, elements.length);
+                Arrays.sort(count, comparator);
+                return list(count);
             }
 
             @Override
             public List<T> sort() {
-                final var nelements = Arrays.copyOf(elements, elements.length);
-                Arrays.sort(nelements, 0, nelements.length);
-                return list(nelements);
+                final var count = Arrays.copyOf(elements, elements.length);
+                Arrays.sort(count, 0, count.length);
+                return list(count);
             }
 
             @Override
             public List<T> shuffle(final Random random) {
-                final var nelements = Arrays.copyOf(elements, elements.length);
+                final var count = Arrays.copyOf(elements, elements.length);
 
-                for(int i = 0; i < nelements.length; i++) {
-                    final var pos = random.nextInt(nelements.length);
-                    final var element = nelements[pos];
-                    nelements[pos] = nelements[i];
-                    nelements[i] = element;
+                for (int i = 0; i < count.length; i++) {
+                    final var pos = random.nextInt(count.length);
+                    final var element = count[pos];
+                    count[pos] = count[i];
+                    count[i] = element;
                 }
-                return list(nelements);
+                return list(count);
             }
 
             @Override
@@ -271,14 +271,14 @@ public interface List<E> extends Collection<E> {
                 return Arrays.hashCode(elements);
             }
 
-            @SuppressWarnings("unchecked")
+            @SuppressWarnings({"unchecked", "rawtypes"})
             @Override
             public boolean equals(final Object obj) {
                 if (obj == this) {
                     return true;
                 }
 
-                if(obj instanceof List list) {
+                if (obj instanceof List list) {
                     return list.size() == size() && list.elementEquals(elements);
                 }
 
@@ -301,12 +301,12 @@ public interface List<E> extends Collection<E> {
             values = new ArrayList<>(capacity);
         }
 
-        private ListBuilder(final int extraSize, final T...elements) {
-            values = new ArrayList<T>(elements.length + extraSize);
+        private ListBuilder(final int extraSize, final T[] elements) {
+            values = new ArrayList<>(elements.length + extraSize);
             values.addAll(Arrays.asList(elements));
         }
 
-        static <E> ListBuilder<E> builder(final int extraSize, final E...elements) {
+        static <E> ListBuilder<E> builder(final int extraSize, final E[] elements) {
             return new ListBuilder<>(extraSize, elements);
         }
 
@@ -321,7 +321,7 @@ public interface List<E> extends Collection<E> {
         }
 
         @Override
-        public ListBuilder<T> append(final T... elements) {
+        public ListBuilder<T> append(final T[] elements) {
             values.addAll(Arrays.asList(elements));
             return this;
         }
@@ -415,11 +415,7 @@ public interface List<E> extends Collection<E> {
                 return true;
             }
 
-            if (obj instanceof List list && list.size() == 0) {
-                return true;
-            }
-
-            return false;
+            return obj instanceof List list && list.size() == 0;
         }
 
         @Override
@@ -432,7 +428,7 @@ public interface List<E> extends Collection<E> {
         return new Collector<>() {
             @Override
             public Supplier<ListBuilder<T>> supplier() {
-                return () -> new ListBuilder<T>(0);
+                return () -> new ListBuilder<>(0);
             }
 
             @Override
