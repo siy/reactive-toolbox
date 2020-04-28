@@ -41,8 +41,8 @@ public abstract class TypeToken<T> {
     public Result<Type> type() {
         final Type type = getClass().getGenericSuperclass();
 
-        if (type instanceof ParameterizedType) {
-            return Result.ok(((ParameterizedType) type).getActualTypeArguments()[0]);
+        if (type instanceof ParameterizedType pt) {
+            return Result.ok(pt.getActualTypeArguments()[0]);
         }
 
         return Errors.TYPE_ERROR(type).asResult();

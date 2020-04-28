@@ -98,15 +98,6 @@ public abstract class Option<T> implements Either<Void, T> {
     }
 
     /**
-     * Shorthand for {@code filer(v -> v != null)}.
-     *
-     * @return current instance if it contains not null value and empty instance otherwise
-     */
-    public Option<T> notNull() {
-        return flatMap(v -> v != null ? this : empty());
-    }
-
-    /**
      * Convert instance into other instance of different type using provided mapping function. Empty instance is mapped
      * into empty instance of different type. Non-empty instance is converted to empty or non-empty instance depending
      * on results of execution of mapping function. Mapping function receives value contained in the current instance

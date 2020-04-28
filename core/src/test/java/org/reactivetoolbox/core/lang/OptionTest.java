@@ -106,8 +106,6 @@ class OptionTest {
               .whenEmpty(Assertions::fail)
               .filter(val -> val > 1)
               .whenEmpty(Assertions::fail)
-              .notNull()
-              .whenEmpty(Assertions::fail)
               .filter(val -> val < 100)
               .whenPresent(val -> fail());
     }

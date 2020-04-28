@@ -388,8 +388,8 @@ public interface Promise<T> {
 
             final Throwable throwable = list.iterator().next();
 
-            if (throwable instanceof RuntimeException) {
-                throw (RuntimeException) throwable;
+            if (throwable instanceof RuntimeException rt) {
+                throw rt;
             }
 
             throw new RuntimeException(throwable);

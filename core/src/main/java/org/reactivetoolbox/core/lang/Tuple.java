@@ -329,7 +329,9 @@ public interface Tuple<S extends Tuple> {
                     return true;
                 }
 
-                return (obj instanceof Tuple1) ? ((Tuple1<?>) obj).map(v1 -> Objects.equals(v1, param1)) : false;
+                return (obj instanceof Tuple1<?> tuple1)
+                       ? tuple1.map(v1 -> Objects.equals(v1, param1))
+                       : false;
             }
 
             @Override
@@ -359,9 +361,10 @@ public interface Tuple<S extends Tuple> {
                     return true;
                 }
 
-                return (obj instanceof Tuple2) ? ((Tuple2<?, ?>) obj).map((v1, v2) ->
-                                                                                  Objects.equals(v1, param1) &&
-                                                                                  Objects.equals(v2, param2)) : false;
+                return (obj instanceof Tuple2<?, ?> tuple2)
+                       ? tuple2.map((v1, v2) -> Objects.equals(v1, param1)
+                                                && Objects.equals(v2, param2))
+                       : false;
             }
 
             @Override
@@ -392,10 +395,11 @@ public interface Tuple<S extends Tuple> {
                     return true;
                 }
 
-                return (obj instanceof Tuple3) ? ((Tuple3<?, ?, ?>) obj).map((v1, v2, v3) ->
-                                                                                     Objects.equals(v1, param1) &&
-                                                                                     Objects.equals(v2, param2) &&
-                                                                                     Objects.equals(v3, param3)) : false;
+                return (obj instanceof Tuple3<?,?,?> tuple3)
+                       ? tuple3.map((v1, v2, v3) -> Objects.equals(v1, param1)
+                                                    && Objects.equals(v2, param2)
+                                                    && Objects.equals(v3, param3))
+                       : false;
             }
 
             @Override
@@ -428,11 +432,12 @@ public interface Tuple<S extends Tuple> {
                     return true;
                 }
 
-                return (obj instanceof Tuple4) ? ((Tuple4<?, ?, ?, ?>) obj).map((v1, v2, v3, v4) ->
-                                                                                        Objects.equals(v1, param1) &&
-                                                                                        Objects.equals(v2, param2) &&
-                                                                                        Objects.equals(v3, param3) &&
-                                                                                        Objects.equals(v4, param4)) : false;
+                return (obj instanceof Tuple4<?,?,?, ?> tuple4)
+                       ? tuple4.map((v1, v2, v3, v4) -> Objects.equals(v1, param1)
+                                                        && Objects.equals(v2, param2)
+                                                        && Objects.equals(v3, param3)
+                                                        && Objects.equals(v4, param4))
+                       : false;
             }
 
             @Override
@@ -466,12 +471,13 @@ public interface Tuple<S extends Tuple> {
                     return true;
                 }
 
-                return (obj instanceof Tuple5) ? ((Tuple5<?, ?, ?, ?, ?>) obj).map((v1, v2, v3, v4, v5) ->
-                                                                                           Objects.equals(v1, param1) &&
-                                                                                           Objects.equals(v2, param2) &&
-                                                                                           Objects.equals(v3, param3) &&
-                                                                                           Objects.equals(v4, param4) &&
-                                                                                           Objects.equals(v5, param5)) : false;
+                return (obj instanceof Tuple5<?, ?, ?, ?, ?> tuple5)
+                       ? tuple5.map((v1, v2, v3, v4, v5) -> Objects.equals(v1, param1)
+                                                            && Objects.equals(v2, param2)
+                                                            && Objects.equals(v3, param3)
+                                                            && Objects.equals(v4, param4)
+                                                            && Objects.equals(v5, param5))
+                       : false;
             }
 
             @Override
@@ -506,13 +512,14 @@ public interface Tuple<S extends Tuple> {
                     return true;
                 }
 
-                return (obj instanceof Tuple6) ? ((Tuple6<?, ?, ?, ?, ?, ?>) obj).map((v1, v2, v3, v4, v5, v6) ->
-                                                                                              Objects.equals(v1, param1) &&
-                                                                                              Objects.equals(v2, param2) &&
-                                                                                              Objects.equals(v3, param3) &&
-                                                                                              Objects.equals(v4, param4) &&
-                                                                                              Objects.equals(v5, param5) &&
-                                                                                              Objects.equals(v6, param6)) : false;
+                return (obj instanceof Tuple6<?, ?, ?, ?, ?, ?> tuple6)
+                       ? tuple6.map((v1, v2, v3, v4, v5, v6) -> Objects.equals(v1, param1)
+                                                                && Objects.equals(v2, param2)
+                                                                && Objects.equals(v3, param3)
+                                                                && Objects.equals(v4, param4)
+                                                                && Objects.equals(v5, param5)
+                                                                && Objects.equals(v6, param6))
+                       : false;
             }
 
             @Override
@@ -549,14 +556,15 @@ public interface Tuple<S extends Tuple> {
                     return true;
                 }
 
-                return (obj instanceof Tuple7) ? ((Tuple7<?, ?, ?, ?, ?, ?, ?>) obj).map((v1, v2, v3, v4, v5, v6, v7) ->
-                                                                                                 Objects.equals(v1, param1) &&
-                                                                                                 Objects.equals(v2, param2) &&
-                                                                                                 Objects.equals(v3, param3) &&
-                                                                                                 Objects.equals(v4, param4) &&
-                                                                                                 Objects.equals(v5, param5) &&
-                                                                                                 Objects.equals(v6, param6) &&
-                                                                                                 Objects.equals(v7, param7)) : false;
+                return (obj instanceof Tuple7<?, ?, ?, ?, ?, ?, ?> tuple7)
+                       ? tuple7.map((v1, v2, v3, v4, v5, v6, v7) -> Objects.equals(v1, param1)
+                                                                    && Objects.equals(v2, param2)
+                                                                    && Objects.equals(v3, param3)
+                                                                    && Objects.equals(v4, param4)
+                                                                    && Objects.equals(v5, param5)
+                                                                    && Objects.equals(v6, param6)
+                                                                    && Objects.equals(v7, param7))
+                       : false;
             }
 
             @Override
@@ -594,15 +602,16 @@ public interface Tuple<S extends Tuple> {
                     return true;
                 }
 
-                return (obj instanceof Tuple8) ? ((Tuple8<?, ?, ?, ?, ?, ?, ?, ?>) obj).map((v1, v2, v3, v4, v5, v6, v7, v8) ->
-                                                                                                    Objects.equals(v1, param1) &&
-                                                                                                    Objects.equals(v2, param2) &&
-                                                                                                    Objects.equals(v3, param3) &&
-                                                                                                    Objects.equals(v4, param4) &&
-                                                                                                    Objects.equals(v5, param5) &&
-                                                                                                    Objects.equals(v6, param6) &&
-                                                                                                    Objects.equals(v7, param7) &&
-                                                                                                    Objects.equals(v8, param8)) : false;
+                return (obj instanceof Tuple8<?, ?, ?, ?, ?, ?, ?, ?> tuple8)
+                       ? tuple8.map((v1, v2, v3, v4, v5, v6, v7, v8) -> Objects.equals(v1, param1)
+                                                                        && Objects.equals(v2, param2)
+                                                                        && Objects.equals(v3, param3)
+                                                                        && Objects.equals(v4, param4)
+                                                                        && Objects.equals(v5, param5)
+                                                                        && Objects.equals(v6, param6)
+                                                                        && Objects.equals(v7, param7)
+                                                                        && Objects.equals(v8, param8))
+                       : false;
             }
 
             @Override
@@ -641,16 +650,17 @@ public interface Tuple<S extends Tuple> {
                     return true;
                 }
 
-                return (obj instanceof Tuple9) ? ((Tuple9<?, ?, ?, ?, ?, ?, ?, ?, ?>) obj).map((v1, v2, v3, v4, v5, v6, v7, v8, v9) ->
-                                                                                                       Objects.equals(v1, param1) &&
-                                                                                                       Objects.equals(v2, param2) &&
-                                                                                                       Objects.equals(v3, param3) &&
-                                                                                                       Objects.equals(v4, param4) &&
-                                                                                                       Objects.equals(v5, param5) &&
-                                                                                                       Objects.equals(v6, param6) &&
-                                                                                                       Objects.equals(v7, param7) &&
-                                                                                                       Objects.equals(v8, param8) &&
-                                                                                                       Objects.equals(v9, param9)) : false;
+                return (obj instanceof Tuple9<?, ?, ?, ?, ?, ?, ?, ?, ?> tuple9)
+                       ? tuple9.map((v1, v2, v3, v4, v5, v6, v7, v8, v9) -> Objects.equals(v1, param1)
+                                                                            && Objects.equals(v2, param2)
+                                                                            && Objects.equals(v3, param3)
+                                                                            && Objects.equals(v4, param4)
+                                                                            && Objects.equals(v5, param5)
+                                                                            && Objects.equals(v6, param6)
+                                                                            && Objects.equals(v7, param7)
+                                                                            && Objects.equals(v8, param8)
+                                                                            && Objects.equals(v9, param9))
+                       : false;
             }
 
             @Override

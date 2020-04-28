@@ -181,7 +181,9 @@ public interface Result<T> extends Either<Failure, T> {
                     return true;
                 }
 
-                return (obj instanceof Result) ? ((Result<?>) obj).fold($ -> false, val -> Objects.equals(val, value)) : false;
+                return (obj instanceof Result<?> result)
+                       ? result.fold($ -> false, val -> Objects.equals(val, value))
+                       : false;
             }
 
             @Override
@@ -219,7 +221,9 @@ public interface Result<T> extends Either<Failure, T> {
                     return true;
                 }
 
-                return (obj instanceof Result) ? ((Result<?>) obj).fold(val -> Objects.equals(val, value), $ -> false) : false;
+                return (obj instanceof Result<?> result)
+                       ? result.fold(val -> Objects.equals(val, value), $ -> false)
+                       : false;
             }
 
             @Override

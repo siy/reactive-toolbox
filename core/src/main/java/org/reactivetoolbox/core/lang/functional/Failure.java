@@ -69,7 +69,8 @@ public interface Failure {
                     return true;
                 }
 
-                return (obj instanceof Failure) && (Objects.equals(((Failure) obj).type(), type) && Objects.equals(((Failure) obj).message(), message));
+                return (obj instanceof Failure failure)
+                       && (Objects.equals(failure.type(), type) && Objects.equals(failure.message(), message));
             }
 
             @Override

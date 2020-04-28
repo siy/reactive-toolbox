@@ -10,6 +10,7 @@
     <modules>
         <module>core</module>
         <module>http</module>
+        <module>async-io</module>
     </modules>
 
     <packaging>pom</packaging>

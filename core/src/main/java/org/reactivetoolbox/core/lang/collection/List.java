@@ -59,7 +59,7 @@ public interface List<E> extends Collection<E> {
      *
      * @return New list with at most requested number of elements
      */
-    List<E> first(final int n);
+    List<E> first(int n);
 
     /**
      * Return last element from list.
@@ -76,7 +76,7 @@ public interface List<E> extends Collection<E> {
      *
      * @return List with elements from current list followed by elements from {@code other} list
      */
-    List<E> append(final List<E> other);
+    List<E> append(List<E> other);
 
     /**
      * Return list which contains elements from list provided as parameter followed by elements of current list.
@@ -105,7 +105,7 @@ public interface List<E> extends Collection<E> {
      *
      * @return New list with transformed elements
      */
-    <R> List<R> mapN(final FN2<R, Integer, E> mapper);
+    <R> List<R> mapN(FN2<R, Integer, E> mapper);
 
     @Override
     default List<E> apply(final Consumer<E> consumer) {
@@ -121,7 +121,7 @@ public interface List<E> extends Collection<E> {
      *
      * @return Current list
      */
-    List<E> applyN(final BiConsumer<Integer, E> consumer);
+    List<E> applyN(BiConsumer<Integer, E> consumer);
 
     /**
      * Create new list which will hold the same elements but sorted according to
@@ -132,7 +132,7 @@ public interface List<E> extends Collection<E> {
      *
      * @return Sorted list
      */
-    List<E> sort(final Comparator<E> comparator);
+    List<E> sort(Comparator<E> comparator);
 
     /**
      * Create new list which will hold the same elements sorted.
@@ -149,7 +149,7 @@ public interface List<E> extends Collection<E> {
      *
      * @return Shuffled list
      */
-    List<E> shuffle(final Random random);
+    List<E> shuffle(Random random);
 
     @Override
     default List<E> filter(final Predicate<E> predicate) {
@@ -167,7 +167,7 @@ public interface List<E> extends Collection<E> {
         return Pair.pair(listFalse.build(), listTrue.build());
     }
 
-    boolean elementEquals(final E ... elements);
+    boolean elementEquals(E[] elements);
 
     @SuppressWarnings("unchecked")
     static <T> List<T> from(final java.util.Collection<T> source) {
@@ -183,7 +183,7 @@ public interface List<E> extends Collection<E> {
         return ListBuilder.builder(1);
     }
 
-    //TODO: more efficient implementation
+    //TODO: need more efficient implementation
     static <T> List<T> list(final T... elements) {
         return new List<T>() {
             @Override
@@ -271,14 +271,14 @@ public interface List<E> extends Collection<E> {
                 return Arrays.hashCode(elements);
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public boolean equals(final Object obj) {
                 if (obj == this) {
                     return true;
                 }
 
-                if(obj instanceof List) {
-                    final var list = (List) obj;
+                if(obj instanceof List list) {
                     return list.size() == size() && list.elementEquals(elements);
                 }
 
@@ -342,6 +342,7 @@ public interface List<E> extends Collection<E> {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     Collection EMPTY_LIST = new List() {
         @Override
         public List mapN(final FN2 mapper) {
@@ -414,7 +415,7 @@ public interface List<E> extends Collection<E> {
                 return true;
             }
 
-            if (obj instanceof List && ((Collection) obj).size() == 0) {
+            if (obj instanceof List list && list.size() == 0) {
                 return true;
             }
 
@@ -431,7 +432,7 @@ public interface List<E> extends Collection<E> {
         return new Collector<>() {
             @Override
             public Supplier<ListBuilder<T>> supplier() {
-                return () -> new ListBuilder<T>(16);
+                return () -> new ListBuilder<T>(0);
             }
 
             @Override
@@ -449,7 +450,7 @@ public interface List<E> extends Collection<E> {
 
             @Override
             public Function<ListBuilder<T>, List<T>> finisher() {
-                return tListBuilder -> tListBuilder.build();
+                return ListBuilder::build;
             }
 
             @Override
