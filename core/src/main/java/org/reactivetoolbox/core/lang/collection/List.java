@@ -184,7 +184,7 @@ public interface List<E> extends Collection<E> {
     }
 
     //TODO: need more efficient implementation
-    static <T> List<T> list(final T[] elements) {
+    static <T> List<T> list(final T... elements) {
         return new List<>() {
             @Override
             public <R> List<R> mapN(final FN2<R, Integer, T> mapper) {
