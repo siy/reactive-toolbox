@@ -32,6 +32,23 @@
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>make</executable>
+                    <workingDirectory>${project.basedir}/../liburing</workingDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>native-maven-plugin</artifactId>
                 <version>1.0-alpha-11</version>
                 <extensions>true</extensions>
@@ -53,7 +70,6 @@
                     <compilerStartOptions>
                         <compilerStartOption>-fPIC</compilerStartOption>
                         <compilerStartOption>-Wall</compilerStartOption>
-<!--                        <compilerStartOption>-g</compilerStartOption>-->
                         <compilerStartOption>-O2</compilerStartOption>
                         <compilerStartOption>-I ${project.basedir}/../liburing/src/include</compilerStartOption>
                         <compilerStartOption>-I ${java.home}/include</compilerStartOption>
@@ -66,12 +82,13 @@
                     <linkerStartOptions>
                         <linkerStartOption>-fPIC</linkerStartOption>
                         <linkerStartOption>-shared</linkerStartOption>
+                        <linkerStartOption>-L${project.basedir}/../liburing/src</linkerStartOption>
+                        <linkerStartOption>-luring</linkerStartOption>
                     </linkerStartOptions>
 
                     <linkerFinalName></linkerFinalName>
 
                     <linkerEndOptions>
-                        <!-- TODO: add liburing.so to jar -->
                         <linkerEndOption>-o ${project.build.directory}/classes/${lib_name}</linkerEndOption>
                     </linkerEndOptions>
                 </configuration>
