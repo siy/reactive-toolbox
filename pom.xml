@@ -46,6 +46,7 @@
 
         <!-- Testing -->
         <junit.version>5.6.2</junit.version>
+        <junit.params.version>5.3.1</junit.params.version>
         <junit.platform.version>1.6.2</junit.platform.version>
     </properties>
 
@@ -96,6 +97,20 @@
             <version>${junit.platform.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit.params.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

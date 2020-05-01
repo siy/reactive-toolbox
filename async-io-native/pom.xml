@@ -82,13 +82,12 @@
                     <linkerStartOptions>
                         <linkerStartOption>-fPIC</linkerStartOption>
                         <linkerStartOption>-shared</linkerStartOption>
-                        <linkerStartOption>-L${project.basedir}/../liburing/src</linkerStartOption>
-                        <linkerStartOption>-luring</linkerStartOption>
                     </linkerStartOptions>
-
-                    <linkerFinalName></linkerFinalName>
+                    <!-- irrelevant, just a cosmetic issue -->
+                    <linkerFinalName>dummy</linkerFinalName>
 
                     <linkerEndOptions>
+                        <linkerEndOption>${project.basedir}/../liburing/src/liburing.a</linkerEndOption>
                         <linkerEndOption>-o ${project.build.directory}/classes/${lib_name}</linkerEndOption>
                     </linkerEndOptions>
                 </configuration>

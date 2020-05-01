@@ -7,13 +7,33 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef org_reactivetoolbox_asyncio_IoUring_DEFAULT_QUEUE_SIZE
+#define org_reactivetoolbox_asyncio_IoUring_DEFAULT_QUEUE_SIZE 4096L
+#undef org_reactivetoolbox_asyncio_IoUring_DEFAULT_FLAGS
+#define org_reactivetoolbox_asyncio_IoUring_DEFAULT_FLAGS 0L
 /*
  * Class:     org_reactivetoolbox_asyncio_IoUring
  * Method:    initIds
- * Signature: ()V
+ * Signature: (Ljava/lang/Class;)V
  */
 JNIEXPORT void JNICALL Java_org_reactivetoolbox_asyncio_IoUring_initIds
-  (JNIEnv *, jclass);
+  (JNIEnv *, jclass, jclass);
+
+/*
+ * Class:     org_reactivetoolbox_asyncio_IoUring
+ * Method:    init
+ * Signature: (JJ)I
+ */
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_IoUring_init
+  (JNIEnv *, jobject, jlong, jlong);
+
+/*
+ * Class:     org_reactivetoolbox_asyncio_IoUring
+ * Method:    exit
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_reactivetoolbox_asyncio_IoUring_exit
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }
