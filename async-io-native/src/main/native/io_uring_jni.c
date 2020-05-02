@@ -40,4 +40,8 @@ JNIEXPORT void JNICALL Java_org_reactivetoolbox_asyncio_IoUring_exit(JNIEnv *env
 
     io_uring_queue_exit(ring);
     free(ring);
+
+//    jobject NewGlobalRef(JNIEnv *env, jobject obj);
+//    void DeleteGlobalRef(JNIEnv *env, jobject globalRef);
+
 }
