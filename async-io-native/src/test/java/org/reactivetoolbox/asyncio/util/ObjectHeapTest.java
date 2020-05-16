@@ -4,11 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ObjectStoreTest {
+class ObjectHeapTest {
 
     @Test
     void elementsCanBePlacedIntoObjectPool() {
-        final ObjectStore<String> pool = ObjectStore.objectPool(1);
+        final ObjectHeap<String> pool = ObjectHeap.objectHeap(1);
 
         assertEquals(0, pool.alloc("0"));
         assertEquals(1, pool.alloc("1"));
@@ -21,7 +21,7 @@ class ObjectStoreTest {
 
     @Test
     void objectPoolReusesIndexesIfTheyAreAvailable() {
-        final ObjectStore<String> pool = ObjectStore.objectPool(1);
+        final ObjectHeap<String> pool = ObjectHeap.objectHeap(1);
 
         assertEquals(0, pool.count());
 

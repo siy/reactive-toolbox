@@ -2,7 +2,16 @@ package org.reactivetoolbox.asyncio.util;
 
 import java.util.Arrays;
 
-public class ObjectStore<T> {
+/**
+ * Temporary storage for objects.
+ * Main use case - storing object corresponding to in-flight requests
+ * and obtaining integer index which can be passed instead of the whole object
+ * to external entity. Upon request completion object then is released from the
+ * heap by using corresponding integer index.
+ *
+ * @param <T>
+ */
+public class ObjectHeap<T> {
     private static final int INITIAL_SIZE = 256;
 
     private Object[] elements;
@@ -11,22 +20,22 @@ public class ObjectStore<T> {
     private int nextFree = 0;
     private int count = 0;
 
-    private ObjectStore(final int initialCapacity) {
+    private ObjectHeap(final int initialCapacity) {
         elements = new Object[initialCapacity];
         indexes = new int[initialCapacity];
     }
 
-    public static <T> ObjectStore<T> objectPool() {
-        return objectPool(INITIAL_SIZE);
+    public static <T> ObjectHeap<T> objectHeap() {
+        return objectHeap(INITIAL_SIZE);
     }
 
-    public static <T> ObjectStore<T> objectPool(final int initialCapacity) {
-        return new ObjectStore<>(initialCapacity);
+    public static <T> ObjectHeap<T> objectHeap(final int initialCapacity) {
+        return new ObjectHeap<>(initialCapacity);
     }
 
     @SuppressWarnings("unchecked")
-    T release(final int key) {
-        if (key < 0 || key >= nextFree || elements[key] == null) {
+    public T release(final int key) {
+        if (key < 0 || key >= nextFree || elements[key] == null || key == firstFree) {
             return null;
         }
 
@@ -38,7 +47,7 @@ public class ObjectStore<T> {
         return result;
     }
 
-    int alloc(final T value) {
+    public int alloc(final T value) {
         // There are some free elements
         if (firstFree >= 0) {
             return allocInFreeChain(value);

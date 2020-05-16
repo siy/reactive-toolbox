@@ -1,6 +1,7 @@
 package org.reactivetoolbox.core.async;
 
 import org.junit.jupiter.api.Test;
+import org.reactivetoolbox.core.lang.functional.Result;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -65,9 +66,53 @@ class PromiseTest {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
 
-        promise.map(Objects::toString).onSuccess(holder::set);
+        promise.map(Objects::toString)
+               .onSuccess(holder::set);
 
         promise.ok(1234);
+
+        assertEquals("1234", holder.get());
+    }
+
+    @Test
+    void mapAsyncTransformsValue() {
+        final var holder = new AtomicReference<String>();
+        final var promise = Promise.<Integer>promise();
+
+        final var mappedPromise = promise.mapAsync(Objects::toString)
+                                         .onSuccess(holder::set);
+
+        promise.ok(1234);
+
+        mappedPromise.syncWait();
+
+        assertEquals("1234", holder.get());
+    }
+
+    @Test
+    void flatMapTransformsValue() {
+        final var holder = new AtomicReference<String>();
+        final var promise = Promise.<Integer>promise();
+
+        promise.flatMap((Integer o) -> Result.ok(Objects.toString(o)))
+               .onSuccess(holder::set);
+
+        promise.ok(1234);
+
+        assertEquals("1234", holder.get());
+    }
+
+    @Test
+    void flatMapAsyncTransformsValue() {
+        final var holder = new AtomicReference<String>();
+        final var promise = Promise.<Integer>promise();
+
+        final var mappedPromise = promise.flatMapAsync((Integer o) -> Result.ok(Objects.toString(o)))
+                                         .onSuccess(holder::set);
+
+        promise.ok(1234);
+
+        mappedPromise.syncWait();
 
         assertEquals("1234", holder.get());
     }

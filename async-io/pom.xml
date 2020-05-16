@@ -10,6 +10,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>async-io</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>org.reactive-toolbox</groupId>
+            <artifactId>core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 
 </project>

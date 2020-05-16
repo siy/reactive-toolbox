@@ -1,4 +1,4 @@
-package org.reactivetoolbox.asyncio;
+package org.reactivetoolbox.asyncio.util;
 
 /*
  * Class NativeUtils is published under the The MIT License:
@@ -42,7 +42,7 @@ import java.nio.file.StandardCopyOption;
  * @see <a href="http://adamheinrich.com/blog/2012/how-to-load-native-jni-library-from-jar">http://adamheinrich.com/blog/2012/how-to-load-native-jni-library-from-jar</a>
  * @see <a href="https://github.com/adamheinrich/native-utils">https://github.com/adamheinrich/native-utils</a>
  */
-public final class NativeUtils {
+public final class LibraryLoader {
     /**
      * The minimum length a prefix for a file has to have according to {@link File#createTempFile(String, String)}}.
      */
@@ -57,7 +57,7 @@ public final class NativeUtils {
     /**
      * Private constructor - this class will never be instanced
      */
-    private NativeUtils() {
+    private LibraryLoader() {
     }
 
     /**
@@ -80,7 +80,7 @@ public final class NativeUtils {
      * @throws FileNotFoundException
      *         If the file could not be found inside the JAR.
      */
-    public static void loadLibraryFromJar(final String path) throws Exception {
+    public static void fromJar(final String path) throws Exception {
 
         if (null == path || !path.startsWith("/")) {
             throw new IllegalArgumentException("The path has to be absolute (start with '/').");
@@ -103,7 +103,7 @@ public final class NativeUtils {
 
         final File temp = new File(temporaryDir, filename);
 
-        try (final InputStream is = NativeUtils.class.getResourceAsStream(path)) {
+        try (final InputStream is = LibraryLoader.class.getResourceAsStream(path)) {
             Files.copy(is, temp.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (final IOException | NullPointerException e) {
             temp.delete();

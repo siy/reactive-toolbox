@@ -219,8 +219,8 @@ public interface Promise<T> {
      */
     default <R> Promise<R> chainMap(final FN1<Promise<R>, T> mapper) {
         return promise(promise -> onResult(result -> result.fold(error -> promise.resolve(Result.fail(error)),
-                                                                success -> mapper.apply(success)
-                                                                                 .onResult(promise::resolve))));
+                                                                 success -> mapper.apply(success)
+                                                                                  .onResult(promise::resolve))));
     }
 
     /**
@@ -235,8 +235,16 @@ public interface Promise<T> {
         return promise(promise -> onResult(result -> promise.resolve(result.map(mapper))));
     }
 
+    default <R> Promise<R> mapAsync(final FN1<R, T> mapper) {
+        return Promise.<R>promise().async(promise -> onResult(result -> promise.resolve(result.map(mapper))));
+    }
+
     default <R> Promise<R> flatMap(final FN1<Result<R>, T> mapper) {
         return promise(promise -> onResult(result -> promise.resolve(result.flatMap(mapper))));
+    }
+
+    default <R> Promise<R> flatMapAsync(final FN1<Result<R>, T> mapper) {
+        return Promise.<R>promise().async(promise -> onResult(result -> promise.resolve(result.flatMap(mapper))));
     }
 
     /**
