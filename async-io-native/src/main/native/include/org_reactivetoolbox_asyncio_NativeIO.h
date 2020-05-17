@@ -9,8 +9,14 @@ extern "C" {
 #endif
 #undef org_reactivetoolbox_asyncio_NativeIO_DEFAULT_QUEUE_SIZE
 #define org_reactivetoolbox_asyncio_NativeIO_DEFAULT_QUEUE_SIZE 4096L
-#undef org_reactivetoolbox_asyncio_NativeIO_DEFAULT_FLAGS
-#define org_reactivetoolbox_asyncio_NativeIO_DEFAULT_FLAGS 0L
+#undef org_reactivetoolbox_asyncio_NativeIO_DEFAULT_QUEUE_FLAGS
+#define org_reactivetoolbox_asyncio_NativeIO_DEFAULT_QUEUE_FLAGS 0L
+#undef org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_STREAM
+#define org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_STREAM 1L
+#undef org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_NONBLOCK
+#define org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_NONBLOCK 2L
+#undef org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_REUSEADDR
+#define org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_REUSEADDR 4L
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
  * Method:    initApi
@@ -61,14 +67,6 @@ JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_spaceLeft
 
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    submit
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_submit
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
  * Method:    submitAndWait
  * Signature: (JJ)J
  */
@@ -77,123 +75,35 @@ JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_submitAndWait
 
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepNop
- * Signature: (JJ)I
+ * Method:    prepareIO
+ * Signature: (JJIJJJJJ)I
  */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepNop
-  (JNIEnv *, jclass, jlong, jlong);
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepareIO
+  (JNIEnv *, jclass, jlong, jlong, jint, jlong, jlong, jlong, jlong, jlong);
 
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepFsync
- * Signature: (JJIJ)I
+ * Method:    createSocket
+ * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepFsync
-  (JNIEnv *, jclass, jlong, jlong, jint, jlong);
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_createSocket
+  (JNIEnv *, jclass, jint);
 
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepTimeout
- * Signature: (JJJJJJ)I
+ * Method:    bind
+ * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepTimeout
-  (JNIEnv *, jclass, jlong, jlong, jlong, jlong, jlong, jlong);
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_bind
+  (JNIEnv *, jclass, jint, jint);
 
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepTimeoutRemove
- * Signature: (JJJ)I
+ * Method:    listen
+ * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepTimeoutRemove
-  (JNIEnv *, jclass, jlong, jlong, jlong);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepCancel
- * Signature: (JJI)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepCancel
-  (JNIEnv *, jclass, jlong, jlong, jint);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepLinkedTimeout
- * Signature: (JJJJJ)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepLinkedTimeout
-  (JNIEnv *, jclass, jlong, jlong, jlong, jlong, jlong);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepSplice
- * Signature: (JJIJIJJJ)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepSplice
-  (JNIEnv *, jclass, jlong, jlong, jint, jlong, jint, jlong, jlong, jlong);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepReadVector
- * Signature: (JJI[J[IJ)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepReadVector
-  (JNIEnv *, jclass, jlong, jlong, jint, jlongArray, jintArray, jlong);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepWriteVector
- * Signature: (JJI[J[IJ)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepWriteVector
-  (JNIEnv *, jclass, jlong, jlong, jint, jlongArray, jintArray, jlong);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepReadFixed
- * Signature: (JJIJIJI)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepReadFixed
-  (JNIEnv *, jclass, jlong, jlong, jint, jlong, jint, jlong, jint);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepWriteFixed
- * Signature: (JJIJIJI)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepWriteFixed
-  (JNIEnv *, jclass, jlong, jlong, jint, jlong, jint, jlong, jint);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepRead
- * Signature: (JJIJIJ)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepRead
-  (JNIEnv *, jclass, jlong, jlong, jint, jlong, jint, jlong);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepWrite
- * Signature: (JJIJIJ)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepWrite
-  (JNIEnv *, jclass, jlong, jlong, jint, jlong, jint, jlong);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepOpen
- * Signature: (JJ[BIJ)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepOpen
-  (JNIEnv *, jclass, jlong, jlong, jbyteArray, jint, jlong);
-
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    prepClose
- * Signature: (JJI)I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepClose
-  (JNIEnv *, jclass, jlong, jlong, jint);
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_listen
+  (JNIEnv *, jclass, jint, jint);
 
 #ifdef __cplusplus
 }
