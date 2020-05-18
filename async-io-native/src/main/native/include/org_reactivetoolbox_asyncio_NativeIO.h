@@ -11,20 +11,6 @@ extern "C" {
 #define org_reactivetoolbox_asyncio_NativeIO_DEFAULT_QUEUE_SIZE 4096L
 #undef org_reactivetoolbox_asyncio_NativeIO_DEFAULT_QUEUE_FLAGS
 #define org_reactivetoolbox_asyncio_NativeIO_DEFAULT_QUEUE_FLAGS 0L
-#undef org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_STREAM
-#define org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_STREAM 1L
-#undef org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_NONBLOCK
-#define org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_NONBLOCK 2L
-#undef org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_REUSEADDR
-#define org_reactivetoolbox_asyncio_NativeIO_SOCKET_OPEN_FLAG_REUSEADDR 4L
-/*
- * Class:     org_reactivetoolbox_asyncio_NativeIO
- * Method:    initApi
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_initApi
-  (JNIEnv *, jclass);
-
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
  * Method:    initRing
@@ -76,10 +62,10 @@ JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_submitAndWait
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
  * Method:    prepareIO
- * Signature: (JJIJJJJJ)I
+ * Signature: (JIIJJJIIJ)I
  */
 JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepareIO
-  (JNIEnv *, jclass, jlong, jlong, jint, jlong, jlong, jlong, jlong, jlong);
+  (JNIEnv *, jclass, jlong, jint, jint, jlong, jlong, jlong, jint, jint, jlong);
 
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
