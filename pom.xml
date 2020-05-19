@@ -159,6 +159,8 @@
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.netty=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.asyncio.uring/org.reactivetoolbox.asyncio=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.asyncio.uring/org.reactivetoolbox.asyncio.util=ALL-UNNAMED
                         ${jaCoCoArgLine}
                         ${java.enable-preview}
                         -Xmx1024m
