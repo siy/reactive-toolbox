@@ -1,20 +1,35 @@
 package org.reactivetoolbox.asyncio;
 
 import org.reactivetoolbox.asyncio.util.LibraryLoader;
+import org.reactivetoolbox.asyncio.util.ObjectHeap;
+
+import java.util.function.BiConsumer;
 
 /**
  * Low level API for IO_URING and other relevant functionality (opening/configuring socket).
  * <p>
  * NOTE: Do your best to keep code and comments consistent and up to date.
  */
+//TODO: add probing of functionality?
 class NativeIO {
     private static final int DEFAULT_QUEUE_SIZE = 4096;
     private static final int DEFAULT_QUEUE_FLAGS = 0;
 
+    public static NativeIO create(final int queueSize) {
+        return new NativeIO(queueSize);
+    }
+
+    public void close() {
+        closeRing(ring);
+    }
+
+    //------------------------------------------------------------------------------------------------------
+    // Low level internals
+    //------------------------------------------------------------------------------------------------------
     private final long ring;
     private final long[] completionData;
-
-    //TODO: add probing functionality?
+    private final ObjectHeap<BiConsumer<Integer, Integer>> requests = ObjectHeap.objectHeap(DEFAULT_QUEUE_SIZE * 2);
+    private final LocalSubmitter submitter;
 
     /**
      * Creates new instance of io_uring.
@@ -124,7 +139,9 @@ class NativeIO {
     /**
      * Create new socket.
      *
-     * @param flags socket open flags (See {@link OpenFlags} for more details)
+     * @param flags
+     *         socket open flags
+     *
      * @return socket file descriptor (> 0) or error ( < 0)
      */
     private native static int createSocket(int flags);
@@ -133,17 +150,26 @@ class NativeIO {
      * Bind socket to specified port.
      * NOTE: current implementation always binds socket to INADDR_ANY
      *
-     * @param socket    socket file descriptor (returned by {@link #createSocket(int)}
-     * @param port      port to bind
+     * @param socket
+     *         socket file descriptor (returned by {@link #createSocket(int)}
+     * @param port
+     *         port to bind
+     * @param addr
+     *         address to bind, if {@code null} then INADDR_ANY is used, otherwise it should be a byte
+     *         array from text representation of IP address to bind.
+     *
      * @return 0 if success, != 0 - error code
      */
-    private native static int bind(int socket, int port);
+    private native static int bind(int socket, int port, byte[] addr);
 
     /**
      * Start listening for the incoming connections.
      *
-     * @param socket    socket file descriptor (returned by {@link #createSocket(int)}
-     * @param backlog   length of the backlog queue
+     * @param socket
+     *         socket file descriptor (returned by {@link #createSocket(int)}
+     * @param backlog
+     *         length of the backlog queue
+     *
      * @return 0 if success, != 0 - error code
      */
     private native static int listen(int socket, int backlog);
@@ -169,60 +195,10 @@ class NativeIO {
         // completion queue is 2x size of submission queue and each entry uses 2 longs to deliver completion
         completionData = new long[(int) (count * 4)];
         ring = initRing(count, DEFAULT_QUEUE_FLAGS);
+        submitter = new LocalSubmitter();
 
         if (ring <= 0) {
             throw new RuntimeException("Unable to initialize io_uring interface");
-        }
-    }
-
-    public static NativeIO create(final int queueSize) {
-        return new NativeIO(queueSize);
-    }
-
-    public void close() {
-        closeRing(ring);
-    }
-
-    //
-//    public void processCompletions(final ObjectHeap<CompletionHandler> heap) {
-//        final int count = peekCQ(completionData);
-//
-//        if (count < 0) {
-//            //TODO: add logging
-//            return;
-//        }
-//
-//        for (int i = 0, ndx = 0; i < count; i++) {
-//            // Unpack data:
-//            // first long is request ID
-//            // second long holds two pieces: upper half is and result code (signed) and lower half is flags (unsigned)
-//            final long userData = completionData[ndx++];
-//            final long result = completionData[ndx++];
-//
-//            final CompletionHandler handler = heap.release((int) userData);
-//            if (handler == null) {
-//                //TODO: add logging: completion is submitted for non-existent request
-//                continue;
-//            }
-//            handler.onCompletion((int) (result >> 32), (int) (result & 0x0FFFFFFFFL));
-//        }
-//        advanceCQ(count);
-//    }
-//
-//    public void submitNop(final int key) {
-//        //TODO: finish it
-//    }
-
-    private enum OpenFlags {
-        STREAM(1 << 0),
-        NONBLOCK(1 << 1),
-        REUSE_ADDR(1 << 2),
-        REUSE_PORT(1 << 3);
-
-        private final int mask;
-
-        OpenFlags(final int mask) {
-            this.mask = mask;
         }
     }
 
@@ -269,7 +245,7 @@ class NativeIO {
         IORING_OP_LAST
     }
 
-    private enum SQFlags {
+    private enum SQFlags implements Bitmask {
         IOSQE_FIXED_FILE(1 << 0),      /* issue after inflight IO */
         IOSQE_IO_DRAIN(1 << 1),
         IOSQE_IO_LINK(1 << 2),         /* links next sqe */
@@ -283,12 +259,13 @@ class NativeIO {
             this.mask = mask;
         }
 
+        @Override
         public int mask() {
             return mask;
         }
     }
 
-    private enum RingFlags {
+    private enum RingFlags implements Bitmask {
         IORING_SETUP_IOPOLL(1 << 0),    /* io_context is polled */
         IORING_SETUP_SQPOLL(1 << 1),    /* SQ poll thread */
         IORING_SETUP_SQ_AFF(1 << 2),    /* sq_thread_cpu is valid */
@@ -302,9 +279,13 @@ class NativeIO {
             this.mask = mask;
         }
 
+        @Override
         public int mask() {
             return mask;
         }
     }
 
+    private class LocalSubmitter /* implements Submitter */ {
+
+    }
 }

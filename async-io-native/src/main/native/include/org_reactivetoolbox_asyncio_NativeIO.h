@@ -78,10 +78,10 @@ JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_createSocket
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
  * Method:    bind
- * Signature: (II)I
+ * Signature: (II[B)I
  */
 JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_bind
-  (JNIEnv *, jclass, jint, jint);
+  (JNIEnv *, jclass, jint, jint, jbyteArray);
 
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
