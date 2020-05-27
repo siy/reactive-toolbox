@@ -34,9 +34,9 @@ JNIEXPORT jint JNICALL Java_org_reactivetoolbox_io_uring_Uring_peekCQ
 /*
  * Class:     org_reactivetoolbox_io_uring_Uring
  * Method:    advanceCQ
- * Signature: (JJ)I
+ * Signature: (JJ)V
  */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_io_uring_Uring_advanceCQ
+JNIEXPORT void JNICALL Java_org_reactivetoolbox_io_uring_Uring_advanceCQ
   (JNIEnv *, jclass, jlong, jlong);
 
 /*
