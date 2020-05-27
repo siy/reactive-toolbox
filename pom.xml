@@ -10,7 +10,6 @@
     <modules>
         <module>core</module>
         <module>http</module>
-        <module>async-io</module>
         <module>uring4j</module>
     </modules>
 

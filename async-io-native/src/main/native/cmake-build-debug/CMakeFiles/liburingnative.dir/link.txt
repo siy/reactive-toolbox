@@ -1,2 +1,0 @@
-/usr/bin/ar qc libliburingnative.a  CMakeFiles/liburingnative.dir/io_uring_jni.c.o
-/usr/bin/ranlib libliburingnative.a
