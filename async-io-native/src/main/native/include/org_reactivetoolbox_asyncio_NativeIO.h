@@ -13,6 +13,14 @@ extern "C" {
 #define org_reactivetoolbox_asyncio_NativeIO_DEFAULT_QUEUE_FLAGS 0L
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
+ * Method:    initIds
+ * Signature: (Ljava/lang/Class;)V
+ */
+JNIEXPORT void JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_initIds
+  (JNIEnv *, jclass, jclass);
+
+/*
+ * Class:     org_reactivetoolbox_asyncio_NativeIO
  * Method:    initRing
  * Signature: (JJ)J
  */
@@ -62,10 +70,10 @@ JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_submitAndWait
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
  * Method:    prepareIO
- * Signature: (JIIJJJIIJ)I
+ * Signature: (JIIJJJIIJJ)I
  */
 JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepareIO
-  (JNIEnv *, jclass, jlong, jint, jint, jlong, jlong, jlong, jint, jint, jlong);
+  (JNIEnv *, jclass, jlong, jint, jint, jlong, jlong, jlong, jint, jint, jlong, jlong);
 
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO

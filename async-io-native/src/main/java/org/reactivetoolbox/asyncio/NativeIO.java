@@ -1,9 +1,8 @@
 package org.reactivetoolbox.asyncio;
 
 import org.reactivetoolbox.asyncio.util.LibraryLoader;
-import org.reactivetoolbox.asyncio.util.ObjectHeap;
 
-import java.util.function.BiConsumer;
+import java.net.InetAddress;
 
 /**
  * Low level API for IO_URING and other relevant functionality (opening/configuring socket).
@@ -27,9 +26,35 @@ class NativeIO {
     // Low level internals
     //------------------------------------------------------------------------------------------------------
     private final long ring;
-    private final long[] completionData;
-    private final ObjectHeap<BiConsumer<Integer, Integer>> requests = ObjectHeap.objectHeap(DEFAULT_QUEUE_SIZE * 2);
     private final LocalSubmitter submitter;
+    private final NativeCallback callback = new LocalCallback();
+
+    //TODO: wire it to user callbacks
+    private static class LocalCallback implements NativeCallback {
+        @Override
+        public void plainCompletion(final long requestId, final int result, final int flags) {
+
+        }
+
+        @Override
+        public void statCompletion(final long requestId, final int result, final int flags, final FileStatData data) {
+
+        }
+
+        @Override
+        public void acceptCompletion(final long requestId, final int result, final int flags, final InetAddress clientAddress) {
+
+        }
+    }
+
+    /**
+     * Initializes various references to methods and fields.
+     *
+     * @param clazz
+     *         Reference to {@link NativeCallback} class which is used as
+     *         interface for submitting completions to Java side.
+     */
+    private native static void initIds(final Class<NativeCallback> clazz);
 
     /**
      * Creates new instance of io_uring.
@@ -127,6 +152,8 @@ class NativeIO {
      *         Submission entry flags (See {@link SQFlags} for more details)
      * @param requestId
      *         Request ID (user_data)
+     * @param timeout
+     *         Request timeout (0 - no timeout)
      *
      * @return -ENOSPC (-28) if no entries available in the submission queue, 0 if operation was successful
      */
@@ -134,7 +161,14 @@ class NativeIO {
                                         int fd, long address,
                                         long len, long offset,
                                         int opFlags, int sqFlags,
-                                        long requestId);
+                                        long requestId, long timeout);
+
+    //TODO: variants of prepareIO for:
+    // statx
+    // readv/writev
+    // connect
+    // accept
+    // open
 
     /**
      * Create new socket.
@@ -177,6 +211,7 @@ class NativeIO {
     static {
         try {
             LibraryLoader.fromJar("/liburingnative.so");
+            initIds(NativeCallback.class);
         } catch (final Exception e) {
             System.err.println("Error while loading JNI library for NativeIO class: " + e);
         }
@@ -193,7 +228,6 @@ class NativeIO {
     private NativeIO(final int queueSize) {
         final var count = calculateNumEntries(queueSize);
         // completion queue is 2x size of submission queue and each entry uses 2 longs to deliver completion
-        completionData = new long[(int) (count * 4)];
         ring = initRing(count, DEFAULT_QUEUE_FLAGS);
         submitter = new LocalSubmitter();
 

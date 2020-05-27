@@ -11,7 +11,7 @@
         <module>core</module>
         <module>http</module>
         <module>async-io</module>
-        <module>async-io-native</module>
+        <module>uring4j</module>
     </modules>
 
     <packaging>pom</packaging>
@@ -159,8 +159,8 @@
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.netty=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.asyncio.uring/org.reactivetoolbox.asyncio=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.asyncio.uring/org.reactivetoolbox.asyncio.util=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io.raw=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io.uring=ALL-UNNAMED
                         ${jaCoCoArgLine}
                         ${java.enable-preview}
                         -Xmx1024m

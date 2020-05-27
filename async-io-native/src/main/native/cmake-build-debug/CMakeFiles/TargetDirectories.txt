@@ -1,0 +1,3 @@
+/home/siy/Projects/hobby/reactive-toolbox/async-io-native/src/main/native/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/siy/Projects/hobby/reactive-toolbox/async-io-native/src/main/native/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/siy/Projects/hobby/reactive-toolbox/async-io-native/src/main/native/cmake-build-debug/CMakeFiles/liburingnative.dir

@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/siy/Projects/hobby/reactive-toolbox/async-io-native/src/main/native/include/org_reactivetoolbox_asyncio_NativeIO.h
+jni.h
+-
+
+/home/siy/Projects/hobby/reactive-toolbox/async-io-native/src/main/native/io_uring_jni.c
+liburing.h
+-
+stdlib.h
+-
+string.h
+-
+netinet/in.h
+-
+arpa/inet.h
+-
+sys/socket.h
+-
+errno.h
+-
+linux/stat.h
+-
+include/org_reactivetoolbox_asyncio_NativeIO.h
+/home/siy/Projects/hobby/reactive-toolbox/async-io-native/src/main/native/include/org_reactivetoolbox_asyncio_NativeIO.h
+
+/usr/lib/jvm/java-14-openjdk-amd64/include/jni.h
+stdio.h
+-
+stdarg.h
+-
+jni_md.h
+/usr/lib/jvm/java-14-openjdk-amd64/include/jni_md.h
+
+/usr/lib/jvm/java-14-openjdk-amd64/include/linux/jni_md.h
+

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>reactive-toolbox-parent</artifactId>
+        <groupId>org.reactive-toolbox</groupId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>uring4j</artifactId>
+
+    <profiles>
+        <profile>
+            <id>Linux</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>platform</name>
+                    <value>nix</value>
+                </property>
+            </activation>
+            <properties>
+                <os_name>linux</os_name>
+                <lib_name>liburingnative.so</lib_name>
+            </properties>
+        </profile>
+    </profiles>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.reactive-toolbox</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>make</executable>
+                    <workingDirectory>${project.basedir}/../liburing</workingDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <version>1.0-alpha-11</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <sources>
+                        <source>
+                            <directory>src/main/native</directory>
+                            <fileNames>
+                                <fileName>uring_api.c</fileName>
+                            </fileNames>
+                        </source>
+                        <source>
+                            <directory>src/main/native/include</directory>
+                        </source>
+                    </sources>
+                    <compilerProvider>generic-classic</compilerProvider>
+                    <compilerExecutable>gcc</compilerExecutable>
+
+                    <compilerStartOptions>
+                        <compilerStartOption>-fPIC</compilerStartOption>
+                        <compilerStartOption>-Wall</compilerStartOption>
+                        <compilerStartOption>-O2</compilerStartOption>
+                        <compilerStartOption>-I ${project.basedir}/../liburing/src/include</compilerStartOption>
+                        <compilerStartOption>-I ${java.home}/include</compilerStartOption>
+                        <compilerStartOption>-I ${java.home}/include/linux</compilerStartOption>
+                    </compilerStartOptions>
+
+                    <linkerOutputDirectory>target</linkerOutputDirectory>
+                    <linkerExecutable>gcc</linkerExecutable>
+
+                    <linkerStartOptions>
+                        <linkerStartOption>-fPIC</linkerStartOption>
+                        <linkerStartOption>-shared</linkerStartOption>
+                    </linkerStartOptions>
+                    <!-- irrelevant, just a cosmetic issue -->
+                    <linkerFinalName>dummy</linkerFinalName>
+
+                    <linkerEndOptions>
+                        <linkerEndOption>${project.basedir}/../liburing/src/liburing.a</linkerEndOption>
+                        <linkerEndOption>-o ${project.build.directory}/classes/${lib_name}</linkerEndOption>
+                    </linkerEndOptions>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <id>javah</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>initialize</goal>
+                            <goal>compile</goal>
+                            <goal>link</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

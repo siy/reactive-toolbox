@@ -1,4 +1,3 @@
-#include <include/org_reactivetoolbox_asyncio_NativeIO.h>
 #include <liburing.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +6,15 @@
 #include <sys/socket.h>
 #include <errno.h>
 #include <linux/stat.h>
+#include "include/org_reactivetoolbox_asyncio_NativeIO.h"
+
+// ------------------------------------------------------------------------------------------------
+// NativeCallback API signatures:
+// NativeCallback.plainCompletion signature : (JII)V
+// NativeCallback.statCompletion signature  : (JIILorg/reactivetoolbox/asyncio/FileStatData;)V
+// NativeCallback.acceptCompletion signature: (JIILjava/net/InetAddress;)V
+// ------------------------------------------------------------------------------------------------
+
 
 // ------------------------------------------------------------------------------------------------
 // Implementation details:
@@ -21,12 +29,27 @@
 
 #define RING_WITH_DATA  ((struct ring_with_data*)ringPtr)
 #define RING            (&(RING_WITH_DATA)->ring)
-#define EXTRA_DATA_SIZE 256
 
-union request_data;
+typedef struct {
+    int64_t operation;
+
+    union {
+        struct __kernel_timespec timeout;
+        struct {
+            socklen_t addrlen;
+            struct sockaddr addr;
+        } accept;
+        struct iovec vector[1];
+        struct msghdr message_header;
+        struct sockaddr connect;
+        char path[1];
+        struct statx statx_data;
+    };
+} request_content;
+
 struct associated_data {
     int count;
-    union request_data** ptrs;
+    request_content **ptrs;
 };
 
 struct ring_with_data {
@@ -34,24 +57,11 @@ struct ring_with_data {
     struct associated_data data;
 };
 
-union request_data {
-    struct __kernel_timespec timeout;
-    struct {
-        socklen_t addrlen;
-        struct sockaddr addr;
-    } accept;
-    struct iovec vector[1];
-    struct msghdr message_header;
-    struct sockaddr connect;
-    char open_path[1];
-    struct statx statx_data;
-};
-
 //--------------------------------------------------
 // Utility functions
 //--------------------------------------------------
-void* zmalloc(size_t size) {
-    void* ptr = malloc(size);
+static void *zmalloc(size_t size) {
+    void *ptr = malloc(size);
 
     if (ptr) {
         memset(ptr, 0, size);
@@ -60,29 +70,93 @@ void* zmalloc(size_t size) {
     return ptr;
 }
 
+//--------------------------------------------------
+// Associated data API
+//--------------------------------------------------
+static int alloc_associated_data(struct associated_data *ptr, const int num_entries) {
+    ptr->count = num_entries;
+    ptr->ptrs = (request_content **) zmalloc(sizeof(request_content *) * num_entries);
+
+    return (ptr->ptrs == 0) ? -ENOMEM : 0;
+}
+
+static int expand_associated_data(struct associated_data *ptr) {
+    request_content **saved_ptr = ptr->ptrs;
+    int num_entries = ptr->count;
+
+    int rc = alloc_associated_data(ptr, ptr->count * 2);
+
+    if (rc) {
+        return rc;
+    }
+
+    memcpy(ptr->ptrs, saved_ptr, sizeof(request_content *) * num_entries);
+
+    return 0;
+}
+
+static int ensure_associated_data(struct associated_data *ptr, const int key, const int space) {
+    while (key >= ptr->count) {
+        int rc = expand_associated_data(ptr);
+
+        if (rc) {
+            return rc;
+        }
+    }
+
+    ptr->ptrs[key] = (request_content *) zmalloc(space);
+
+    return ptr->ptrs[key] ? 0 : -ENOMEM;
+}
+
+static int release_associated_data(struct associated_data *ptr, const int key) {
+    if (key >= ptr->count) {
+        return -EBADSLT;
+    }
+
+    if (ptr->ptrs[key]) {
+        free(ptr->ptrs[key]);
+        ptr->ptrs[key] = 0;
+    }
+    return 0;
+}
+
+static void free_associated_data(struct associated_data *ptr) {
+    for (int i = 0; i < ptr->count) {
+        free(ptr->ptrs[i]);
+    }
+    free(ptr->ptrs);
+    ptr->ptrs = 0;
+    ptr->count = 0;
+}
+
 /*
  * Class:     org_reactivetoolbox_asyncio_NativeIO
  * Method:    initRing
  * Signature: (JJ)J
  */
-JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_initRing(JNIEnv *env, jclass clazz, jlong entries_count, jlong flags) {
-    struct ring_with_data* ring_instance = zmalloc(sizeof(struct ring_with_data));
+JNIEXPORT jlong JNICALL
+Java_org_reactivetoolbox_asyncio_NativeIO_initRing(JNIEnv *env, jclass clazz, jlong entries_count, jlong flags) {
+    struct ring_with_data *ring_instance = zmalloc(sizeof(struct ring_with_data));
 
-    int rc = io_uring_queue_init(entries_count, &ring_instance->ring, flags);
+    int rc = alloc_associated_data(&ring_instance->data, entries_count * 2);
+
+    if (rc != 0) {
+        free(ring_instance);
+        return 0;
+    }
+
+    rc = io_uring_queue_init(entries_count, &ring_instance->ring, flags);
 
     // Don't share any data with child processes
     if (rc == 0) {
         rc = io_uring_ring_dontfork(&ring_instance->ring);
 
-        if (rc != 0) {
-            //TODO: throw an exception?
+        if (rc) {
             free(ring_instance);
-            ring_instance = 0;
+            return 0;
         }
     }
-
-    ring_instance->data.ptrs = (union request_data**) zmalloc(sizeof(union request_data*) * entries_count * 2);
-    ring_instance->data.count = entries_count * 2;
 
     return (jlong) ring_instance;
 }
@@ -92,20 +166,16 @@ JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_initRing(JNIEn
  * Method:    closeRing
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_closeRing(JNIEnv * env, jclass clazz, jlong ringPtr) {
+JNIEXPORT void JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_closeRing(JNIEnv *env, jclass clazz, jlong ringPtr) {
     if (ringPtr == 0) {
         return;
     }
 
-    io_uring_queue_exit(RING);
+    struct ring_with_data *ring_instance = RING_WITH_DATA;
 
-    struct ring_with_data* ring_instance = RING_WITH_DATA;
-
-    for (int i = 0; i < ring_instance->data.count; i++) {
-        free(ring_instance->data.ptrs[i]);
-    }
-
-    free(RING_WITH_DATA);
+    io_uring_queue_exit(&ring_instance->ring);
+    free_associated_data(&ring_instance->data);
+    free(ring_instance);
 }
 
 /*
@@ -113,24 +183,26 @@ JNIEXPORT void JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_closeRing(JNIEn
  * Method:    peekCQ
  * Signature: (J[J)I
  */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_peekCQ(JNIEnv *env, jclass clazz, jlong ringPtr, jlongArray data) {
-    int count = (*env)->GetArrayLength(env, data) >> 1;
-
-    struct io_uring_cqe* batch[count];
-    int ready = io_uring_peek_batch_cqe(RING, batch, count);
-
-    if (ready) {
-        int outputCount = ready << 1;
-        jlong localData[outputCount];
-
-        for (int i = 0, ndx = 0; i < ready; i++) {
-            localData[ndx++] = batch[i]->user_data;
-            localData[ndx++] = ((jlong) batch[i]->res) << 32 | batch[i]->flags;
-        }
-        (*env)->SetLongArrayRegion(env, data, 0, outputCount, localData);
-    }
-
-    return (jint) ready;
+JNIEXPORT jint JNICALL
+Java_org_reactivetoolbox_asyncio_NativeIO_peekCQ(JNIEnv *env, jclass clazz, jlong ringPtr, jlongArray data) {
+    //TODO: rework using callback
+//    int count = (*env)->GetArrayLength(env, data) >> 1;
+//
+//    struct io_uring_cqe* batch[count];
+//    int ready = io_uring_peek_batch_cqe(RING, batch, count);
+//
+//    if (ready) {
+//        int outputCount = ready << 1;
+//        jlong localData[outputCount];
+//
+//        for (int i = 0, ndx = 0; i < ready; i++) {
+//            localData[ndx++] = batch[i]->user_data;
+//            localData[ndx++] = ((jlong) batch[i]->res) << 32 | batch[i]->flags;
+//        }
+//        (*env)->SetLongArrayRegion(env, data, 0, outputCount, localData);
+//    }
+//
+//    return (jint) ready;
 }
 
 /*
@@ -138,7 +210,8 @@ JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_peekCQ(JNIEnv *
  * Method:    advanceCQ
  * Signature: (JI)V
  */
-JNIEXPORT void JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_advanceCQ(JNIEnv *env, jclass clazz, jlong ringPtr, jint count) {
+JNIEXPORT void JNICALL
+Java_org_reactivetoolbox_asyncio_NativeIO_advanceCQ(JNIEnv *env, jclass clazz, jlong ringPtr, jint count) {
     io_uring_cq_advance(RING, count);
 }
 
@@ -147,7 +220,8 @@ JNIEXPORT void JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_advanceCQ(JNIEn
  * Method:    submitAndWait
  * Signature: (JJ)J
  */
-JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_submitAndWait(JNIEnv *env, jclass clazz, jlong ringPtr, jlong numWait) {
+JNIEXPORT jlong JNICALL
+Java_org_reactivetoolbox_asyncio_NativeIO_submitAndWait(JNIEnv *env, jclass clazz, jlong ringPtr, jlong numWait) {
     return (jlong) io_uring_submit_and_wait(RING, (unsigned) numWait);
 }
 
@@ -165,22 +239,7 @@ JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_spaceLeft(JNIE
  * Method:    prepareIO
  * Signature: (JJIJJJJJ)I
  */
-static void ensure_memory(struct ring_with_data* ring_instance, jlong requestId) {
-    if (ring_instance->data.count >= requestId) {
-        // Reallocate pointers
-        union request_data** new_ptrs = zmalloc(sizeof(void*) * ring_instance->data.count * 2);
-
-        memcpy(new_ptrs, ring_instance->data.ptrs, sizeof(void*) * ring_instance->data.count);
-        free(ring_instance->data.ptrs);
-        ring_instance->data.ptrs = new_ptrs;
-        ring_instance->data.count *= 2;
-    }
-
-    if (!ring_instance->data.ptrs[requestId]) {
-        ring_instance->data.ptrs[requestId] = zmalloc(EXTRA_DATA_SIZE);
-    }
-}
-
+//TODO: add second method for requests which require extra data
 JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepareIO(JNIEnv *env, jclass clazz,
                                                                            jlong ringPtr, jint operation,
                                                                            jint fd, jlong address,
@@ -190,11 +249,8 @@ JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_prepareIO(JNIEn
     struct io_uring_sqe *sqe = io_uring_get_sqe(RING);
 
     if (!sqe) {
-        return (jint)(-ENOSPC);
+        return (jint) (-ENOSPC);
     }
-
-    // Make sure accompanying memory is available
-    ensure_memory(RING_WITH_DATA, requestId);
 
     sqe->__pad2[0] = sqe->__pad2[1] = sqe->__pad2[2] = 0;
     sqe->opcode = (__u8) operation;
@@ -262,7 +318,8 @@ JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_createSocket(JN
  * Method:    bind
  * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_bind(JNIEnv *env, jclass clazz, jint socket, jint port, jbyteArray byteAddress) {
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_bind(JNIEnv *env, jclass clazz, jint socket, jint port,
+                                                                      jbyteArray byteAddress) {
     struct sockaddr_in bind_addr;
 
     memset(&bind_addr, 0, sizeof(bind_addr));
@@ -280,7 +337,7 @@ JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_bind(JNIEnv *en
             len = sizeof(address) - 1;
         }
 
-        (*env)->GetByteArrayRegion(env, byteAddress, 0, len, (jbyte*)address);
+        (*env)->GetByteArrayRegion(env, byteAddress, 0, len, (jbyte *) address);
 
         int rc = inet_pton(AF_INET, address, &bind_addr.sin_addr);
 
@@ -289,7 +346,7 @@ JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_bind(JNIEnv *en
         }
     }
 
-    return (jint) bind(socket, (struct sockaddr *)&bind_addr, sizeof(bind_addr));
+    return (jint) bind(socket, (struct sockaddr *) &bind_addr, sizeof(bind_addr));
 }
 
 /*
@@ -297,6 +354,7 @@ JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_bind(JNIEnv *en
  * Method:    listen
  * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_org_reactivetoolbox_asyncio_NativeIO_listen(JNIEnv *env, jclass clazz, jint socket, jint backlog) {
+JNIEXPORT jint JNICALL
+Java_org_reactivetoolbox_asyncio_NativeIO_listen(JNIEnv *env, jclass clazz, jint socket, jint backlog) {
     return (jint) listen(socket, backlog);
 }
