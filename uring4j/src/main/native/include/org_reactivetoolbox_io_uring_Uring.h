@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (IJJ)I
  */
 JNIEXPORT jint JNICALL Java_org_reactivetoolbox_io_uring_Uring_init
-  (JNIEnv *, jclass, jint, jlong, jlong);
+  (JNIEnv *, jclass, jint, jlong, jint);
 
 /*
  * Class:     org_reactivetoolbox_io_uring_Uring
@@ -70,6 +70,22 @@ JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_io_uring_Uring_nextSQEntry
  */
 JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_io_uring_Uring_submitAndWait
   (JNIEnv *, jclass, jlong, jint);
+
+/*
+ * Class:     org_reactivetoolbox_io_uring_Uring
+ * Method:    socket
+ * Signature: (III)I
+ */
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_io_uring_Uring_socket
+  (JNIEnv *, jclass, jint, jint, jint);
+
+/*
+ * Class:     org_reactivetoolbox_io_uring_Uring
+ * Method:    prepareForListen
+ * Signature: (IJII)I
+ */
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_io_uring_Uring_prepareForListen
+  (JNIEnv *, jclass, jint, jlong, jint, jint);
 
 #ifdef __cplusplus
 }
