@@ -1,10 +1,13 @@
 package org.reactivetoolbox.io.uring.structs;
 
-import static org.reactivetoolbox.io.raw.UnsafeHolder.unsafe;
+import org.reactivetoolbox.io.raw.RawMemory;
+
 import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.flags;
 import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.res;
 import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.user_data;
 
+//TODO: make common API for such structs?
+//TODO: make it movable?
 public class CompletionQueueEntry {
     private final long address;
 
@@ -17,14 +20,14 @@ public class CompletionQueueEntry {
     }
 
     public long userData() {
-        return unsafe().getLong(address + user_data.offset());
+        return RawMemory.getLong(address + user_data.offset());
     }
 
     public int result() {
-        return unsafe().getInt(address + res.offset());
+        return RawMemory.getInt(address + res.offset());
     }
 
     public int flags() {
-        return unsafe().getInt(address + flags.offset());
+        return RawMemory.getInt(address + flags.offset());
     }
 }

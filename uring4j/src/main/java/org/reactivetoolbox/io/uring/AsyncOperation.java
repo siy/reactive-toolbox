@@ -40,5 +40,9 @@ public enum AsyncOperation {
     IORING_OP_SPLICE,
     IORING_OP_PROVIDE_BUFFERS,
     IORING_OP_REMOVE_BUFFERS,
-    IORING_OP_LAST
+    IORING_OP_LAST;
+
+    public byte opcode() {
+        return (byte) ordinal();
+    }
 }

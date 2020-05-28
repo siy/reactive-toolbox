@@ -160,6 +160,7 @@
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.netty=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io.raw=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io.uring=ALL-UNNAMED
+                        --add-opens java.base/jdk.internal.misc=org.reactivetoolbox.io.uring,ALL-UNNAMED
                         ${jaCoCoArgLine}
                         ${java.enable-preview}
                         -Xmx1024m
@@ -183,10 +184,15 @@
                 <configuration>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
-                    <release>${java.release}</release>
-                    <compilerArgument>${java.enable-preview}</compilerArgument>
+<!--                    <release>${java.release}</release>-->
+                    <source>14</source>
+                    <target>14</target>
+                    <compilerArgs>
+                        <arg>${java.enable-preview}</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
