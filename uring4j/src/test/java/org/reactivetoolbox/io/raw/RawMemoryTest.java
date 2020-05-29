@@ -1,9 +1,8 @@
 package org.reactivetoolbox.io.raw;
 
 import org.junit.jupiter.api.Test;
-import jdk.internal.misc.Unsafe;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RawMemoryTest {
     @Test

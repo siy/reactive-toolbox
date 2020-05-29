@@ -1,5 +1,5 @@
 package org.reactivetoolbox.io.uring.structs;
 
-//TODO: make common API for such structs?
+//TODO: finish implementation
 public class SocketAddressIn6 {
 }

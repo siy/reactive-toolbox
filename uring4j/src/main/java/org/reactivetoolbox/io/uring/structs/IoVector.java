@@ -1,16 +1,11 @@
 package org.reactivetoolbox.io.uring.structs;
 
-import org.reactivetoolbox.io.raw.RawMemory;
-
 import static org.reactivetoolbox.io.uring.structs.IoVectorOffsets.iov_base;
 import static org.reactivetoolbox.io.uring.structs.IoVectorOffsets.iov_len;
 
-//TODO: make common API for such structs?
-public class IoVector {
-    private final long address;
-
+public class IoVector extends AbstractRawStructure<IoVector> {
     private IoVector(final long address) {
-        this.address = address;
+        super(address, IoVectorOffsets.SIZE);
     }
 
     public static IoVector at(final long address) {
@@ -18,20 +13,18 @@ public class IoVector {
     }
 
     public long base() {
-        return RawMemory.getLong(address + iov_base.offset());
+        return getLong(iov_base);
     }
 
     public IoVector base(final long data) {
-        RawMemory.putLong(address + iov_base.offset(), data);
-        return this;
+        return putLong(iov_base, data);
     }
 
     public long len() {
-        return RawMemory.getLong(address + iov_len.offset());
+        return getLong(iov_len);
     }
 
     public IoVector len(final long data) {
-        RawMemory.putLong(address + iov_len.offset(), data);
-        return this;
+        return putLong(iov_len, data);
     }
 }

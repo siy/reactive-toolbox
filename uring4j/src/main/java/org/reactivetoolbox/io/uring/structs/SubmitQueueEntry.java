@@ -1,7 +1,5 @@
 package org.reactivetoolbox.io.uring.structs;
 
-import org.reactivetoolbox.io.raw.RawMemory;
-
 import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.accept_flags;
 import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.addr;
 import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.addr2;
@@ -29,150 +27,116 @@ import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.sync_
 import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.timeout_flags;
 import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.user_data;
 
-//TODO: make common API for such structs?
-public class SubmitQueueEntry {
-    private final long address;
-
+public class SubmitQueueEntry extends AbstractRawStructure<SubmitQueueEntry> {
     private SubmitQueueEntry(final long address) {
-        this.address = address;
+        super(address, SubmitQueueEntryOffsets.SIZE);
     }
 
     public static SubmitQueueEntry at(final long address) {
         return new SubmitQueueEntry(address);
     }
 
-    public SubmitQueueEntry clear() {
-        RawMemory.clear(address, SubmitQueueEntryOffsets.SIZE);
-        return this;
-    }
-
     public SubmitQueueEntry opcode(final byte data) {
-        RawMemory.putByte(address + opcode.offset(), data);
-        return this;
+        return putByte(opcode, data);
     }
 
     public SubmitQueueEntry flags(final byte data) {
-        RawMemory.putByte(address + flags.offset(), data);
-        return this;
+        return putByte(flags, data);
     }
 
     public SubmitQueueEntry ioprio(final short data) {
-        RawMemory.putShort(address + ioprio.offset(), data);
-        return this;
+        return putShort(ioprio, data);
     }
 
     public SubmitQueueEntry pollEvents(final short data) {
-        RawMemory.putShort(address + poll_events.offset(), data);
-        return this;
+        return putShort(poll_events, data);
     }
 
     public SubmitQueueEntry bufIndex(final short data) {
-        RawMemory.putShort(address + buf_index.offset(), data);
-        return this;
+        return putShort(buf_index, data);
     }
 
     public SubmitQueueEntry bufGroup(final short data) {
-        RawMemory.putShort(address + buf_group.offset(), data);
-        return this;
+        return putShort(buf_group, data);
     }
 
     public SubmitQueueEntry personality(final short data) {
-        RawMemory.putShort(address + personality.offset(), data);
-        return this;
+        return putShort(personality, data);
     }
 
     public SubmitQueueEntry fd(final int data) {
-        RawMemory.putInt(address + fd.offset(), data);
-        return this;
+        return putInt(fd, data);
     }
 
     public SubmitQueueEntry len(final int data) {
-        RawMemory.putInt(address + len.offset(), data);
-        return this;
+        return putInt(len, data);
     }
 
     public SubmitQueueEntry rwFlags(final int data) {
-        RawMemory.putInt(address + rw_flags.offset(), data);
-        return this;
+        return putInt(rw_flags, data);
     }
 
     public SubmitQueueEntry fsyncFlags(final int data) {
-        RawMemory.putInt(address + fsync_flags.offset(), data);
-        return this;
+        return putInt(fsync_flags, data);
     }
 
     public SubmitQueueEntry syncRangeFlags(final int data) {
-        RawMemory.putInt(address + sync_range_flags.offset(), data);
-        return this;
+        return putInt(sync_range_flags, data);
     }
 
     public SubmitQueueEntry msgFlags(final int data) {
-        RawMemory.putInt(address + msg_flags.offset(), data);
-        return this;
+        return putInt(msg_flags, data);
     }
 
     public SubmitQueueEntry timeoutFlags(final int data) {
-        RawMemory.putInt(address + timeout_flags.offset(), data);
-        return this;
+        return putInt(timeout_flags, data);
     }
 
     public SubmitQueueEntry acceptFlags(final int data) {
-        RawMemory.putInt(address + accept_flags.offset(), data);
-        return this;
+        return putInt(accept_flags, data);
     }
 
     public SubmitQueueEntry cancelFlags(final int data) {
-        RawMemory.putInt(address + cancel_flags.offset(), data);
-        return this;
+        return putInt(cancel_flags, data);
     }
 
     public SubmitQueueEntry openFlags(final int data) {
-        RawMemory.putInt(address + open_flags.offset(), data);
-        return this;
+        return putInt(open_flags, data);
     }
 
     public SubmitQueueEntry statxFlags(final int data) {
-        RawMemory.putInt(address + statx_flags.offset(), data);
-        return this;
+        return putInt(statx_flags, data);
     }
 
     public SubmitQueueEntry fadviseAdvice(final int data) {
-        RawMemory.putInt(address + fadvise_advice.offset(), data);
-        return this;
+        return putInt(fadvise_advice, data);
     }
 
     public SubmitQueueEntry spliceFlags(final int data) {
-        RawMemory.putInt(address + splice_flags.offset(), data);
-        return this;
+        return putInt(splice_flags, data);
     }
 
     public SubmitQueueEntry spliceFdIn(final int data) {
-        RawMemory.putInt(address + splice_fd_in.offset(), data);
-        return this;
+        return putInt(splice_fd_in, data);
     }
 
     public SubmitQueueEntry off(final long data) {
-        RawMemory.putLong(address + off.offset(), data);
-        return this;
+        return putLong(off, data);
     }
 
     public SubmitQueueEntry addr2(final long data) {
-        RawMemory.putLong(address + addr2.offset(), data);
-        return this;
+        return putLong(addr2, data);
     }
 
     public SubmitQueueEntry addr(final long data) {
-        RawMemory.putLong(address + addr.offset(), data);
-        return this;
+        return putLong(addr, data);
     }
 
     public SubmitQueueEntry spliceOffIn(final long data) {
-        RawMemory.putLong(address + splice_off_in.offset(), data);
-        return this;
+        return putLong(splice_off_in, data);
     }
 
     public SubmitQueueEntry userData(final long data) {
-        RawMemory.putLong(address + user_data.offset(), data);
-        return this;
+        return putLong(user_data, data);
     }
 }

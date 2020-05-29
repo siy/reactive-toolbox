@@ -1,18 +1,12 @@
 package org.reactivetoolbox.io.uring.structs;
 
-import org.reactivetoolbox.io.raw.RawMemory;
-
 import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.flags;
 import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.res;
 import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.user_data;
 
-//TODO: make common API for such structs?
-//TODO: make it movable?
-public class CompletionQueueEntry {
-    private final long address;
-
+public class CompletionQueueEntry extends AbstractRawStructure<CompletionQueueEntry> {
     private CompletionQueueEntry(final long address) {
-        this.address = address;
+        super(address, CompletionQueueEntryOffsets.SIZE);
     }
 
     public static CompletionQueueEntry at(final long address) {
@@ -20,14 +14,14 @@ public class CompletionQueueEntry {
     }
 
     public long userData() {
-        return RawMemory.getLong(address + user_data.offset());
+        return getLong(user_data);
     }
 
     public int result() {
-        return RawMemory.getInt(address + res.offset());
+        return getInt(res);
     }
 
     public int flags() {
-        return RawMemory.getInt(address + flags.offset());
+        return getInt(flags);
     }
 }

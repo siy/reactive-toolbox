@@ -6,38 +6,34 @@ import static org.reactivetoolbox.io.uring.structs.SocketAddressInOffsets.sin_ad
 import static org.reactivetoolbox.io.uring.structs.SocketAddressInOffsets.sin_family;
 import static org.reactivetoolbox.io.uring.structs.SocketAddressInOffsets.sin_port;
 
-//TODO: make common API for such structs?
-public class SocketAddressIn {
-    private final long address;
-
+public class SocketAddressIn extends AbstractRawStructure<SocketAddressIn> {
     private SocketAddressIn(final long address) {
-        this.address = address;
+        super(address, SocketAddressInOffsets.SIZE);
     }
 
     public int address() {
-        return RawMemory.getIntInNetOrder(address + sin_addr.offset());
+        return getIntInNetOrder(sin_addr);
     }
 
     public SocketAddressIn address(final int addr) {
-        RawMemory.putIntInNetOrder(address + sin_addr.offset(), addr);
-        return this;
+        return putIntInNetOrder(sin_addr, addr);
     }
 
     public short port() {
-        return RawMemory.getShortInNetOrder(address + sin_port.offset());
+        return getShortInNetOrder(sin_port);
     }
 
     public SocketAddressIn port(final short port) {
-        RawMemory.putShortInNetOrder(address + sin_port.offset(), port);
-        return this;
+        return putShortInNetOrder(sin_port, port);
     }
 
+    //TODO: clarify family byte ordering
     public short family() {
-        return RawMemory.getShort(address + sin_family.offset());
+        return getShort(sin_family);
     }
 
+    //TODO: clarify family byte ordering
     public SocketAddressIn family(final short family) {
-        RawMemory.putShort(address + sin_family.offset(), family);
-        return this;
+        return putShort(sin_family, family);
     }
 }
