@@ -2,12 +2,12 @@ package org.reactivetoolbox.net.http.server.router;
 
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.codec.validation.Is;
-import org.reactivetoolbox.core.async.Promise;
+import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.core.lang.collection.List;
 import org.reactivetoolbox.core.lang.support.KSUID;
 import org.reactivetoolbox.net.http.ContentType;
 
-import static org.reactivetoolbox.core.async.Promise.readyOk;
+import static org.reactivetoolbox.io.async.Promise.readyOk;
 import static org.reactivetoolbox.net.http.server.router.RequestParameters.inBody;
 import static org.reactivetoolbox.net.http.server.router.RequestParameters.inPath;
 import static org.reactivetoolbox.net.http.server.router.RouteBuilder.get;

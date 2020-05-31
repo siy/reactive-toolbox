@@ -1,6 +1,6 @@
 package org.reactivetoolbox.net.http.server;
 
-import org.reactivetoolbox.core.async.Promise;
+import org.reactivetoolbox.io.async.Promise;
 
 public interface Server<T> {
     Promise<Server<T>> start();

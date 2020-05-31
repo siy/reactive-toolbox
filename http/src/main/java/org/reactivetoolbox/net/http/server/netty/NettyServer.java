@@ -13,7 +13,7 @@ import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.reactivetoolbox.core.async.Promise;
+import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.lang.Tuple.Tuple3;
@@ -24,10 +24,10 @@ import org.reactivetoolbox.net.http.server.router.Router;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.reactivetoolbox.core.async.Promise.all;
-import static org.reactivetoolbox.core.async.Promise.promise;
-import static org.reactivetoolbox.core.async.Promise.readyFail;
-import static org.reactivetoolbox.core.async.Promise.readyOk;
+import static org.reactivetoolbox.io.async.Promise.all;
+import static org.reactivetoolbox.io.async.Promise.promise;
+import static org.reactivetoolbox.io.async.Promise.readyFail;
+import static org.reactivetoolbox.io.async.Promise.readyOk;
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
 
 /**

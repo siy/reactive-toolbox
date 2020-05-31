@@ -9,8 +9,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <modules>
         <module>core</module>
-        <module>http</module>
-        <module>async-io-native</module>
+        <module>async-io</module>
     </modules>
 
     <packaging>pom</packaging>
@@ -40,9 +39,6 @@
         <java.release>14</java.release>
         <java.enable-preview>--enable-preview</java.enable-preview>
 
-        <!-- Dependencies versions -->
-        <netty.version>4.1.42.Final</netty.version>
-
         <!-- Testing -->
         <junit.version>5.6.2</junit.version>
         <junit.params.version>5.3.1</junit.params.version>
@@ -59,14 +55,8 @@
 
             <dependency>
                 <groupId>org.reactive-toolbox</groupId>
-                <artifactId>http</artifactId>
+                <artifactId>async-io</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-all</artifactId>
-                <version>${netty.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -103,13 +93,13 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
             <version>${junit.params.version}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -145,12 +135,13 @@
                 <configuration>
                     <argLine>
                         --illegal-access=permit
-                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.examples.async=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.async=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.scheduler=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.scheduler.impl=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.io.examples.async=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.io.async=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.io.scheduler=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.io.scheduler.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang.support=ALL-UNNAMED
+
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.codec=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.codec.json=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http=ALL-UNNAMED
@@ -158,10 +149,11 @@
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.netty=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io.raw=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io.uring=ALL-UNNAMED
-                        --add-opens java.base/jdk.internal.misc=org.reactivetoolbox.io.uring,ALL-UNNAMED
+
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.raw=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.uring=ALL-UNNAMED
+                        --add-opens java.base/jdk.internal.misc=org.reactivetoolbox.io.async,ALL-UNNAMED
                         ${jaCoCoArgLine}
                         ${java.enable-preview}
                         -Xmx1024m

@@ -17,7 +17,6 @@ package org.reactivetoolbox.core.meta;
 
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.core.log.impl.JdkLogger;
-import org.reactivetoolbox.core.scheduler.TaskScheduler;
 
 import java.time.Clock;
 import java.util.Map;
@@ -83,9 +82,6 @@ public final class AppMetaRepository {
 
         //Pre-load default configuration for use by built-in classes and for general purpose use
         static {
-            final int workerSchedulerSize = Runtime.getRuntime().availableProcessors();
-
-            INSTANCE.put(TaskScheduler.class, TaskScheduler.with(workerSchedulerSize));
             INSTANCE.put(CoreLogger.class, new JdkLogger());
             INSTANCE.put(Clock.class, Clock.systemUTC());
         }

@@ -1,6 +1,6 @@
 package org.reactivetoolbox.net.http.server.router;
 
-import org.reactivetoolbox.core.async.Promise;
+import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.core.lang.functional.Functions.FN0;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 import org.reactivetoolbox.core.lang.functional.Functions.FN2;
