@@ -10,7 +10,7 @@
     <modules>
         <module>core</module>
         <module>http</module>
-        <module>uring4j</module>
+        <module>async-io-native</module>
     </modules>
 
     <packaging>pom</packaging>

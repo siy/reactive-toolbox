@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>uring4j</artifactId>
+    <artifactId>async-io-native</artifactId>
 
     <profiles>
         <profile>
