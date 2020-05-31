@@ -3,26 +3,33 @@ package org.reactivetoolbox.io.uring.structs;
 import org.reactivetoolbox.io.raw.RawMemory;
 import org.reactivetoolbox.io.raw.RawProperty;
 
-abstract class AbstractRawStructure<T extends RawStructure<T>> implements RawStructure<T> {
+abstract class AbstractRawStructure<T extends RawStructure<?>> implements RawStructure<T> {
     private long address;
-    private final long size;
+    private final int size;
 
-    AbstractRawStructure(final long address, final long size) {
+    protected AbstractRawStructure(final long address, final int size) {
         this.address = address;
         this.size = size;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public T clear() {
-        RawMemory.clear(address, size);
-        return (T) this;
+    public long address() {
+        return address;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public T reposition(final long address) {
+    protected void address(final long address) {
         this.address = address;
+    }
+
+    @Override
+    public int size() {
+        return size;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public T clear() {
+        RawMemory.clear(address(), size());
         return (T) this;
     }
 

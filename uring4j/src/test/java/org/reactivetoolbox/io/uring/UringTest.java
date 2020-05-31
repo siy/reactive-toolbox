@@ -47,8 +47,8 @@ public class UringTest {
             Uring.advanceCQ(ringBase, 1);
         } finally {
             Uring.close(ringBase);
-            RawMemory.release(ringBase);
-            RawMemory.release(completionBase);
+            RawMemory.dispose(ringBase);
+            RawMemory.dispose(completionBase);
         }
     }
 
@@ -82,7 +82,7 @@ public class UringTest {
             }
         } finally {
             Uring.close(ringBase);
-            RawMemory.release(ringBase);
+            RawMemory.dispose(ringBase);
         }
     }
 }

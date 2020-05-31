@@ -20,13 +20,13 @@ import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_rdev_minor;
 import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_size;
 import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_uid;
 
-public class Statx extends AbstractRawStructure<Statx> {
-    private final StatxTimestamp atime = StatxTimestamp.at(0);
-    private final StatxTimestamp btime = StatxTimestamp.at(0);
-    private final StatxTimestamp ctime = StatxTimestamp.at(0);
-    private final StatxTimestamp mtime = StatxTimestamp.at(0);
+public class RawStatx extends AbstractExternalRawStructure<RawStatx> {
+    private final RawStatxTimestamp atime = RawStatxTimestamp.at(0);
+    private final RawStatxTimestamp btime = RawStatxTimestamp.at(0);
+    private final RawStatxTimestamp ctime = RawStatxTimestamp.at(0);
+    private final RawStatxTimestamp mtime = RawStatxTimestamp.at(0);
 
-    private Statx(final long address) {
+    private RawStatx(final long address) {
         super(address, StatxOffsets.SIZE);
 
         repositionInner(address);
@@ -40,7 +40,7 @@ public class Statx extends AbstractRawStructure<Statx> {
     }
 
     @Override
-    public Statx reposition(final long address) {
+    public RawStatx reposition(final long address) {
         repositionInner(address);
         return super.reposition(address);
     }
@@ -86,7 +86,7 @@ public class Statx extends AbstractRawStructure<Statx> {
     }
 
     /* File size */
-    public long size() {
+    public long fileSize() {
         return getLong(stx_size);
     }
 
@@ -121,22 +121,22 @@ public class Statx extends AbstractRawStructure<Statx> {
     }
 
     /* Last access time */
-    public StatxTimestamp lastAccessTime() {
+    public RawStatxTimestamp lastAccessTime() {
         return atime;
     }
 
     /* File creation time */
-    public StatxTimestamp creationTime() {
+    public RawStatxTimestamp creationTime() {
         return btime;
     }
 
     /* Last attribute change time */
-    public StatxTimestamp changeTime() {
+    public RawStatxTimestamp changeTime() {
         return ctime;
     }
 
     /* Last data modification time */
-    public StatxTimestamp modificationTime() {
+    public RawStatxTimestamp modificationTime() {
         return mtime;
     }
 }

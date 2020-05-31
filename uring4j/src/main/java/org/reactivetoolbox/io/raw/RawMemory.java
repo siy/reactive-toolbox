@@ -65,7 +65,7 @@ public final class RawMemory {
         return instance.reallocateMemory(address, newAmount);
     }
 
-    public static void release(final long address) {
+    public static void dispose(final long address) {
         instance.freeMemory(address);
     }
 

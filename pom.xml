@@ -158,6 +158,7 @@
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.netty=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io.raw=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.uring/org.reactivetoolbox.io.uring=ALL-UNNAMED
                         --add-opens java.base/jdk.internal.misc=org.reactivetoolbox.io.uring,ALL-UNNAMED

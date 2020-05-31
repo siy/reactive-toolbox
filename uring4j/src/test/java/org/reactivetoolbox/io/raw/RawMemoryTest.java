@@ -8,7 +8,7 @@ class RawMemoryTest {
     @Test
     void instanceCanBeObtained() {
         final long address = RawMemory.allocate(1024);
-        RawMemory.release(address);
+        RawMemory.dispose(address);
 
         assertTrue(address != 0);
     }

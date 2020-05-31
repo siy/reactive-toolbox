@@ -1,19 +1,12 @@
 package org.reactivetoolbox.io.uring;
 
-import org.reactivetoolbox.io.uring.structs.SocketAddressIn;
-import org.reactivetoolbox.io.uring.structs.SocketAddressIn6;
+import org.reactivetoolbox.io.uring.structs.RawSocketAddressIn;
+import org.reactivetoolbox.io.uring.structs.RawSocketAddressIn6;
 import org.reactivetoolbox.io.uring.utils.LibraryLoader;
 
 final class Uring {
-//    private static final int DEFAULT_QUEUE_SIZE = 4096;
-//    private static final int DEFAULT_QUEUE_FLAGS = 0;
-//    private static long calculateNumEntries(final int size) {
-//        if (size <= 0) {
-//            return DEFAULT_QUEUE_SIZE;
-//        }
-//        //Round up to nearest power of two
-//        return 1 << (32 - Integer.numberOfLeadingZeros(size - 1));
-//    }
+    // Actual size of struct io_uring is 160 bytes at the moment of writing
+    public static final long SIZE = 256;
 
     static {
         try {
@@ -47,15 +40,6 @@ final class Uring {
     public static native long nextSQEntry(long baseAddress);
     public static native long submitAndWait(long baseAddress, int waitNr);
 
-    public interface SubmissionFlags {
-        int IOSQE_FIXED_FILE        = (1 << 0); /* issue after inflight IO */
-        int IOSQE_IO_DRAIN          = (1 << 1);
-        int IOSQE_IO_LINK           = (1 << 2); /* links next sqe */
-        int IOSQE_IO_HARDLINK       = (1 << 3); /* like LINK, but stronger */
-        int IOSQE_ASYNC             = (1 << 4); /* always go async */
-        int IOSQE_BUFFER_SELECT     = (1 << 5); /* select buffer from sqe->buf_group */
-    }
-
     // Socket API
 
     /**
@@ -78,7 +62,7 @@ final class Uring {
      * @param socket
      *      Socket to configure.
      * @param address
-     *      Memory address with prepared socket address structure (See {@link SocketAddressIn} and {@link SocketAddressIn6} for more details}.
+     *      Memory address with prepared socket address structure (See {@link RawSocketAddressIn} and {@link RawSocketAddressIn6} for more details}.
      * @param len
      *      Size of the prepared socket address structure.
      * @param queueDepth

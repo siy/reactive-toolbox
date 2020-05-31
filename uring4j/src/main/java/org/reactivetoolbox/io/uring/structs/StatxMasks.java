@@ -1,7 +1,7 @@
 package org.reactivetoolbox.io.uring.structs;
 
 //TODO: find better location?
-public interface StatxFlags {
+public interface StatxMasks {
     int STATX_TYPE		    = 0x000000001;	/* Want/got stx_mode & S_IFMT */
     int STATX_MODE		    = 0x000000002;	/* Want/got stx_mode & ~S_IFMT */
     int STATX_NLINK	        = 0x000000004;	/* Want/got stx_nlink */

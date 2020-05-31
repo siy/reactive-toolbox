@@ -27,7 +27,19 @@ import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.sync_
 import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.timeout_flags;
 import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.user_data;
 
-public class SubmitQueueEntry extends AbstractRawStructure<SubmitQueueEntry> {
+public class SubmitQueueEntry extends AbstractExternalRawStructure<SubmitQueueEntry> {
+    public static final int IORING_FSYNC_DATASYNC = 1;      /* sqe->fsync_flags */
+    public static final int IORING_TIMEOUT_ABS = 1;         /* sqe->timeout_flags */
+    public static final int SPLICE_F_FD_IN_FIXED = 1 << 31; /* sqe->splice_flags, extends splice(2) flags */
+
+    //  SubmissionFlags
+    public static final int IOSQE_FIXED_FILE = 1;       /* issue after inflight IO */
+    public static final int IOSQE_IO_DRAIN = 2;
+    public static final int IOSQE_IO_LINK = 4;          /* links next sqe */
+    public static final int IOSQE_IO_HARDLINK = 8;      /* like LINK, but stronger */
+    public static final int IOSQE_ASYNC = 16;           /* always go async */
+    public static final int IOSQE_BUFFER_SELECT = 32;   /* select buffer from sqe->buf_group */
+
     private SubmitQueueEntry(final long address) {
         super(address, SubmitQueueEntryOffsets.SIZE);
     }

@@ -1,6 +1,9 @@
 package org.reactivetoolbox.io.uring.structs;
 
-public interface RawStructure<T extends RawStructure<T>> {
+public interface RawStructure<T extends RawStructure<?>> {
+    long address();
+
+    int size();
+
     T clear();
-    T reposition(final long address);
 }

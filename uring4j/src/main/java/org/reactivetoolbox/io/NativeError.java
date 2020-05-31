@@ -1,7 +1,7 @@
 package org.reactivetoolbox.io;
 
+import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.FailureType;
-import org.reactivetoolbox.core.lang.functional.Option;
 
 /**
  * Representation of native error codes in Java
@@ -123,7 +123,7 @@ public enum NativeError implements FailureType {
     EHOSTUNREACH(113, "No route to host"),
     EALREADY(114, "Operation already in progress"),
     EINPROGRESS(115, "Operation now in progress"),
-    ESTALE(116, "Stale file handle"),
+    ESTALE(116, "Stale file descriptor"),
     EUCLEAN(117, "Structure needs cleaning"),
     ENOTNAM(118, "Not a XENIX named type file"),
     ENAVAIL(119, "No XENIX semaphores available"),
@@ -140,9 +140,13 @@ public enum NativeError implements FailureType {
     EOWNERDEAD(130, "Owner died"),
     ENOTRECOVERABLE(131, "State not recoverable"),
     ERFKILL(132, "Operation not possible due to RF-kill"),
-    EHWPOISON(133, "Memory page has hardware error");
+    EHWPOISON(133, "Memory page has hardware error"),
 
-    private static final NativeError[] index = new NativeError[NativeError.values()[NativeError.values().length - 1].code];
+    // Always keep this constant last in the list
+    EUNKNOWN(Integer.MAX_VALUE, "Memory page has hardware error");
+
+    // Note that last error (EUNKNOWN) is not in the list, thus it is omitted during calculation
+    private static final NativeError[] index = new NativeError[NativeError.values()[NativeError.values().length - 2].code];
     private final int code;
     private final String description;
 
@@ -167,13 +171,17 @@ public enum NativeError implements FailureType {
         return description;
     }
 
-    public static Option<NativeError> decode(final int code) {
+    public Failure asFailure() {
+        return Failure.failure(this, description);
+    }
+
+    public static NativeError decode(final int code) {
         final int key = Math.abs(code);
 
         if (code >= index.length) {
-            return Option.empty();
+            return EUNKNOWN;
         }
 
-        return Option.option(index[key]);
+        return index[key];
     }
 }

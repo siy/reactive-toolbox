@@ -3,7 +3,7 @@ package org.reactivetoolbox.io.uring.structs;
 import static org.reactivetoolbox.io.uring.structs.IoVectorOffsets.iov_base;
 import static org.reactivetoolbox.io.uring.structs.IoVectorOffsets.iov_len;
 
-public class IoVector extends AbstractRawStructure<IoVector> {
+public class IoVector extends AbstractExternalRawStructure<IoVector> {
     private IoVector(final long address) {
         super(address, IoVectorOffsets.SIZE);
     }

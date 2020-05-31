@@ -4,7 +4,7 @@ import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.f
 import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.res;
 import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.user_data;
 
-public class CompletionQueueEntry extends AbstractRawStructure<CompletionQueueEntry> {
+public class CompletionQueueEntry extends AbstractExternalRawStructure<CompletionQueueEntry> {
     private CompletionQueueEntry(final long address) {
         super(address, CompletionQueueEntryOffsets.SIZE);
     }
