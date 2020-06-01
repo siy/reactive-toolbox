@@ -135,10 +135,6 @@
                 <configuration>
                     <argLine>
                         --illegal-access=permit
-                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.io.examples.async=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.io.async=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.io.scheduler=ALL-UNNAMED
-                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.io.scheduler.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang.support=ALL-UNNAMED
 
@@ -150,6 +146,10 @@
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.router.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.http/org.reactivetoolbox.net.http.server.netty=ALL-UNNAMED
 
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.examples.async=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.async=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.scheduler=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.scheduler.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.raw=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.uring=ALL-UNNAMED
