@@ -40,6 +40,12 @@ public final class RawMemory {
         return instance.getByte(address);
     }
 
+    public static byte[] getByteArray(final long address, final int length) {
+        final byte[] output = new byte[length];
+        instance.copyMemory(null, address, output, Unsafe.ARRAY_BYTE_BASE_OFFSET, length);
+        return output;
+    }
+
     public static void putLong(final long address, final long value) {
         instance.putLong(address, value);
     }
@@ -54,6 +60,10 @@ public final class RawMemory {
 
     public static void putByte(final long address, final byte value) {
         instance.putByte(address, value);
+    }
+
+    public static void putByteArray(final long address, final byte[] input) {
+        instance.copyMemory(input, Unsafe.ARRAY_BYTE_BASE_OFFSET, null, address, input.length);
     }
 
     // Memory management

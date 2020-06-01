@@ -18,31 +18,39 @@ package org.reactivetoolbox.io.scheduler.impl;
 
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.core.meta.AppMetaRepository;
-import org.reactivetoolbox.io.scheduler.RunnablePredicate;
+import org.reactivetoolbox.io.Proactor;
+import org.reactivetoolbox.io.scheduler.Action;
 import org.reactivetoolbox.io.scheduler.TaskScheduler;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static java.util.stream.IntStream.range;
+import static org.reactivetoolbox.core.lang.collection.List.list;
+import static org.reactivetoolbox.io.Proactor.proactor;
+import static org.reactivetoolbox.io.scheduler.impl.ActionProcessor.actionProcessor;
 
 /**
  * Task scheduler tuned to large number of short tasks.
  */
 public class DoubleQueueTaskScheduler implements TaskScheduler {
     private final ExecutorService executor;
-    private final PredicateProcessor[] processors;
+    private final ActionProcessor[] processors;
+    private final Proactor[] proactors;
     private int counter = 0;
 
     private DoubleQueueTaskScheduler(final int size) {
         executor = Executors.newFixedThreadPool(size, DaemonThreadFactory.of("Task Scheduler Thread #%d"));
-        processors = new PredicateProcessor[size];
+        processors = new ActionProcessor[size];
+        proactors = new Proactor[size];
 
         range(0, size).forEach(n -> {
-            processors[n] = new PredicateProcessor();
+            processors[n] = actionProcessor();
+            proactors[n] = proactor();
             executor.execute(() -> {
                 while (!executor.isShutdown()) {
-                    processors[n].processTimeoutsOnce();
+                    processors[n].processTasks(proactors[n]);
+                    proactors[n].processIO();
                     try {
                         Thread.sleep(0);
                     } catch (final InterruptedException e){
@@ -58,19 +66,19 @@ public class DoubleQueueTaskScheduler implements TaskScheduler {
     }
 
     @Override
-    public TaskScheduler submit(final RunnablePredicate predicate) {
+    public TaskScheduler submit(final Action action) {
         if (executor.isShutdown()) {
             throw new IllegalStateException("Attempt to submit new task after scheduler is shut down");
         }
-        processors[counter = (counter + 1) % processors.length].submit(predicate);
+        processors[counter = (counter + 1) % processors.length].submit(action);
         return this;
     }
 
     @Override
     public void shutdown() {
         executor.shutdown();
+        list(proactors).apply(Proactor::close);
     }
-
 
     @Override
     public CoreLogger logger() {

@@ -17,28 +17,42 @@ package org.reactivetoolbox.io.scheduler;
  */
 
 import org.reactivetoolbox.core.log.CoreLogger;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.scheduler.impl.DoubleQueueTaskScheduler;
 
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 /**
  * General purpose task scheduler for executing arbitrary functions.
  * <br>
- * Note that this scheduler is tailored for short living, non-blocking tasks. For long living and blocking tasks
- * other schedulers should be used.
+ * Note that this scheduler is tailored for short living, non-blocking tasks.
  *
- * @see RunnablePredicate
+ * @see Action
  */
 public interface TaskScheduler extends Executor {
     /**
-     * Low-level method which accepts {@link RunnablePredicate} and processes it as many times, as {@link RunnablePredicate#isDone(long)}
+     * Low-level method which accepts {@link Action} and processes it as many times, as {@link Action#perform(long, Submitter)}
      * returns false.
      *
-     * @param predicate
-     *        Runnable predicate to execute
+     * @param action
+     *         Runnable predicate to execute
+     *
      * @return this instance for fluent call chaining.
      */
-    TaskScheduler submit(final RunnablePredicate predicate);
+    TaskScheduler submit(final Action action);
+
+    /**
+     * Submit an I/O task.
+     *
+     * @param ioAction
+     *          The I/O task
+     *
+     * @return this instance for fluent call chaining.
+     */
+    default TaskScheduler submit(final Consumer<Submitter> ioAction) {
+        return submit((__, submitter) -> { ioAction.accept(submitter); return true;} );
+    }
 
     /**
      * Get internal logger instance.
@@ -51,18 +65,22 @@ public interface TaskScheduler extends Executor {
      * Submit task which will be executed exactly once and as soon as possible.
      *
      * @param runnable
-     *        Task to execute
+     *         Task to execute
+     *
      * @return this instance for fluent call chaining.
      */
     default TaskScheduler submit(final Runnable runnable) {
-        return submit((nanoTime) -> { runnable.run(); return true;});
+        return submit((nanoTime, __) -> {
+            runnable.run();
+            return true;
+        });
     }
 
     /**
      * Implementation of {@link Executor} interface
      *
      * @param task
-     *        Task to run
+     *         Task to run
      */
     @Override
     default void execute(final Runnable task) {
@@ -79,21 +97,28 @@ public interface TaskScheduler extends Executor {
      * Submit task which will be executed once specified timeout is expired.
      *
      * @param timeout
-     *        Timeout after which task will be executed
+     *         Timeout after which task will be executed
      * @param runnable
-     *        Code to execute
+     *         Code to execute
+     *
      * @return this instance fo fluent call chaining.
      */
     default TaskScheduler submit(final Timeout timeout, final Runnable runnable) {
         final long threshOld = System.nanoTime() + timeout.nanos();
 
-        return submit(nanoTime -> {
+        return submit((nanoTime, __) -> {
             if (nanoTime >= threshOld) {
                 runnable.run();
                 return true;
             }
             return false;
         });
+        /*
+         * Note: this implementation uses pure user level approach. Attempts to use
+         * kernel-driven timeout processing (see code commented below) demonstrated much worse performance.
+         */
+//        return submit(submitter -> submitter.delay(timeout)
+//                                            .onResult(v -> runnable.run()));
     }
 
     /**
@@ -106,7 +131,8 @@ public interface TaskScheduler extends Executor {
      * Create instance of scheduler with specified execution pool size.
      *
      * @param size
-     *        Execution pool size
+     *         Execution pool size
+     *
      * @return created scheduler
      */
     static TaskScheduler with(final int size) {

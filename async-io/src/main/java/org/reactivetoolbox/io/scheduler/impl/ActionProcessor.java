@@ -16,27 +16,35 @@ package org.reactivetoolbox.io.scheduler.impl;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.io.scheduler.RunnablePredicate;
+import org.reactivetoolbox.io.Proactor;
+import org.reactivetoolbox.io.async.Submitter;
+import org.reactivetoolbox.io.scheduler.Action;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Single processing pipeline for {@link RunnablePredicate} tasks. Incoming tasks are placed into incoming queue,
+ * Single processing pipeline for {@link Action} tasks. Incoming tasks are placed into incoming queue,
  * while tasks are processed from processing queue. Once processing queue is empty queues are swapped.
- * In order to make this processor work, its {@link #processTimeoutsOnce()} method must be invoked as frequently
- * as possible.
+ * In order to make this processor work, its {@link #processTasks(Submitter)} method must be invoked
+ * as frequently as possible.
  */
-public class PredicateProcessor {
-    private volatile Queue<RunnablePredicate> processingQueue = new LinkedTransferQueue<>();
-    private final AtomicReference<Queue<RunnablePredicate>> incomingQueue = new AtomicReference<>(new LinkedTransferQueue<>());
+public class ActionProcessor {
+    private volatile Queue<Action> processingQueue = new LinkedTransferQueue<>();
+    private final AtomicReference<Queue<Action>> incomingQueue = new AtomicReference<>(new LinkedTransferQueue<>());
 
-    public void submit(final RunnablePredicate runnablePredicate) {
-        incomingQueue.get().add(runnablePredicate);
+    private ActionProcessor() {}
+
+    public static ActionProcessor actionProcessor() {
+        return new ActionProcessor();
     }
 
-    public void processTimeoutsOnce() {
+    public void submit(final Action action) {
+        incomingQueue.get().add(action);
+    }
+
+    public void processTasks(final Submitter submitter) {
         while (true) {
             final var element = processingQueue.poll();
             if (element == null) {
@@ -44,7 +52,7 @@ public class PredicateProcessor {
                 return;
             }
 
-            if (!element.isDone(System.nanoTime())) {
+            if (!element.perform(System.nanoTime(), submitter)) {
                 submit(element);
             }
         }

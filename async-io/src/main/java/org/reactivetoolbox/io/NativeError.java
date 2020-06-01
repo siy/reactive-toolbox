@@ -2,6 +2,7 @@ package org.reactivetoolbox.io;
 
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.FailureType;
+import org.reactivetoolbox.core.lang.functional.Result;
 
 /**
  * Representation of native error codes in Java
@@ -145,14 +146,15 @@ public enum NativeError implements FailureType {
     // Always keep this constant last in the list
     EUNKNOWN(Integer.MAX_VALUE, "Memory page has hardware error");
 
-    // Note that last error (EUNKNOWN) is not in the list, thus it is omitted during calculation
     private static final NativeError[] index = new NativeError[NativeError.values()[NativeError.values().length - 2].code];
     private final int code;
     private final String description;
 
     static {
         for(final NativeError err : NativeError.values()) {
-            index[err.code] = err;
+            if (err.code < index.length) {
+                index[err.code] = err;
+            }
         }
     }
 
@@ -175,7 +177,15 @@ public enum NativeError implements FailureType {
         return Failure.failure(this, description);
     }
 
-    public static NativeError decode(final int code) {
+    public static Failure nativeFailure(final int code) {
+        return nativeError(code).asFailure();
+    }
+
+    public static <T> Result<T> nativeResult(final int code) {
+        return Result.<T>fail(nativeFailure(code));
+    }
+
+    public static NativeError nativeError(final int code) {
         final int key = Math.abs(code);
 
         if (code >= index.length) {

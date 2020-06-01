@@ -166,13 +166,13 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    Promise<Unit> close(final FileDescriptor fd, final Option<Timeout> timeout);
+    Promise<Unit> closeFileDescriptor(final FileDescriptor fd, final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #close(FileDescriptor, Option)} except no timeout is specified.
+     * Same as {@link #closeFileDescriptor(FileDescriptor, Option)} except no timeout is specified.
      */
-    default Promise<Unit> close(final FileDescriptor fd) {
-        return close(fd, Option.empty());
+    default Promise<Unit> closeFileDescriptor(final FileDescriptor fd) {
+        return closeFileDescriptor(fd, Option.empty());
     }
 
     /**

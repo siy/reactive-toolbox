@@ -16,13 +16,16 @@ package org.reactivetoolbox.io.scheduler;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.io.async.Submitter;
+
 /**
  * Single task which accepts current time stamp and returns a decision, should
- * it be scheduled for next execution round or not. If {@link #isDone(long)}
+ * it be scheduled for next execution round or not. If {@link #perform(long, Submitter)}
  * returns <code>true</code> then task is considered finished and not scheduled
- * for the next round.
+ * for the next round. Otherwise task will be called again as soon as possible according
+ * to scheduling policy used by scheduler implementation.
  */
 @FunctionalInterface
-public interface RunnablePredicate {
-    boolean isDone(final long nanoTime);
+public interface Action {
+    boolean perform(final long nanoTime, final Submitter submitter);
 }

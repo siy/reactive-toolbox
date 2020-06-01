@@ -9,7 +9,7 @@ import org.reactivetoolbox.io.uring.structs.SubmitQueueEntry;
 import java.util.function.Consumer;
 
 public class UringHolder implements AutoCloseable {
-    public static final int DEFAULT_QUEUE_SIZE = 4096;
+    public static final int DEFAULT_QUEUE_SIZE = 128; //128 looks like a "sweet spot" for my HW/kernel
     public static final int DEFAULT_QUEUE_FLAGS = 0;
 
     private static final int ENTRY_SIZE = 8;    // each entry is a 64-bit pointer
@@ -87,7 +87,7 @@ public class UringHolder implements AutoCloseable {
 
         if (rc != 0) {
             RawMemory.dispose(ringBase);
-            return Result.fail(NativeError.decode(rc).asFailure());
+            return Result.fail(NativeError.nativeError(rc).asFailure());
         }
 
         return Result.ok(new UringHolder(numEntries, ringBase));

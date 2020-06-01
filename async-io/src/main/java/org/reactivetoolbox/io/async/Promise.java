@@ -33,6 +33,7 @@ import org.reactivetoolbox.io.scheduler.Timeout;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -64,6 +65,8 @@ public interface Promise<T> {
      */
     Promise<T> async(final Consumer<Promise<T>> task);
 
+    //Promise<T> async(final BiConsumer<Promise<T>, Submitter> task);
+
     /**
      * Run specified task asynchronously after specified timeout expires. Current instance of {@link Promise} is passed
      * to the task as a parameter.
@@ -72,6 +75,8 @@ public interface Promise<T> {
      * @return Current instance
      */
     Promise<T> async(final Timeout timeout, final Consumer<Promise<T>> task);
+
+    //Promise<T> async(final Timeout timeout, final BiConsumer<Promise<T>, Submitter> task);
 
     /**
      * Synchronously wait for this instance resolution.
