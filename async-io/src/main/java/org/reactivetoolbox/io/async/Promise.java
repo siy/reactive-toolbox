@@ -240,6 +240,7 @@ public interface Promise<T> {
         return promise(promise -> onResult(result -> promise.resolve(result.map(mapper))));
     }
 
+    //TODO: check correctness
     default <R> Promise<R> mapAsync(final FN1<R, T> mapper) {
         return Promise.<R>promise().async(promise -> onResult(result -> promise.resolve(result.map(mapper))));
     }
@@ -248,6 +249,7 @@ public interface Promise<T> {
         return promise(promise -> onResult(result -> promise.resolve(result.flatMap(mapper))));
     }
 
+    //TODO: check correctness
     default <R> Promise<R> flatMapAsync(final FN1<Result<R>, T> mapper) {
         return Promise.<R>promise().async(promise -> onResult(result -> promise.resolve(result.flatMap(mapper))));
     }

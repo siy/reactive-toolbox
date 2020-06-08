@@ -1,7 +1,7 @@
 package org.reactivetoolbox.io.uring;
 
 import org.reactivetoolbox.io.raw.RawMemory;
-import org.reactivetoolbox.io.uring.structs.CompletionQueueEntry;
+import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 
 import java.util.function.Consumer;
 

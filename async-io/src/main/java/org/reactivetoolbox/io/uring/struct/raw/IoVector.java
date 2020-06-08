@@ -1,7 +1,10 @@
-package org.reactivetoolbox.io.uring.structs;
+package org.reactivetoolbox.io.uring.struct.raw;
 
-import static org.reactivetoolbox.io.uring.structs.IoVectorOffsets.iov_base;
-import static org.reactivetoolbox.io.uring.structs.IoVectorOffsets.iov_len;
+import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
+import org.reactivetoolbox.io.uring.struct.shape.IoVectorOffsets;
+
+import static org.reactivetoolbox.io.uring.struct.shape.IoVectorOffsets.iov_base;
+import static org.reactivetoolbox.io.uring.struct.shape.IoVectorOffsets.iov_len;
 
 public class IoVector extends AbstractExternalRawStructure<IoVector> {
     private IoVector(final long address) {

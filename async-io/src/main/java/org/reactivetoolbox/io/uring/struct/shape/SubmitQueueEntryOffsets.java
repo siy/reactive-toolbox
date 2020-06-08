@@ -1,10 +1,10 @@
-package org.reactivetoolbox.io.uring.structs;
+package org.reactivetoolbox.io.uring.struct.shape;
 
 import org.reactivetoolbox.io.raw.RawProperty;
 
 import static org.reactivetoolbox.io.raw.RawProperty.raw;
 
-interface SubmitQueueEntryOffsets {
+public interface SubmitQueueEntryOffsets {
     int SIZE = 64;
     RawProperty opcode = raw(0, 1);
     RawProperty flags = raw(1, 1);

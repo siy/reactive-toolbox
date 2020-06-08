@@ -1,24 +1,27 @@
-package org.reactivetoolbox.io.uring.structs;
+package org.reactivetoolbox.io.uring.struct.raw;
 
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_atime;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_attributes;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_attributes_mask;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_blksize;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_blocks;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_btime;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_ctime;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_dev_major;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_dev_minor;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_gid;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_ino;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_mask;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_mode;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_mtime;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_nlink;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_rdev_major;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_rdev_minor;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_size;
-import static org.reactivetoolbox.io.uring.structs.StatxOffsets.stx_uid;
+import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
+import org.reactivetoolbox.io.uring.struct.shape.StatxOffsets;
+
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_atime;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_attributes;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_attributes_mask;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_blksize;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_blocks;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_btime;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_ctime;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_dev_major;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_dev_minor;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_gid;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_ino;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_mask;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_mode;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_mtime;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_nlink;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_rdev_major;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_rdev_minor;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_size;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_uid;
 
 public class RawStatx extends AbstractExternalRawStructure<RawStatx> {
     private final RawStatxTimestamp atime = RawStatxTimestamp.at(0);

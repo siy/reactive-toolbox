@@ -1,10 +1,10 @@
-package org.reactivetoolbox.io.uring.structs;
+package org.reactivetoolbox.io.uring.struct.shape;
 
 import org.reactivetoolbox.io.raw.RawProperty;
 
 import static org.reactivetoolbox.io.raw.RawProperty.raw;
 
-interface StatxOffsets {
+public interface StatxOffsets {
     int SIZE = 256;
     RawProperty stx_mask = raw(0, 4);
     RawProperty stx_blksize = raw(4, 4);

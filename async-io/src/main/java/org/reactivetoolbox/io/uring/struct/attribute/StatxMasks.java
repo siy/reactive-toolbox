@@ -1,4 +1,4 @@
-package org.reactivetoolbox.io.uring.structs;
+package org.reactivetoolbox.io.uring.struct.attribute;
 
 //TODO: find better location?
 public interface StatxMasks {

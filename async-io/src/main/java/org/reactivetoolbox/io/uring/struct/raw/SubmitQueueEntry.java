@@ -1,31 +1,34 @@
-package org.reactivetoolbox.io.uring.structs;
+package org.reactivetoolbox.io.uring.struct.raw;
 
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.accept_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.addr;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.addr2;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.buf_group;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.buf_index;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.cancel_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.fadvise_advice;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.fd;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.fsync_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.ioprio;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.len;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.msg_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.off;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.opcode;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.open_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.personality;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.poll_events;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.rw_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.splice_fd_in;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.splice_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.splice_off_in;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.statx_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.sync_range_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.timeout_flags;
-import static org.reactivetoolbox.io.uring.structs.SubmitQueueEntryOffsets.user_data;
+import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
+import org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets;
+
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.accept_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.addr;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.addr2;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.buf_group;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.buf_index;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.cancel_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.fadvise_advice;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.fd;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.fsync_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.ioprio;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.len;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.msg_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.off;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.opcode;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.open_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.personality;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.poll_events;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.rw_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.splice_fd_in;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.splice_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.splice_off_in;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.statx_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.sync_range_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.timeout_flags;
+import static org.reactivetoolbox.io.uring.struct.shape.SubmitQueueEntryOffsets.user_data;
 
 public class SubmitQueueEntry extends AbstractExternalRawStructure<SubmitQueueEntry> {
     public static final int IORING_FSYNC_DATASYNC = 1;      /* sqe->fsync_flags */

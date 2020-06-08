@@ -1,11 +1,19 @@
 package org.reactivetoolbox.io.uring;
 
+import org.reactivetoolbox.core.lang.Tuple;
+import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Result;
+import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.async.FileDescriptor;
+import org.reactivetoolbox.io.async.SizeT;
+import org.reactivetoolbox.io.async.net.*;
 import org.reactivetoolbox.io.raw.RawMemory;
-import org.reactivetoolbox.io.uring.structs.CompletionQueueEntry;
-import org.reactivetoolbox.io.uring.structs.SubmitQueueEntry;
+import org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress;
+import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
+import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 
+import java.util.EnumSet;
 import java.util.function.Consumer;
 
 public class UringHolder implements AutoCloseable {
@@ -103,5 +111,51 @@ public class UringHolder implements AutoCloseable {
 
     public int numEntries() {
         return numEntries;
+    }
+
+    public static Result<FileDescriptor> socket(final AddressFamily addressFamily,
+                                                final SocketType socketType,
+                                                final EnumSet<SocketFlag> openFlags,
+                                                final EnumSet<SocketOption> options) {
+        return NativeError.result(Uring.socket(addressFamily.code(),
+                                               socketType.code() | Bitmask.combine(openFlags),
+                                               Bitmask.combine(options)),
+                                  FileDescriptor::socket);
+    }
+
+    public static Result<ServerConnector> server(final SocketAddress<?> socketAddress,
+                                                 final SocketType socketType,
+                                                 final EnumSet<SocketFlag> openFlags,
+                                                 final EnumSet<SocketOption> options,
+                                                 final SizeT queueDepth) {
+        return socket(socketAddress.family(), socketType, openFlags, options)
+                .flatMap(fileDescriptor -> configureForListen(fileDescriptor, socketAddress, (int) queueDepth.value()))
+                .map(tuple -> tuple.map(ServerConnector::connector));
+    }
+
+    private static Result<Tuple2<FileDescriptor, SocketAddress<?>>> configureForListen(final FileDescriptor fileDescriptor,
+                                                                                       final SocketAddress<?> socketAddress,
+                                                                                       final int queueDepth) {
+        int rc;
+        if (socketAddress instanceof SocketAddressIn socketAddressIn) {
+            var addressIn = OffHeapSocketAddress.addressIn(socketAddressIn);
+
+            rc = Uring.prepareForListen(fileDescriptor.descriptor(),
+                                        addressIn.address(),
+                                        addressIn.size(),
+                                        queueDepth);
+
+        } else if (socketAddress instanceof SocketAddressIn6 socketAddressIn6) {
+            var addressIn6 = OffHeapSocketAddress.addressIn6(socketAddressIn6);
+
+            rc = Uring.prepareForListen(fileDescriptor.descriptor(),
+                                        addressIn6.address(),
+                                        addressIn6.size(),
+                                        queueDepth);
+        } else {
+            return Result.fail(NativeError.EPFNOSUPPORT.asFailure());
+        }
+
+        return rc == 0 ? Result.ok(Tuple.tuple(fileDescriptor, socketAddress)) : NativeError.failure(rc);
     }
 }

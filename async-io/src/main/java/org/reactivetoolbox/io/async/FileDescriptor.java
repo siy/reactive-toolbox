@@ -9,7 +9,7 @@ public class FileDescriptor {
     private final int fd;
     private final boolean isSocket;
 
-    public FileDescriptor(final int fd, final boolean isSocket) {
+    private FileDescriptor(final int fd, final boolean isSocket) {
         this.fd = fd;
         this.isSocket = isSocket;
     }

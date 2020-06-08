@@ -2,9 +2,11 @@ package org.reactivetoolbox.io;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.reactivetoolbox.core.lang.Tuple;
 import org.reactivetoolbox.io.async.OpenFlags;
 import org.reactivetoolbox.io.async.OpenMode;
 import org.reactivetoolbox.io.async.Promise;
+import org.reactivetoolbox.io.async.OffHeapBuffer;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
 import java.nio.file.Path;
@@ -48,6 +50,24 @@ class ProactorTest {
                                     .onResult(v -> v.onFailure(f -> fail()));
 
         waitForResult(promise);
+    }
+
+    @Test
+    void fileCanBeOpenedReadAndClosed() {
+        try (final OffHeapBuffer buffer = OffHeapBuffer.fixedSize(1024 * 1024)) {
+            final var promise = proactor.open(Path.of("target/classes/org/reactivetoolbox/io/Proactor.class"),
+                                              EnumSet.of(OpenFlags.O_RDONLY),
+                                              EnumSet.noneOf(OpenMode.class))
+                                        .onResult(System.out::println)
+                                        .onResult(v -> v.onSuccess(fd -> assertTrue(fd.descriptor() > 0))
+                                                        .onFailure(f -> fail()))
+                                        .chainMap(fd1 -> proactor.read(fd1, buffer).map(size -> Tuple.tuple(fd1, size)))
+                                        .chainMap(fdAndSize -> fdAndSize.map((fd, sz) -> proactor.closeFileDescriptor(fd)))
+                                        .onResult(System.out::println)
+                                        .onResult(v -> v.onFailure(f -> fail()));
+
+            waitForResult(promise);
+        }
     }
 
     private void waitForResult(final Promise<?> promise) {

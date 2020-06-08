@@ -1,4 +1,4 @@
-package org.reactivetoolbox.io.uring.structs;
+package org.reactivetoolbox.io.uring.struct;
 
 public interface RawStructure<T extends RawStructure<?>> {
     long address();

@@ -1,5 +1,7 @@
 package org.reactivetoolbox.io.async.net;
 
+import java.util.Arrays;
+
 public enum AddressFamily {
     AF_UNIX(1),           // Local communication
     AF_LOCAL(1),          // Synonym for AF_UNIX
@@ -27,13 +29,33 @@ public enum AddressFamily {
     AF_XDP(44),            // XDP (express data path) interface
     ;
 
-    private final int code;
+    private final short code;
+    private static final AddressFamily[] values = AddressFamily.values();
 
     AddressFamily(final int code) {
-        this.code = code;
+        this.code = (short) code;
     }
 
-    public int code() {
+    public static AddressFamily unsafeFromCode(final short family) {
+        int low = 0;
+        int high = values.length - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+
+            int cmp = values[mid].code - family;
+            if (cmp < 0)
+                low = mid + 1;
+            else if (cmp > 0)
+                high = mid - 1;
+            else
+                return values[mid];
+        }
+
+        return null;
+    }
+
+    public short code() {
         return code;
     }
 }

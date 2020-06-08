@@ -1,13 +1,14 @@
-package org.reactivetoolbox.io.uring.structs;
+package org.reactivetoolbox.io.uring.struct.raw;
 
-import org.reactivetoolbox.core.lang.functional.Functions;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
+import org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets;
 
-import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.flags;
-import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.res;
-import static org.reactivetoolbox.io.uring.structs.CompletionQueueEntryOffsets.user_data;
+import static org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets.flags;
+import static org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets.res;
+import static org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets.user_data;
 
 public class CompletionQueueEntry extends AbstractExternalRawStructure<CompletionQueueEntry> {
     private CompletionQueueEntry(final long address) {
@@ -31,6 +32,6 @@ public class CompletionQueueEntry extends AbstractExternalRawStructure<Completio
     }
 
     public <T> Result<T> result(final FN1<T, Integer> constructor) {
-        return res() >= 0 ? Result.ok(constructor.apply(res())) : NativeError.nativeResult(res());
+        return NativeError.result(res(), constructor);
     }
 }

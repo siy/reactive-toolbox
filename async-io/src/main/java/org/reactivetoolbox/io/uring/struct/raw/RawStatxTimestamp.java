@@ -1,7 +1,10 @@
-package org.reactivetoolbox.io.uring.structs;
+package org.reactivetoolbox.io.uring.struct.raw;
 
-import static org.reactivetoolbox.io.uring.structs.StatxTimestampOffsets.tv_nsec;
-import static org.reactivetoolbox.io.uring.structs.StatxTimestampOffsets.tv_sec;
+import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
+import org.reactivetoolbox.io.uring.struct.shape.StatxTimestampOffsets;
+
+import static org.reactivetoolbox.io.uring.struct.shape.StatxTimestampOffsets.tv_nsec;
+import static org.reactivetoolbox.io.uring.struct.shape.StatxTimestampOffsets.tv_sec;
 
 public class RawStatxTimestamp extends AbstractExternalRawStructure<RawStatxTimestamp> {
     private RawStatxTimestamp(final long address) {

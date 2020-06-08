@@ -9,23 +9,24 @@ import org.reactivetoolbox.io.async.OffsetT;
 import org.reactivetoolbox.io.async.OpenFlags;
 import org.reactivetoolbox.io.async.OpenMode;
 import org.reactivetoolbox.io.async.Promise;
+import org.reactivetoolbox.io.async.OffHeapBuffer;
 import org.reactivetoolbox.io.async.SizeT;
 import org.reactivetoolbox.io.async.SpliceDescriptor;
 import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.net.AddressFamily;
+import org.reactivetoolbox.io.async.net.ServerConnector;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketFlag;
 import org.reactivetoolbox.io.async.net.SocketType;
 import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.AsyncOperation;
 import org.reactivetoolbox.io.uring.UringHolder;
-import org.reactivetoolbox.io.uring.structs.CompletionQueueEntry;
-import org.reactivetoolbox.io.uring.structs.RawCString;
-import org.reactivetoolbox.io.uring.structs.SubmitQueueEntry;
-import org.reactivetoolbox.io.uring.structs.TimeSpec;
+import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
+import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
+import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
+import org.reactivetoolbox.io.uring.struct.offheap.OffHeapTimeSpec;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Deque;
@@ -34,8 +35,6 @@ import java.util.LinkedList;
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
-import static org.reactivetoolbox.io.NativeError.nativeResult;
-import static org.reactivetoolbox.io.async.FileDescriptor.*;
 import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
 
 public class Proactor implements Submitter, AutoCloseable {
@@ -107,7 +106,7 @@ public class Proactor implements Submitter, AutoCloseable {
     @Override
     public Promise<Duration> delay(final Timeout timeout) {
         return Promise.promise(promise -> {
-            final TimeSpec timeSpec = TimeSpec.forTimeout(timeout);
+            final OffHeapTimeSpec timeSpec = OffHeapTimeSpec.forTimeout(timeout);
             promise.onResult((r) -> timeSpec.dispose());
 
             final long startNanos = System.nanoTime();
@@ -116,8 +115,8 @@ public class Proactor implements Submitter, AutoCloseable {
                 final long endNanos = System.nanoTime();
                 final long totalNanos = endNanos - startNanos;
                 //TODO: add error handling
-                promise.ok(Duration.ofSeconds(totalNanos / TimeSpec.NANO_SCALE,
-                                              totalNanos % TimeSpec.NANO_SCALE));
+                promise.ok(Duration.ofSeconds(totalNanos / OffHeapTimeSpec.NANO_SCALE,
+                                              totalNanos % OffHeapTimeSpec.NANO_SCALE));
             }));
 
             queue.add(sqe -> sqe.clear()
@@ -131,24 +130,8 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
-    public Promise<SizeT> splice(final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
-        return null;
-    }
-
-    @Override
-    public Promise<SizeT> read(final FileDescriptor fdIn, final ByteBuffer buffer, final OffsetT offset, final Option<Timeout> timeout) {
-        return null;
-    }
-
-    @Override
-    public Promise<SizeT> write(final FileDescriptor fdOut, final ByteBuffer buffer, final OffsetT offset, final Option<Timeout> timeout) {
-        return null;
-    }
-
-    @Override
     public Promise<Unit> closeFileDescriptor(final FileDescriptor fd, final Option<Timeout> timeout) {
         //TODO: add handling for timeout
-
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> {
                 promise.resolve(entry.result(v -> Unit.UNIT));
@@ -161,12 +144,52 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
+    public Promise<SizeT> read(final FileDescriptor fdIn, final OffHeapBuffer buffer, final OffsetT offset, final Option<Timeout> timeout) {
+        //TODO: add handling for timeout
+        return Promise.promise(promise -> {
+            final int key = pendingCompletions.allocKey(entry -> {
+                buffer.used(entry.res());
+                promise.resolve(entry.result(SizeT::sizeT));
+            });
+
+            queue.add(sqe -> sqe.clear()
+                                .opcode(AsyncOperation.IORING_OP_READ.opcode())
+                                .fd(fdIn.descriptor())
+                                .addr(buffer.address())
+                                .len(buffer.size())
+                                .off(offset.value()));
+        });
+    }
+
+    @Override
+    public Promise<SizeT> write(final FileDescriptor fdOut, final OffHeapBuffer buffer, final OffsetT offset, final Option<Timeout> timeout) {
+        //TODO: add handling for timeout
+        return Promise.promise(promise -> {
+            final int key = pendingCompletions.allocKey(entry -> {
+                promise.resolve(entry.result(SizeT::sizeT));
+            });
+
+            queue.add(sqe -> sqe.clear()
+                                .opcode(AsyncOperation.IORING_OP_WRITE.opcode())
+                                .fd(fdOut.descriptor())
+                                .addr(buffer.address())
+                                .len(buffer.size())
+                                .off(offset.value()));
+        });
+    }
+
+    @Override
+    public Promise<SizeT> splice(final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
+        return null;
+    }
+
+    @Override
     public Promise<FileDescriptor> open(final Path path,
                                         final EnumSet<OpenFlags> flags,
                                         final EnumSet<OpenMode> mode,
                                         final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final RawCString rawPath = RawCString.rawCString(path.toString());
+            final OffHeapCString rawPath = OffHeapCString.cstring(path.toString());
             promise.onResult(v -> rawPath.dispose());
 
             final int key = pendingCompletions.allocKey((entry -> {
@@ -182,13 +205,18 @@ public class Proactor implements Submitter, AutoCloseable {
         });
     }
 
+    //TODO: finish it
     @Override
     public Promise<FileDescriptor> socket(final AddressFamily addressFamily, final SocketType socketType, final EnumSet<SocketFlag> openFlags) {
         return null;
     }
 
+    //TODO: finish it
     @Override
-    public Promise<FileDescriptor> serverSocket(final FileDescriptor socket, final Option<SocketAddress<?>> address, final SizeT backLog) {
+    public Promise<ServerConnector> server(final SocketAddress<?> socketAddress,
+                                           final SocketType socketType,
+                                           final EnumSet<SocketFlag> openFlags,
+                                           final SizeT queueDepth) {
         return null;
     }
 

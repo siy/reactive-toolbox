@@ -2,8 +2,8 @@ package org.reactivetoolbox.io.uring;
 
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.io.raw.RawMemory;
-import org.reactivetoolbox.io.uring.structs.CompletionQueueEntry;
-import org.reactivetoolbox.io.uring.structs.SubmitQueueEntry;
+import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
+import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 
 import static org.junit.jupiter.api.Assertions.*;
 
