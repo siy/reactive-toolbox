@@ -1,4 +1,7 @@
-package org.reactivetoolbox.io.async;
+package org.reactivetoolbox.io.async.file;
+
+import org.reactivetoolbox.io.async.common.OffsetT;
+import org.reactivetoolbox.io.async.common.SizeT;
 
 import java.util.EnumSet;
 

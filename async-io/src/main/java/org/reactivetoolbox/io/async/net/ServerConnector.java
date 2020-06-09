@@ -1,7 +1,6 @@
 package org.reactivetoolbox.io.async.net;
 
-import org.reactivetoolbox.core.lang.functional.Result;
-import org.reactivetoolbox.io.async.FileDescriptor;
+import org.reactivetoolbox.io.async.file.FileDescriptor;
 
 public interface ServerConnector {
 

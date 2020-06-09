@@ -3,10 +3,10 @@ package org.reactivetoolbox.io;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.lang.Tuple;
-import org.reactivetoolbox.io.async.OpenFlags;
-import org.reactivetoolbox.io.async.OpenMode;
+import org.reactivetoolbox.io.async.file.OpenFlags;
+import org.reactivetoolbox.io.async.file.OpenMode;
 import org.reactivetoolbox.io.async.Promise;
-import org.reactivetoolbox.io.async.OffHeapBuffer;
+import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
 import java.nio.file.Path;

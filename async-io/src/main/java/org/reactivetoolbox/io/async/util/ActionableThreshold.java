@@ -1,4 +1,4 @@
-package org.reactivetoolbox.io.async;
+package org.reactivetoolbox.io.async.util;
 
 /*
  * Copyright (c) 2019, 2020 Sergiy Yevtushenko

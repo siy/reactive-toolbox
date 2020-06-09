@@ -5,8 +5,8 @@ import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.NativeError;
-import org.reactivetoolbox.io.async.FileDescriptor;
-import org.reactivetoolbox.io.async.SizeT;
+import org.reactivetoolbox.io.async.file.FileDescriptor;
+import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.net.*;
 import org.reactivetoolbox.io.raw.RawMemory;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress;
@@ -117,7 +117,7 @@ public class UringHolder implements AutoCloseable {
                                                 final SocketType socketType,
                                                 final EnumSet<SocketFlag> openFlags,
                                                 final EnumSet<SocketOption> options) {
-        return NativeError.result(Uring.socket(addressFamily.code(),
+        return NativeError.result(Uring.socket(addressFamily.familyId(),
                                                socketType.code() | Bitmask.combine(openFlags),
                                                Bitmask.combine(options)),
                                   FileDescriptor::socket);

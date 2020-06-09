@@ -1,6 +1,6 @@
 package org.reactivetoolbox.io.async.net;
 
-public final class SocketAddressIn implements SocketAddress<Inet4Address> {
+public class SocketAddressIn implements SocketAddress<Inet4Address> {
     private final AddressFamily family;
     private final InetPort port;
     private final Inet4Address address;

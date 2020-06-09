@@ -1,6 +1,9 @@
 package org.reactivetoolbox.io.async.net;
 
-import java.util.Arrays;
+import org.reactivetoolbox.core.lang.functional.Option;
+import org.reactivetoolbox.core.lang.functional.Result;
+
+import static org.reactivetoolbox.io.NativeError.EPFNOSUPPORT;
 
 public enum AddressFamily {
     AF_UNIX(1),           // Local communication
@@ -29,11 +32,11 @@ public enum AddressFamily {
     AF_XDP(44),            // XDP (express data path) interface
     ;
 
-    private final short code;
+    private final short id;
     private static final AddressFamily[] values = AddressFamily.values();
 
-    AddressFamily(final int code) {
-        this.code = (short) code;
+    AddressFamily(final int id) {
+        this.id = (short) id;
     }
 
     public static AddressFamily unsafeFromCode(final short family) {
@@ -43,7 +46,7 @@ public enum AddressFamily {
         while (low <= high) {
             int mid = (low + high) >>> 1;
 
-            int cmp = values[mid].code - family;
+            int cmp = values[mid].id - family;
             if (cmp < 0)
                 low = mid + 1;
             else if (cmp > 0)
@@ -55,7 +58,12 @@ public enum AddressFamily {
         return null;
     }
 
-    public short code() {
-        return code;
+    public static Result<AddressFamily> addressFamily(final short family) {
+        return Option.option(unsafeFromCode(family))
+                     .fold($ -> EPFNOSUPPORT.result(), Result::ok);
+    }
+
+    public short familyId() {
+        return id;
     }
 }

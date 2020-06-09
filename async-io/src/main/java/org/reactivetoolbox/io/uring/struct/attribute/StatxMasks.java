@@ -1,6 +1,5 @@
 package org.reactivetoolbox.io.uring.struct.attribute;
 
-//TODO: find better location?
 public interface StatxMasks {
     int STATX_TYPE		    = 0x000000001;	/* Want/got stx_mode & S_IFMT */
     int STATX_MODE		    = 0x000000002;	/* Want/got stx_mode & ~S_IFMT */

@@ -20,6 +20,6 @@ package org.reactivetoolbox.core.lang.functional;
  * Error types interface
  */
 public interface FailureType {
-    int code();
+    int typeCode();
     String description();
 }

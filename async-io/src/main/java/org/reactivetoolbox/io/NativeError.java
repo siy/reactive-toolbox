@@ -2,7 +2,6 @@ package org.reactivetoolbox.io;
 
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.FailureType;
-import org.reactivetoolbox.core.lang.functional.Functions;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 import org.reactivetoolbox.core.lang.functional.Result;
 
@@ -166,7 +165,7 @@ public enum NativeError implements FailureType {
     }
 
     @Override
-    public int code() {
+    public int typeCode() {
         return code;
     }
 
@@ -177,6 +176,10 @@ public enum NativeError implements FailureType {
 
     public Failure asFailure() {
         return Failure.failure(this, description);
+    }
+
+    public <T> Result<T> result() {
+        return Result.fail(asFailure());
     }
 
     public static <T> Result<T> failure(final int code) {

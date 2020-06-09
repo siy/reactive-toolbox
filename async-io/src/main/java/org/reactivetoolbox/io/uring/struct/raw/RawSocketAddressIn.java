@@ -1,12 +1,14 @@
 package org.reactivetoolbox.io.uring.struct.raw;
 
-import org.reactivetoolbox.io.async.net.AddressFamily;
-import org.reactivetoolbox.io.async.net.Inet4Address;
-import org.reactivetoolbox.io.async.net.InetPort;
+import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.shape.SocketAddressInOffsets;
 
+import static org.reactivetoolbox.core.lang.functional.Result.ok;
+import static org.reactivetoolbox.io.async.net.AddressFamily.addressFamily;
+import static org.reactivetoolbox.io.async.net.Inet4Address.inet4Address;
+import static org.reactivetoolbox.io.async.net.InetPort.inetPort;
 import static org.reactivetoolbox.io.uring.struct.shape.SocketAddressInOffsets.sin_addr;
 import static org.reactivetoolbox.io.uring.struct.shape.SocketAddressInOffsets.sin_family;
 import static org.reactivetoolbox.io.uring.struct.shape.SocketAddressInOffsets.sin_port;
@@ -47,16 +49,17 @@ public class RawSocketAddressIn extends AbstractExternalRawStructure<RawSocketAd
 
     @Override
     public void assign(final SocketAddressIn addressIn) {
-        family(addressIn.family().code());
+        family(addressIn.family().familyId());
         port(addressIn.port().port());
         putBytes(sin_addr, addressIn.address().asBytes());
     }
 
     @Override
-    public SocketAddressIn extract() {
-        return SocketAddressIn.create(AddressFamily.unsafeFromCode(family()),
-                                      InetPort.inetPort(port()),
-                                      Inet4Address.unsafeFrom(getBytes(sin_addr)));
+    public Result<SocketAddressIn> extract() {
+        return Result.flatten(addressFamily(family()),
+                              ok(inetPort(port())),
+                              inet4Address(getBytes(sin_addr)))
+                     .map(tuple -> tuple.map(SocketAddressIn::create));
     }
 
     @Override

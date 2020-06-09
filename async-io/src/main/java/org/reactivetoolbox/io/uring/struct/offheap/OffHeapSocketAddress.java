@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io.uring.struct.offheap;
 
+import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.async.net.SocketAddressIn6;
@@ -19,7 +20,7 @@ public class OffHeapSocketAddress<T extends SocketAddress<?>, R extends External
         shape.shape().reposition(address());
     }
 
-    public T extract() {
+    public Result<T> extract() {
         return shape.extract();
     }
 

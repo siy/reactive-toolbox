@@ -1,4 +1,4 @@
-package org.reactivetoolbox.io.async;
+package org.reactivetoolbox.io.async.common;
 
 /**
  * Representation of the various values meaning 'size' of the something, for example size of read/writen chunk of data.

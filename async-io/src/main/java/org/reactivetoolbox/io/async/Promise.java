@@ -33,11 +33,10 @@ import org.reactivetoolbox.io.scheduler.Timeout;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static org.reactivetoolbox.io.async.ActionableThreshold.threshold;
+import static org.reactivetoolbox.io.async.util.ActionableThreshold.threshold;
 import static org.reactivetoolbox.core.lang.Tuple.Tuple1;
 import static org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import static org.reactivetoolbox.core.lang.Tuple.Tuple3;

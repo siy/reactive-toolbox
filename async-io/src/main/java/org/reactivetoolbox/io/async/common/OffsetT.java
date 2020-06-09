@@ -1,4 +1,4 @@
-package org.reactivetoolbox.io.async;
+package org.reactivetoolbox.io.async.common;
 
 /**
  * Representation of the various values meaning 'offset' inside something, for example offset from beginning of the file.

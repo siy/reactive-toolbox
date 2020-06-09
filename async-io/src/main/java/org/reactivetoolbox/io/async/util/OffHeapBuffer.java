@@ -1,4 +1,4 @@
-package org.reactivetoolbox.io.async;
+package org.reactivetoolbox.io.async.util;
 
 import org.reactivetoolbox.io.raw.RawMemory;
 import org.reactivetoolbox.io.uring.struct.AbstractOffHeapStructure;

@@ -1,6 +1,12 @@
 package org.reactivetoolbox.io.async.net;
 
+import org.reactivetoolbox.core.lang.functional.Option;
+import org.reactivetoolbox.core.lang.functional.Result;
+import org.reactivetoolbox.io.NativeError;
+
 import java.util.Arrays;
+
+import static org.reactivetoolbox.io.NativeError.EFAULT;
 
 public class Inet4Address implements InetAddress {
     public static final int SIZE = 4;
@@ -12,12 +18,11 @@ public class Inet4Address implements InetAddress {
         this.address = address;
     }
 
-    //TODO: switch to Option/Result?
-    public static Inet4Address unsafeFrom(final byte[] address) {
-        if (address.length != 4) {
-            return null;
+    public static Result<Inet4Address> inet4Address(final byte[] address) {
+        if (address.length != SIZE) {
+            return EFAULT.result();
         }
-        return new Inet4Address(Arrays.copyOf(address, SIZE));
+        return Result.ok(new Inet4Address(address));
     }
 
     @Override

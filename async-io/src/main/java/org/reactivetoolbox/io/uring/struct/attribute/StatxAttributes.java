@@ -1,6 +1,5 @@
 package org.reactivetoolbox.io.uring.struct.attribute;
 
-//TODO: find better location?
 public interface StatxAttributes {
     int STATX_ATTR_COMPRESSED   = 0x00000004; /* [I] File is compressed by the fs */
     int STATX_ATTR_IMMUTABLE    = 0x00000010; /* [I] File is marked immutable */

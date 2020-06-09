@@ -76,7 +76,7 @@ public enum WebFailureTypes implements FailureType {
     }
 
     @Override
-    public int code() {
+    public int typeCode() {
         return code;
     }
 

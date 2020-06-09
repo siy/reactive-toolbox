@@ -1,16 +1,22 @@
 package org.reactivetoolbox.io.uring.struct.raw;
 
+import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.async.net.SocketAddressIn6;
 import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.shape.SocketAddressIn6Offsets;
 
+import static org.reactivetoolbox.core.lang.functional.Result.ok;
+import static org.reactivetoolbox.io.async.net.AddressFamily.addressFamily;
+import static org.reactivetoolbox.io.async.net.Inet6Address.inet6Address;
+import static org.reactivetoolbox.io.async.net.Inet6FlowInfo.inet6FlowInfo;
+import static org.reactivetoolbox.io.async.net.Inet6ScopeId.inet6ScopeId;
+import static org.reactivetoolbox.io.async.net.InetPort.inetPort;
 import static org.reactivetoolbox.io.uring.struct.shape.SocketAddressIn6Offsets.sin6_addr;
 import static org.reactivetoolbox.io.uring.struct.shape.SocketAddressIn6Offsets.sin6_family;
 import static org.reactivetoolbox.io.uring.struct.shape.SocketAddressIn6Offsets.sin6_flowinfo;
 import static org.reactivetoolbox.io.uring.struct.shape.SocketAddressIn6Offsets.sin6_port;
 import static org.reactivetoolbox.io.uring.struct.shape.SocketAddressIn6Offsets.sin6_scope_id;
 
-//TODO: finish implementation
 public class RawSocketAddressIn6 extends AbstractExternalRawStructure<RawSocketAddressIn6>
         implements RawSocketAddress<SocketAddressIn6, RawSocketAddressIn6> {
 
@@ -69,12 +75,21 @@ public class RawSocketAddressIn6 extends AbstractExternalRawStructure<RawSocketA
 
     @Override
     public void assign(final SocketAddressIn6 input) {
-
+        family(input.family().familyId());
+        port(input.port().port());
+        addr(input.address().asBytes());
+        flowinfo(input.flowInfo().value());
+        scopeId(input.scopeId().scopeId());
     }
 
     @Override
-    public SocketAddressIn6 extract() {
-        return null;
+    public Result<SocketAddressIn6> extract() {
+        return Result.flatten(addressFamily(family()),
+                              ok(inetPort(port())),
+                              inet6Address(addr()),
+                              ok(inet6FlowInfo(flowinfo())),
+                              ok(inet6ScopeId(scopeId())))
+                     .map(tuple -> tuple.map(SocketAddressIn6::create));
     }
 
     @Override
