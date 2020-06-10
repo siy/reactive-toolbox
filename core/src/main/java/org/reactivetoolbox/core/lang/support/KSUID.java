@@ -17,7 +17,7 @@ import static org.reactivetoolbox.core.lang.functional.Result.ok;
 
 public final class KSUID implements Comparable<KSUID> {
     private static final ZoneId UTC = ZoneId.of("UTC");
-    private static final int EPOCH = 1400000000;
+    private static final long EPOCH = 1_400_000_000L;
     private static final int PAYLOAD_LENGTH = 16;
     private static final int DECODED_LENGTH = PAYLOAD_LENGTH + 4;
     private static final int MAX_ENCODED_LENGTH = 27;
@@ -82,7 +82,11 @@ public final class KSUID implements Comparable<KSUID> {
     private static Result<String> validate(final String input) {
         return (lengthValid(input) && validator.matcher(input).find())
                ? ok(input)
-               : Errors.NOT_VALID("Not a valid KSUID {0}", input == null ? "null" : input).asResult();
+               : Errors.NOT_VALID("Not a valid KSUID {0}", valueOrNull(input)).asResult();
+    }
+
+    private static String valueOrNull(final String input) {
+        return input == null ? "null" : input;
     }
 
     private static boolean lengthValid(final String input) {

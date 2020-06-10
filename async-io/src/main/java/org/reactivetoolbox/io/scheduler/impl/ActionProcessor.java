@@ -16,7 +16,6 @@ package org.reactivetoolbox.io.scheduler.impl;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.io.Proactor;
 import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.scheduler.Action;
 

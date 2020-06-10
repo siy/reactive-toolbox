@@ -70,7 +70,8 @@ public class DoubleQueueTaskScheduler implements TaskScheduler {
         if (executor.isShutdown()) {
             throw new IllegalStateException("Attempt to submit new task after scheduler is shut down");
         }
-        processors[counter = (counter + 1) % processors.length].submit(action);
+        final int index = counter = (counter + 1) % processors.length;
+        processors[index].submit(action);
         return this;
     }
 

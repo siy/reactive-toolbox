@@ -1,6 +1,5 @@
 package org.reactivetoolbox.io.async.net;
 
-import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 
 public class ClientConnection<T extends SocketAddress<?>> {

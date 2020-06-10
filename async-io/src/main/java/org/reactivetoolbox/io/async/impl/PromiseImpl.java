@@ -39,10 +39,9 @@ public class PromiseImpl<T> implements Promise<T> {
     private final AtomicMarkableReference<Result<T>> value = new AtomicMarkableReference<>(null, false);
     private final BlockingQueue<Consumer<Result<T>>> thenActions = new LinkedBlockingQueue<>();
     private final CountDownLatch actionsHandled = new CountDownLatch(1);
-    private final AtomicReference<Consumer<Throwable>> exceptionLogger = new AtomicReference<>(e -> logger().debug("Exception while applying handlers", e));
-
-    public PromiseImpl() {
-    }
+    private final AtomicReference<Consumer<Throwable>>
+            exceptionLogger =
+            new AtomicReference<>(e -> logger().debug("Exception while applying handlers", e));
 
     @Override
     public Promise<T> exceptionCollector(final Consumer<Throwable> consumer) {
@@ -139,9 +138,9 @@ public class PromiseImpl<T> implements Promise<T> {
     }
 
     private static final class SingletonHolder {
-        private static final int workerSchedulerSize = Runtime.getRuntime().availableProcessors();
+        private static final int WORKER_SCHEDULER_SIZE = Runtime.getRuntime().availableProcessors();
         private static final TaskScheduler SCHEDULER = AppMetaRepository.instance()
-                                                                        .put(TaskScheduler.class, TaskScheduler.with(workerSchedulerSize))
+                                                                        .put(TaskScheduler.class, TaskScheduler.with(WORKER_SCHEDULER_SIZE))
                                                                         .get(TaskScheduler.class);
 
         static TaskScheduler scheduler() {

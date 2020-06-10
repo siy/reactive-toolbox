@@ -1,10 +1,6 @@
 package org.reactivetoolbox.io.async.net;
 
-import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
-import org.reactivetoolbox.io.NativeError;
-
-import java.util.Arrays;
 
 import static org.reactivetoolbox.io.NativeError.EFAULT;
 

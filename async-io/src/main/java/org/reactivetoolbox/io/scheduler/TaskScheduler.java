@@ -51,7 +51,7 @@ public interface TaskScheduler extends Executor {
      * @return this instance for fluent call chaining.
      */
     default TaskScheduler submit(final Consumer<Submitter> ioAction) {
-        return submit((__, submitter) -> { ioAction.accept(submitter); return true;} );
+        return submit(($, submitter) -> { ioAction.accept(submitter); return true;} );
     }
 
     /**
@@ -70,7 +70,7 @@ public interface TaskScheduler extends Executor {
      * @return this instance for fluent call chaining.
      */
     default TaskScheduler submit(final Runnable runnable) {
-        return submit((nanoTime, __) -> {
+        return submit((nanoTime, $) -> {
             runnable.run();
             return true;
         });
@@ -106,7 +106,7 @@ public interface TaskScheduler extends Executor {
     default TaskScheduler submit(final Timeout timeout, final Runnable runnable) {
         final long threshOld = System.nanoTime() + timeout.nanos();
 
-        return submit((nanoTime, __) -> {
+        return submit((nanoTime, $) -> {
             if (nanoTime >= threshOld) {
                 runnable.run();
                 return true;

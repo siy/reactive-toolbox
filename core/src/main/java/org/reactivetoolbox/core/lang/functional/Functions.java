@@ -57,7 +57,7 @@ public interface Functions {
             return v1 -> function.apply(apply(v1));
         }
 
-        default <NT1> FN1<R, NT1> before(final FN1<T1, NT1> function) {
+        default <N> FN1<R, N> before(final FN1<T1, N> function) {
             return v1 -> apply(function.apply(v1));
         }
     }
@@ -71,7 +71,7 @@ public interface Functions {
         }
 
         default FN1<R, T2> bind(final T1 param) {
-            return (v2) -> apply(param, v2);
+            return v2 -> apply(param, v2);
         }
 
         default <N> FN2<N, T1, T2> then(final FN1<N, R> function) {

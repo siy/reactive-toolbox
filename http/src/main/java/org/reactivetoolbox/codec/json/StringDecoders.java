@@ -16,6 +16,9 @@ import static org.reactivetoolbox.codec.json.CodecError.error;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 
 public interface StringDecoders {
+
+    String INVALID_LOCAL_DATE_VALUE = "Invalid local date value {0}";
+
     static <T> Result<Option<T>> answer(final T value) {
         return ok(Option.option(value));
     }
@@ -88,7 +91,7 @@ public interface StringDecoders {
         try {
             return answer(LocalDate.parse(string));
         } catch (final DateTimeParseException e) {
-            return error("Invalid local date value {0}", string);
+            return error(INVALID_LOCAL_DATE_VALUE, string);
         }
     }
 
@@ -96,7 +99,7 @@ public interface StringDecoders {
         try {
             return answer(LocalDateTime.parse(string));
         } catch (final DateTimeParseException e) {
-            return error("Invalid local date value {0}", string);
+            return error(INVALID_LOCAL_DATE_VALUE, string);
         }
     }
 
@@ -104,7 +107,7 @@ public interface StringDecoders {
         try {
             return answer(ZonedDateTime.parse(string));
         } catch (final DateTimeParseException e) {
-            return error("Invalid local date value {0}", string);
+            return error(INVALID_LOCAL_DATE_VALUE, string);
         }
     }
 

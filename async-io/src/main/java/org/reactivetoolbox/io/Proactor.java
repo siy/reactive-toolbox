@@ -47,7 +47,7 @@ public class Proactor implements Submitter, AutoCloseable {
     private final Deque<Consumer<SubmitQueueEntry>> queue = new LinkedList<>();
 
     private Proactor(final int queueLen) {
-        uring = UringHolder.create(queueLen).fold((f) -> null, (h) -> h);
+        uring = UringHolder.create(queueLen).fold(f -> null, h -> h);
         pendingCompletions = ObjectHeap.objectHeap(uring.numEntries());
     }
 
@@ -137,9 +137,7 @@ public class Proactor implements Submitter, AutoCloseable {
     public Promise<Unit> closeFileDescriptor(final FileDescriptor fd, final Option<Timeout> timeout) {
         //TODO: add handling for timeout
         return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result(v -> Unit.UNIT));
-            });
+            final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(v -> Unit.UNIT)));
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)
@@ -177,9 +175,7 @@ public class Proactor implements Submitter, AutoCloseable {
                                 final Option<Timeout> timeout) {
         //TODO: add handling for timeout
         return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result(SizeT::sizeT));
-            });
+            final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(SizeT::sizeT)));
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)

@@ -6,7 +6,7 @@ import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import java.util.function.Consumer;
 
 class CompletionProcessor implements AutoCloseable {
-    private static final int ENTRY_SIZE = 8;    // each entry is a 64-bit pointer
+    private static final long ENTRY_SIZE = 8L;    // each entry is a 64-bit pointer
     private final CompletionQueueEntry entry;
     private final long completionBuffer;
     private final int size;

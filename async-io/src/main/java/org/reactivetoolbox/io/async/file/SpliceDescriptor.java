@@ -83,35 +83,18 @@ public class SpliceDescriptor {
 
         public SpliceDescriptorBuilder1 from(final FileDescriptor from) {
             descriptor.from(from);
-            return new SpliceDescriptorBuilder1() {
-                @Override
-                public SpliceDescriptorBuilder2 to(final FileDescriptor to) {
-                    descriptor.to(to);
-                    return new SpliceDescriptorBuilder2() {
-                        @Override
-                        public SpliceDescriptorBuilder3 fromOffset(final OffsetT fromOffset) {
-                            descriptor.fromOffset(fromOffset);
-                            return new SpliceDescriptorBuilder3() {
-                                @Override
-                                public SpliceDescriptorBuilder4 toOffset(final OffsetT toOffset) {
-                                    descriptor.toOffset(toOffset);
-                                    return new SpliceDescriptorBuilder4() {
-                                        @Override
-                                        public SpliceDescriptorBuilder5 toCopy(final SizeT toCopy) {
-                                            descriptor.toCopy(toCopy);
-                                            return new SpliceDescriptorBuilder5() {
-                                                @Override
-                                                public SpliceDescriptor flags(final EnumSet<SpliceFlags> flags) {
-                                                    return descriptor.flags(flags).toImmutable();
-                                                }
-                                            };
-                                        }
-                                    };
-                                }
-                            };
-                        }
+            return to -> {
+                descriptor.to(to);
+                return (SpliceDescriptorBuilder2) fromOffset -> {
+                    descriptor.fromOffset(fromOffset);
+                    return (SpliceDescriptorBuilder3) toOffset -> {
+                        descriptor.toOffset(toOffset);
+                        return (SpliceDescriptorBuilder4) toCopy -> {
+                            descriptor.toCopy(toCopy);
+                            return (SpliceDescriptorBuilder5) flags -> descriptor.flags(flags).toImmutable();
+                        };
                     };
-                }
+                };
             };
         }
 

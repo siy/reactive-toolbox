@@ -35,6 +35,10 @@ public class RawStatx extends AbstractExternalRawStructure<RawStatx> {
         repositionInner(address);
     }
 
+    public static RawStatx at(final long address) {
+        return new RawStatx(address);
+    }
+
     private void repositionInner(final long address) {
         atime.reposition(address + stx_atime.offset());
         btime.reposition(address + stx_btime.offset());

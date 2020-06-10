@@ -14,7 +14,7 @@ public enum AddressFamily {
     AF_APPLETALK(5),      // AppleTalk
     AF_X25(9),            // ITU-T X.25 / ISO-8208 protocol
     AF_INET6(10),          // IPv6 Internet protocols
-    AF_DECnet(12),         // DECet protocol sockets
+    AF_DEC_NET(12),         // DECet protocol sockets
     AF_KEY(15),            // Key management protocol, originally developed for usage with IPsec
     AF_NETLINK(16),        // Kernel user interface device
     AF_PACKET(17),         // Low-level packet interface
