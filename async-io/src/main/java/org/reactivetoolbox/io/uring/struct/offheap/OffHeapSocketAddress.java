@@ -4,6 +4,7 @@ import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.async.net.SocketAddressIn6;
+import org.reactivetoolbox.io.raw.RawProperty;
 import org.reactivetoolbox.io.uring.struct.AbstractOffHeapStructure;
 import org.reactivetoolbox.io.uring.struct.ExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.raw.RawSocketAddress;
@@ -11,17 +12,32 @@ import org.reactivetoolbox.io.uring.struct.raw.RawSocketAddressIn;
 import org.reactivetoolbox.io.uring.struct.raw.RawSocketAddressIn6;
 
 public class OffHeapSocketAddress<T extends SocketAddress<?>, R extends ExternalRawStructure<?>> extends AbstractOffHeapStructure<OffHeapSocketAddress<T,R>> {
-    private static final int SIZE = 128;    //Equal to sizeof(struct sockaddr_storage)
+    private static final int SIZE = 128 + 4;    //Equal to sizeof(struct sockaddr_storage) + sizeof(socklen_t)
+    private static final RawProperty sockaddrLen = RawProperty.raw(0, 4);
     private final RawSocketAddress<T, R> shape;
 
     private OffHeapSocketAddress(final RawSocketAddress<T, R> shape) {
         super(SIZE);
         this.shape = shape;
-        shape.shape().reposition(address());
+        clear();
+        shape.shape().reposition(address() + sockaddrLen.size());
+        putInt(sockaddrLen, shape.shape().size());
     }
 
     public Result<T> extract() {
         return shape.extract();
+    }
+
+    public long sizePtr() {
+        return address();
+    }
+
+    public int sockAddrSize() {
+        return getInt(sockaddrLen);
+    }
+
+    public long sockAddrPtr() {
+        return shape.shape().address();
     }
 
     public OffHeapSocketAddress<T,R> assign(final T input) {

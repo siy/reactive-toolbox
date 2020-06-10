@@ -183,36 +183,40 @@ public interface Submitter {
 
     /**
      * Create socket for making client-side connections/requests.
-     *
-     * @param addressFamily
+     *  @param addressFamily
      * @param socketType
      * @param openFlags
+     * @param options
      */
     Promise<FileDescriptor> socket(final AddressFamily addressFamily,
                                    final SocketType socketType,
-                                   final EnumSet<SocketFlag> openFlags);
+                                   final EnumSet<SocketFlag> openFlags,
+                                   final EnumSet<SocketOption> options);
 
     /**
      * Create server connector bound to specified address/port and is ready to accept incoming connection.
-     *
-     * @param socketAddress Socket address
+     *  @param socketAddress Socket address
      * @param socketType    Socket type
      * @param openFlags     Socket open flags
      * @param queueDepth    Depth of the listening queue
+     * @param options
      */
-    Promise<ServerConnector> server(final SocketAddress<?> socketAddress, final SocketType socketType,
-                                    final EnumSet<SocketFlag> openFlags, final SizeT queueDepth);
+    Promise<ServerConnector> server(final SocketAddress<?> socketAddress,
+                                    final SocketType socketType,
+                                    final EnumSet<SocketFlag> openFlags,
+                                    final SizeT queueDepth,
+                                    final EnumSet<SocketOption> options);
 
     /**
      * Submit ACCEPT operation.
      * Accept incoming connection for server socket. Accepted connection receives its own socket which
      * then need to be used to communicate (read/write) with particular client.
-     *
-     * @param socket Server socket to accept connections on.
+     *  @param socket Server socket to accept connections on.
      * @param flags  Accept flags (see {@link SocketFlag} for more details)
+     * @return
      */
-    Promise<ClientConnection> accept(final FileDescriptor socket,
-                                     final EnumSet<SocketFlag> flags);
+    Promise<ClientConnection<?>> accept(final FileDescriptor socket,
+                                        final EnumSet<SocketFlag> flags);
 
     /**
      * Submit CONNECT operation.

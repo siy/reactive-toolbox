@@ -1,22 +1,30 @@
 package org.reactivetoolbox.io.async.net;
 
+import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
-import org.reactivetoolbox.io.async.net.SocketAddress;
 
-public class ClientConnection {
-    private final FileDescriptor handle;
-    private final SocketAddress<?> address;
+public class ClientConnection<T extends SocketAddress<?>> {
+    private final FileDescriptor socket;
+    private final T address;
 
-    protected ClientConnection(final FileDescriptor handle, final SocketAddress<?> address) {
-        this.handle = handle;
+    private ClientConnection(final FileDescriptor socket, final T address) {
+        this.socket = socket;
         this.address = address;
     }
 
-    public FileDescriptor handle() {
-        return handle;
+    public FileDescriptor socket() {
+        return socket;
     }
 
-    public SocketAddress<?> address() {
+    public T address() {
         return address;
+    }
+
+    public static ClientConnection<SocketAddressIn> connectionIn(final FileDescriptor fileDescriptor, final SocketAddressIn addressIn) {
+        return new ClientConnection<>(fileDescriptor, addressIn);
+    }
+
+    public static ClientConnection<SocketAddressIn6> connectionIn6(final FileDescriptor fileDescriptor, final SocketAddressIn6 addressIn6) {
+        return new ClientConnection<>(fileDescriptor, addressIn6);
     }
 }

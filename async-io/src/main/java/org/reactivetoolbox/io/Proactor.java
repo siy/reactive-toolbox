@@ -9,6 +9,7 @@ import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.file.OpenFlags;
 import org.reactivetoolbox.io.async.file.OpenMode;
 import org.reactivetoolbox.io.async.Promise;
+import org.reactivetoolbox.io.async.net.SocketOption;
 import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.SpliceDescriptor;
@@ -21,6 +22,7 @@ import org.reactivetoolbox.io.async.net.SocketType;
 import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.AsyncOperation;
 import org.reactivetoolbox.io.uring.UringHolder;
+import org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress;
 import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
@@ -98,7 +100,8 @@ public class Proactor implements Submitter, AutoCloseable {
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey((entry -> promise.resolve(UNIT)));
 
-            queue.add(sqe -> sqe.userData(key)
+            queue.add(sqe -> sqe.clear()
+                                .userData(key)
                                 .opcode(AsyncOperation.IORING_OP_NOP.opcode()));
         });
     }
@@ -107,7 +110,6 @@ public class Proactor implements Submitter, AutoCloseable {
     public Promise<Duration> delay(final Timeout timeout) {
         return Promise.promise(promise -> {
             final OffHeapTimeSpec timeSpec = OffHeapTimeSpec.forTimeout(timeout);
-            promise.onResult((r) -> timeSpec.dispose());
 
             final long startNanos = System.nanoTime();
 
@@ -117,11 +119,13 @@ public class Proactor implements Submitter, AutoCloseable {
                 //TODO: add error handling
                 promise.ok(Duration.ofSeconds(totalNanos / OffHeapTimeSpec.NANO_SCALE,
                                               totalNanos % OffHeapTimeSpec.NANO_SCALE));
+
+                timeSpec.dispose();
             }));
 
             queue.add(sqe -> sqe.clear()
-                                .opcode(AsyncOperation.IORING_OP_TIMEOUT.opcode())
                                 .userData(key)
+                                .opcode(AsyncOperation.IORING_OP_TIMEOUT.opcode())
                                 .addr(timeSpec.address())
                                 .fd(-1)
                                 .len(1)
@@ -138,13 +142,17 @@ public class Proactor implements Submitter, AutoCloseable {
             });
 
             queue.add(sqe -> sqe.clear()
+                                .userData(key)
                                 .opcode(AsyncOperation.IORING_OP_CLOSE.opcode())
                                 .fd(fd.descriptor()));
         });
     }
 
     @Override
-    public Promise<SizeT> read(final FileDescriptor fdIn, final OffHeapBuffer buffer, final OffsetT offset, final Option<Timeout> timeout) {
+    public Promise<SizeT> read(final FileDescriptor fdIn,
+                               final OffHeapBuffer buffer,
+                               final OffsetT offset,
+                               final Option<Timeout> timeout) {
         //TODO: add handling for timeout
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> {
@@ -153,6 +161,7 @@ public class Proactor implements Submitter, AutoCloseable {
             });
 
             queue.add(sqe -> sqe.clear()
+                                .userData(key)
                                 .opcode(AsyncOperation.IORING_OP_READ.opcode())
                                 .fd(fdIn.descriptor())
                                 .addr(buffer.address())
@@ -162,7 +171,10 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
-    public Promise<SizeT> write(final FileDescriptor fdOut, final OffHeapBuffer buffer, final OffsetT offset, final Option<Timeout> timeout) {
+    public Promise<SizeT> write(final FileDescriptor fdOut,
+                                final OffHeapBuffer buffer,
+                                final OffsetT offset,
+                                final Option<Timeout> timeout) {
         //TODO: add handling for timeout
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> {
@@ -170,6 +182,7 @@ public class Proactor implements Submitter, AutoCloseable {
             });
 
             queue.add(sqe -> sqe.clear()
+                                .userData(key)
                                 .opcode(AsyncOperation.IORING_OP_WRITE.opcode())
                                 .fd(fdOut.descriptor())
                                 .addr(buffer.address())
@@ -190,13 +203,14 @@ public class Proactor implements Submitter, AutoCloseable {
                                         final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
             final OffHeapCString rawPath = OffHeapCString.cstring(path.toString());
-            promise.onResult(v -> rawPath.dispose());
 
             final int key = pendingCompletions.allocKey((entry -> {
                 promise.resolve(entry.result(FileDescriptor::file));
+                rawPath.dispose();
             }));
 
             queue.add(sqe -> sqe.clear()
+                                .userData(key)
                                 .opcode(AsyncOperation.IORING_OP_OPENAT.opcode())
                                 .fd(-100) // AT_FDCWD = -100
                                 .addr(rawPath.address())
@@ -205,28 +219,50 @@ public class Proactor implements Submitter, AutoCloseable {
         });
     }
 
-    //TODO: finish it
     @Override
-    public Promise<FileDescriptor> socket(final AddressFamily addressFamily, final SocketType socketType, final EnumSet<SocketFlag> openFlags) {
-        return null;
+    public Promise<FileDescriptor> socket(final AddressFamily addressFamily,
+                                          final SocketType socketType,
+                                          final EnumSet<SocketFlag> openFlags,
+                                          final EnumSet<SocketOption> options) {
+        return nop().flatMap($ -> UringHolder.socket(addressFamily, socketType, openFlags, options));
     }
 
-    //TODO: finish it
     @Override
     public Promise<ServerConnector> server(final SocketAddress<?> socketAddress,
                                            final SocketType socketType,
                                            final EnumSet<SocketFlag> openFlags,
-                                           final SizeT queueDepth) {
-        return null;
+                                           final SizeT queueDepth,
+                                           final EnumSet<SocketOption> options) {
+        return nop().flatMap($ -> UringHolder.server(socketAddress, socketType, openFlags, options, queueDepth));
     }
 
     @Override
-    public Promise<ClientConnection> accept(final FileDescriptor socket, final EnumSet<SocketFlag> flags) {
-        return null;
+    public Promise<ClientConnection<?>> accept(final FileDescriptor socket, final EnumSet<SocketFlag> flags) {
+        return Promise.promise(promise -> {
+            //TODO: add support for v6
+            final var clientAddress = OffHeapSocketAddress.addressIn();
+
+            final int key = pendingCompletions.allocKey((entry -> {
+                promise.resolve(entry.result(FileDescriptor::file)
+                                     .flatMap(fd -> Result.flatten(Result.ok(fd), clientAddress.extract())
+                                                          .map(tuple -> tuple.map(ClientConnection::connectionIn))));
+                clientAddress.dispose();
+            }));
+
+            queue.add(sqe -> sqe.clear()
+                                .userData(key)
+                                .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
+                                .fd(socket.descriptor())
+                                .addr(clientAddress.sockAddrPtr())
+                                .off(clientAddress.sizePtr())
+                                .acceptFlags(Bitmask.combine(flags)));
+        });
     }
 
     @Override
     public Promise<Unit> connect(final FileDescriptor socket, final SocketAddress<?> address) {
-        return null;
+        return Promise.promise(promise -> {
+            //TODO: finish it. finish OffHeapSocketAddress.socketAddress(final SocketAddress<?> address) first.
+        });
     }
 }
