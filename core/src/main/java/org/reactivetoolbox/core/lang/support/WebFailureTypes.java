@@ -58,7 +58,7 @@ public enum WebFailureTypes implements FailureType {
     SERVICE_UNAVAILABLE(503, "Service Unavailable"),
     GATEWAY_TIMEOUT(504, "Gateway Timeout"),
     HTTP_VERSION_NOT_SUPPORTED(505, "HTTP Version Not Supported"),
-    VARIANT_ALSO_NEGOTIATES_(506, "Variant Also Negotiates "),
+    VARIANT_ALSO_NEGOTIATES(506, "Variant Also Negotiates "),
     INSUFFICIENT_STORAGE(507, "Insufficient Storage"),
     LOOP_DETECTED(508, "Loop Detected"),
     BANDWIDTH_LIMIT_EXCEEDED(509, "Bandwidth Limit Exceeded"),

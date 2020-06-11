@@ -6,6 +6,8 @@ import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets;
 
+import java.util.StringJoiner;
+
 import static org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets.flags;
 import static org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets.res;
 import static org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets.user_data;
@@ -33,5 +35,14 @@ public class CompletionQueueEntry extends AbstractExternalRawStructure<Completio
 
     public <T> Result<T> result(final FN1<T, Integer> constructor) {
         return NativeError.result(res(), constructor);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", "CompletionQueueEntry(", ")")
+                .add("res: " + res())
+                .add("flags: " + flags())
+                .add("data: " + userData())
+                .toString();
     }
 }

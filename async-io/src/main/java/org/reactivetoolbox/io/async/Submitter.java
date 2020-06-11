@@ -16,6 +16,8 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.EnumSet;
 
+import static org.reactivetoolbox.core.lang.functional.Option.empty;
+
 /**
  * Low level externally accessible API for submission of I/O operations.
  */
@@ -23,47 +25,52 @@ import java.util.EnumSet;
 //TODO: carefully check javadocs
 public interface Submitter {
     /**
-     * Submit NOP operation.
-     * This operation actually does nothing except performing round trip to OS kernel and back.
+     * Submit NOP operation. This operation actually does nothing except performing round trip to OS kernel and back.
      */
     Promise<Unit> nop();
 
     /**
-     * Submit DELAY (TIMEOUT) operation.
-     * This operation resolves after specified timeout. More or less precise value of the actual delay provided as a result of the operation.
+     * Submit DELAY (TIMEOUT) operation. This operation resolves after specified timeout. More or less precise value of the actual
+     * delay provided as a result of the operation.
      *
-     * @param timeout Requested timeout delay.
+     * @param timeout
+     *         Requested timeout delay.
      */
     Promise<Duration> delay(final Timeout timeout);
 
     /**
-     * Submit SPLICE operation.
-     * Copies data from one file descriptor to another.
+     * Submit SPLICE operation. Copies data from one file descriptor to another.
+     * Returned {@link Promise} is used to deliver error or number of successfully copied bytes.
      *
-     * @param descriptor Splice operation details container
-     * @param timeout    Optional operation timeout.
+     * @param descriptor
+     *         Splice operation details container
+     * @param timeout
+     *         Optional operation timeout.
      */
     Promise<SizeT> splice(final SpliceDescriptor descriptor,
                           final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #splice(SpliceDescriptor, Option)} except
-     * no timeout is specified.
+     * Same as {@link #splice(SpliceDescriptor, Option)} except no timeout is specified.
      */
     default Promise<SizeT> splice(final SpliceDescriptor descriptor) {
-        return splice(descriptor, Option.empty());
+        return splice(descriptor, empty());
     }
 
     /**
-     * Submit READ operation.
-     * Read from specified file descriptor. The number of bytes to read is defined by the provided buffer {@link OffHeapBuffer#size()}.
-     * Upon successful completion but before {@code completionHandler} is invoked, {@code buffer} {@code used} value is set to number
-     * of bytes actually read.
+     * Submit READ operation. Read from specified file descriptor. The number of bytes to read is defined by the provided buffer
+     * {@link OffHeapBuffer#size()}. Upon successful completion but before {@code completionHandler} is invoked, {@code buffer}
+     * {@code used} value is set to number of bytes actually read.
+     * Returned {@link Promise} is used to deliver error or number of successfully read bytes.
      *
-     * @param fdIn    File descriptor to read from.
-     * @param buffer  Data buffer.
-     * @param offset  Offset to read from if file descriptor points to file.
-     * @param timeout Optional operation timeout.
+     * @param fdIn
+     *         File descriptor to read from.
+     * @param buffer
+     *         Data buffer.
+     * @param offset
+     *         Offset to read from if file descriptor points to file.
+     * @param timeout
+     *         Optional operation timeout.
      */
     Promise<SizeT> read(final FileDescriptor fdIn,
                         final OffHeapBuffer buffer,
@@ -76,12 +83,12 @@ public interface Submitter {
     default Promise<SizeT> read(final FileDescriptor fdIn,
                                 final OffHeapBuffer buffer,
                                 final OffsetT offset) {
-        return read(fdIn, buffer, offset, Option.empty());
+        return read(fdIn, buffer, offset, empty());
     }
 
     /**
-     * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified.
-     * Convenient for using with sockets or reading file at current position.
+     * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified. Convenient for using
+     * with sockets or reading file at current position.
      */
     default Promise<SizeT> read(final FileDescriptor fdIn,
                                 final OffHeapBuffer buffer,
@@ -95,18 +102,22 @@ public interface Submitter {
      */
     default Promise<SizeT> read(final FileDescriptor fdIn,
                                 final OffHeapBuffer buffer) {
-        return read(fdIn, buffer, OffsetT.ZERO, Option.empty());
+        return read(fdIn, buffer, OffsetT.ZERO, empty());
     }
 
     /**
-     * Submit WRITE operation.
-     * Writes data into specified file descriptor at specified offset. The number of bytes to write is defined by the provided buffer
-     * {@link OffHeapBuffer#used()}.
+     * Submit WRITE operation. Writes data into specified file descriptor at specified offset. The number of bytes to write is
+     * defined by the provided buffer {@link OffHeapBuffer#used()}.
+     * Returned {@link Promise} is used to deliver error or number of successfully written bytes.
      *
-     * @param fdOut   File descriptor to write to.
-     * @param buffer  Data buffer.
-     * @param offset  Offset in a file to start writing if file descriptor points to file.
-     * @param timeout Optional operation timeout.
+     * @param fdOut
+     *         File descriptor to write to.
+     * @param buffer
+     *         Data buffer.
+     * @param offset
+     *         Offset in a file to start writing if file descriptor points to file.
+     * @param timeout
+     *         Optional operation timeout.
      */
     Promise<SizeT> write(final FileDescriptor fdOut,
                          final OffHeapBuffer buffer,
@@ -119,12 +130,12 @@ public interface Submitter {
     default Promise<SizeT> write(final FileDescriptor fdOut,
                                  final OffHeapBuffer buffer,
                                  final OffsetT offset) {
-        return write(fdOut, buffer, offset, Option.empty());
+        return write(fdOut, buffer, offset, empty());
     }
 
     /**
-     * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified.
-     * Convenient for using with sockets or writing file at current position.
+     * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified. Convenient for using
+     * with sockets or writing file at current position.
      */
     default Promise<SizeT> write(final FileDescriptor fdOut,
                                  final OffHeapBuffer buffer,
@@ -138,15 +149,17 @@ public interface Submitter {
      */
     default Promise<SizeT> write(final FileDescriptor fdOut,
                                  final OffHeapBuffer buffer) {
-        return write(fdOut, buffer, OffsetT.ZERO, Option.empty());
+        return write(fdOut, buffer, OffsetT.ZERO, empty());
     }
 
     /**
-     * Submit CLOSE operation.
-     * Closes specified file descriptor (either file or socket).
+     * Submit CLOSE operation. Closes specified file descriptor (either file or socket).
+     * Returned {@link Promise} is necessary only to deliver error and notify when operation is done.
      *
-     * @param fd      File descriptor to close.
-     * @param timeout Optional operation timeout.
+     * @param fd
+     *         File descriptor to close.
+     * @param timeout
+     *         Optional operation timeout.
      */
     Promise<Unit> closeFileDescriptor(final FileDescriptor fd, final Option<Timeout> timeout);
 
@@ -154,18 +167,22 @@ public interface Submitter {
      * Same as {@link #closeFileDescriptor(FileDescriptor, Option)} except no timeout is specified.
      */
     default Promise<Unit> closeFileDescriptor(final FileDescriptor fd) {
-        return closeFileDescriptor(fd, Option.empty());
+        return closeFileDescriptor(fd, empty());
     }
 
     /**
-     * Submit OPEN operation.
-     * Open file at specified location. Note that this method only partially covers functionality of the underlying {@code openat(2)} call. Instead
-     * simple {@code open(2)} semantics is implemented.
+     * Submit OPEN operation. Open file at specified location. Note that this method only partially covers functionality of the
+     * underlying {@code openat(2)} call. Instead simple {@code open(2)} semantics is implemented.
      *
-     * @param path    File path.
-     * @param flags   File open flags.
-     * @param mode    File open mode. Must be present only if {@code flags} contains {@link OpenFlags#O_CREAT} or {@link OpenFlags#O_TMPFILE}.
-     * @param timeout Optional operation timeout.
+     * @param path
+     *         File path.
+     * @param flags
+     *         File open flags.
+     * @param mode
+     *         File open mode. Must be present only if {@code flags} contains {@link OpenFlags#O_CREAT} or {@link
+     *         OpenFlags#O_TMPFILE}.
+     * @param timeout
+     *         Optional operation timeout.
      */
     Promise<FileDescriptor> open(final Path path,
                                  final EnumSet<OpenFlags> flags,
@@ -178,12 +195,13 @@ public interface Submitter {
     default Promise<FileDescriptor> open(final Path path,
                                          final EnumSet<OpenFlags> flags,
                                          final EnumSet<OpenMode> mode) {
-        return open(path, flags, mode, Option.empty());
+        return open(path, flags, mode, empty());
     }
 
     /**
      * Create socket for making client-side connections/requests.
-     *  @param addressFamily
+     *
+     * @param addressFamily
      * @param socketType
      * @param openFlags
      * @param options
@@ -195,10 +213,15 @@ public interface Submitter {
 
     /**
      * Create server connector bound to specified address/port and is ready to accept incoming connection.
-     *  @param socketAddress Socket address
-     * @param socketType    Socket type
-     * @param openFlags     Socket open flags
-     * @param queueDepth    Depth of the listening queue
+     *
+     * @param socketAddress
+     *         Socket address
+     * @param socketType
+     *         Socket type
+     * @param openFlags
+     *         Socket open flags
+     * @param queueDepth
+     *         Depth of the listening queue
      * @param options
      */
     Promise<ServerConnector> server(final SocketAddress<?> socketAddress,
@@ -208,24 +231,45 @@ public interface Submitter {
                                     final EnumSet<SocketOption> options);
 
     /**
-     * Submit ACCEPT operation.
-     * Accept incoming connection for server socket. Accepted connection receives its own socket which
-     * then need to be used to communicate (read/write) with particular client.
-     *  @param socket Server socket to accept connections on.
-     * @param flags  Accept flags (see {@link SocketFlag} for more details)
+     * Submit ACCEPT operation. Accept incoming connection for server socket. Accepted connection receives its own socket which then
+     * need to be used to communicate (read/write) with particular client.
+     *
+     * @param socket
+     *         Server socket to accept connections on.
+     * @param flags
+     *         Accept flags (see {@link SocketFlag} for more details)
      * @return
      */
     Promise<ClientConnection<?>> accept(final FileDescriptor socket,
                                         final EnumSet<SocketFlag> flags);
 
     /**
-     * Submit CONNECT operation.
-     * Connect to external server at provided address (host/port).
+     * Submit CONNECT operation. Connect to external server at provided address (host/port).
+     * Returned {@link Promise} is necessary only to deliver error and notify when socket can be used.
      *
-     * @param socket  Socket to connect
-     * @param address Address to connect to
+     * @param socket
+     *         Socket to connect
+     * @param address
+     *         Address to connect to
+     * @param timeout
+     *         Optional operation timeout.
      */
-    Promise<Unit> connect(final FileDescriptor socket, final SocketAddress<?> address);
+    Promise<Unit> connect(final FileDescriptor socket,
+                          final SocketAddress<?> address,
+                          final Option<Timeout> timeout);
+
+    /**
+     * Same as {@link #connect(FileDescriptor, SocketAddress, Option)} except no timeout is specified.
+     *
+     * @param socket
+     *          Socket to use for connection.
+     * @param address
+     *          Remote address to connect.
+     */
+    default Promise<Unit> connect(final FileDescriptor socket,
+                                  final SocketAddress<?> address) {
+        return connect(socket, address, empty());
+    }
 
     //TODO: implement it. what should we return here?
     //Submitter batch(final Consumer<Submitter> submitterConsumer);

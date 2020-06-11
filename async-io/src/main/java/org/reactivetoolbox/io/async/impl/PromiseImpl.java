@@ -39,13 +39,13 @@ public class PromiseImpl<T> implements Promise<T> {
     private final AtomicMarkableReference<Result<T>> value = new AtomicMarkableReference<>(null, false);
     private final BlockingQueue<Consumer<Result<T>>> thenActions = new LinkedBlockingQueue<>();
     private final CountDownLatch actionsHandled = new CountDownLatch(1);
-    private final AtomicReference<Consumer<Throwable>>
-            exceptionLogger =
+    //TODO: make it global instead of per-instance?
+    private final AtomicReference<Consumer<Throwable>> exceptionConsumer =
             new AtomicReference<>(e -> logger().debug("Exception while applying handlers", e));
 
     @Override
-    public Promise<T> exceptionCollector(final Consumer<Throwable> consumer) {
-        exceptionLogger.set(consumer);
+    public Promise<T> exceptionConsumer(final Consumer<Throwable> consumer) {
+        exceptionConsumer.set(consumer);
         return this;
     }
 
@@ -59,7 +59,7 @@ public class PromiseImpl<T> implements Promise<T> {
                 try {
                     action.accept(value.getReference());
                 } catch (final Throwable t) {
-                    exceptionLogger.get().accept(t);
+                    exceptionConsumer.get().accept(t);
                 }
             });
             actionsHandled.countDown();
@@ -76,7 +76,7 @@ public class PromiseImpl<T> implements Promise<T> {
             try {
                 action.accept(value.getReference());
             } catch (final Throwable t) {
-                exceptionLogger.get().accept(t);
+                exceptionConsumer.get().accept(t);
             }
         } else {
             thenActions.offer(action);
@@ -140,7 +140,8 @@ public class PromiseImpl<T> implements Promise<T> {
     private static final class SingletonHolder {
         private static final int WORKER_SCHEDULER_SIZE = Runtime.getRuntime().availableProcessors();
         private static final TaskScheduler SCHEDULER = AppMetaRepository.instance()
-                                                                        .put(TaskScheduler.class, TaskScheduler.with(WORKER_SCHEDULER_SIZE))
+                                                                        .put(TaskScheduler.class,
+                                                                             TaskScheduler.with(WORKER_SCHEDULER_SIZE))
                                                                         .get(TaskScheduler.class);
 
         static TaskScheduler scheduler() {

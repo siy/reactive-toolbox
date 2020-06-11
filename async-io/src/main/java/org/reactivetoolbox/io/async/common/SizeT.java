@@ -19,4 +19,9 @@ public class SizeT {
     public long value() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "SizeT(" + value + ")";
+    }
 }

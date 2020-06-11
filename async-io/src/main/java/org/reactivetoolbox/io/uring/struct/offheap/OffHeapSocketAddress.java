@@ -1,6 +1,7 @@
 package org.reactivetoolbox.io.uring.struct.offheap;
 
 import org.reactivetoolbox.core.lang.functional.Result;
+import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.async.net.SocketAddressIn6;
@@ -59,5 +60,17 @@ public class OffHeapSocketAddress<T extends SocketAddress<?>, R extends External
 
     public static OffHeapSocketAddress<SocketAddressIn6, RawSocketAddressIn6> addressIn6(final SocketAddressIn6 addressIn6) {
         return new OffHeapSocketAddress<>(RawSocketAddressIn6.at(0)).assign(addressIn6);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <SA extends SocketAddress<?>, RSA extends ExternalRawStructure<?>>
+        Result<OffHeapSocketAddress<SA, RSA>> socketAddress(final SocketAddress<?> address) {
+        if (address instanceof SocketAddressIn addressIn) {
+            return Result.ok((OffHeapSocketAddress<SA, RSA>) addressIn(addressIn));
+        } else if (address instanceof SocketAddressIn6 addressIn6) {
+            return Result.ok((OffHeapSocketAddress<SA, RSA>) addressIn6(addressIn6));
+        } else {
+            return NativeError.EPFNOSUPPORT.result();
+        }
     }
 }

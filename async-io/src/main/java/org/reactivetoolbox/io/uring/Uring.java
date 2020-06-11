@@ -1,5 +1,7 @@
 package org.reactivetoolbox.io.uring;
 
+import org.reactivetoolbox.core.log.CoreLogger;
+import org.reactivetoolbox.core.meta.AppMetaRepository;
 import org.reactivetoolbox.io.async.net.AddressFamily;
 import org.reactivetoolbox.io.async.net.SocketFlag;
 import org.reactivetoolbox.io.async.net.SocketOption;
@@ -16,32 +18,37 @@ final class Uring {
         try {
             LibraryLoader.fromJar("/liburingnative.so");
         } catch (final Exception e) {
-            System.err.println("Error while loading JNI library for Uring class: " + e);
+            SingletonHolder.logger().error("Error while loading JNI library for Uring class: ", e);
             System.exit(-1);
         }
     }
 
     // Start/Stop
     public static native int init(int numEntries, long baseAddress, int flags);
+
     public static native void close(long baseAddress);
 
     public interface RingOpenFlags {
-        int IORING_SETUP_IOPOLL     = (1 << 0);    /* io_context is polled */
-        int IORING_SETUP_SQPOLL     = (1 << 1);    /* SQ poll thread */
-        int IORING_SETUP_SQ_AFF     = (1 << 2);    /* sq_thread_cpu is valid */
-        int IORING_SETUP_CQSIZE     = (1 << 3);    /* app defines CQ size */
-        int IORING_SETUP_CLAMP      = (1 << 4);    /* clamp SQ/CQ ring sizes */
-        int IORING_SETUP_ATTACH_WQ  = (1 << 5);    /* attach to existing wq */
+        int IORING_SETUP_IOPOLL = (1 << 0);    /* io_context is polled */
+        int IORING_SETUP_SQPOLL = (1 << 1);    /* SQ poll thread */
+        int IORING_SETUP_SQ_AFF = (1 << 2);    /* sq_thread_cpu is valid */
+        int IORING_SETUP_CQSIZE = (1 << 3);    /* app defines CQ size */
+        int IORING_SETUP_CLAMP = (1 << 4);    /* clamp SQ/CQ ring sizes */
+        int IORING_SETUP_ATTACH_WQ = (1 << 5);    /* attach to existing wq */
     }
 
     // Completion
     public static native int peekCQ(long baseAddress, long completionsAddress, long count);
+
     public static native void advanceCQ(long baseAddress, long count);
+
     public static native int readyCQ(long baseAddress);
 
     // Submissions
     public static native long spaceLeft(long baseAddress);
+
     public static native long nextSQEntry(long baseAddress);
+
     public static native long submitAndWait(long baseAddress, int waitNr);
 
     // Socket API
@@ -50,27 +57,30 @@ final class Uring {
      * Create socket. This call is a combination of socket(2) and setsockopt(2).
      *
      * @param domain
-     *          Socket domain. Refer to {@link AddressFamily} for set of recognized values.
+     *         Socket domain. Refer to {@link AddressFamily} for set of recognized values.
      * @param type
-     *          Socket type and open flags. Refer to {@link SocketType} for possible types. The {@link SocketFlag} flags can be OR-ed if necessary.
+     *         Socket type and open flags. Refer to {@link SocketType} for possible types. The {@link SocketFlag} flags
+     *         can be OR-ed if necessary.
      * @param options
-     *          Socket option1s. Only subset of possible options are supported. Refer to {@link SocketOption} for details.
+     *         Socket option1s. Only subset of possible options are supported. Refer to {@link SocketOption} for
+     *         details.
      * @return socket (>0) or error (<0)
      */
     public static native int socket(int domain, int type, int options);
 
     /**
-     * Configure socket for listening at specified address, port and with specified depth of backlog queue.
-     * It's a combination of bind(2) and listen(2) calls.
+     * Configure socket for listening at specified address, port and with specified depth of backlog queue. It's a
+     * combination of bind(2) and listen(2) calls.
      *
      * @param socket
-     *      Socket to configure.
+     *         Socket to configure.
      * @param address
-     *      Memory address with prepared socket address structure (See {@link RawSocketAddressIn} and {@link RawSocketAddressIn6} for more details}.
+     *         Memory address with prepared socket address structure (See {@link RawSocketAddressIn} and {@link
+     *         RawSocketAddressIn6} for more details}.
      * @param len
-     *      Size of the prepared socket address structure.
+     *         Size of the prepared socket address structure.
      * @param queueDepth
-     *      Set backlog queue dept.
+     *         Set backlog queue dept.
      * @return 0 for success and non-zero for error.
      */
     public static native int prepareForListen(int socket, long address, int len, int queueDepth);
@@ -116,7 +126,7 @@ final class Uring {
 //        static final int SOCK_RDM = 4;          // Provides a reliable datagram layer that does not guarantee ordering.
 //    }
 
-//    /**
+    //    /**
 //     * Socket open flags.
 //     */
 //    public interface SocketOpenFlag {
@@ -136,4 +146,11 @@ final class Uring {
 //        static final int SO_REUSEPORT = 0x0004; // Enable reuse port option
 //        static final int SO_LINGER    = 0x0008; // Enable linger option and set linger time to 0
 //    }
+    private static final class SingletonHolder {
+        private static final CoreLogger LOGGER = AppMetaRepository.instance().get(CoreLogger.class);
+
+        static CoreLogger logger() {
+            return LOGGER;
+        }
+    }
 }

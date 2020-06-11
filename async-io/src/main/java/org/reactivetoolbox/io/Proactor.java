@@ -27,6 +27,7 @@ import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapTimeSpec;
+import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
 import java.nio.file.Path;
@@ -38,6 +39,7 @@ import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
+import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
 
 public class Proactor implements Submitter, AutoCloseable {
     private static final Result<Unit> UNIT = ok(Unit.UNIT);
@@ -113,15 +115,19 @@ public class Proactor implements Submitter, AutoCloseable {
 
             final long startNanos = System.nanoTime();
 
-            final int key = pendingCompletions.allocKey((entry -> {
+            final int key = pendingCompletions.allocKey(entry -> {
+                timeSpec.dispose();
+
                 final long endNanos = System.nanoTime();
                 final long totalNanos = endNanos - startNanos;
-                //TODO: add error handling
-                promise.ok(Duration.ofSeconds(totalNanos / OffHeapTimeSpec.NANO_SCALE,
-                                              totalNanos % OffHeapTimeSpec.NANO_SCALE));
 
-                timeSpec.dispose();
-            }));
+                if (Math.abs(entry.res()) != NativeError.ETIME.typeCode()) {
+                    promise.resolve(NativeError.failure(entry.res()));
+                } else {
+                    promise.ok(Duration.ofSeconds(totalNanos / OffHeapTimeSpec.NANO_SCALE,
+                                                  totalNanos % OffHeapTimeSpec.NANO_SCALE));
+                }
+            });
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)
@@ -135,14 +141,16 @@ public class Proactor implements Submitter, AutoCloseable {
 
     @Override
     public Promise<Unit> closeFileDescriptor(final FileDescriptor fd, final Option<Timeout> timeout) {
-        //TODO: add handling for timeout
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(v -> Unit.UNIT)));
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)
+                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_CLOSE.opcode())
                                 .fd(fd.descriptor()));
+
+            timeout.whenPresent(this::appendTimeout);
         });
     }
 
@@ -151,7 +159,7 @@ public class Proactor implements Submitter, AutoCloseable {
                                final OffHeapBuffer buffer,
                                final OffsetT offset,
                                final Option<Timeout> timeout) {
-        //TODO: add handling for timeout
+
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> {
                 buffer.used(entry.res());
@@ -160,11 +168,14 @@ public class Proactor implements Submitter, AutoCloseable {
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)
+                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_READ.opcode())
                                 .fd(fdIn.descriptor())
                                 .addr(buffer.address())
                                 .len(buffer.size())
                                 .off(offset.value()));
+
+            timeout.whenPresent(this::appendTimeout);
         });
     }
 
@@ -173,17 +184,20 @@ public class Proactor implements Submitter, AutoCloseable {
                                 final OffHeapBuffer buffer,
                                 final OffsetT offset,
                                 final Option<Timeout> timeout) {
-        //TODO: add handling for timeout
+
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(SizeT::sizeT)));
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)
+                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_WRITE.opcode())
                                 .fd(fdOut.descriptor())
                                 .addr(buffer.address())
                                 .len(buffer.size())
                                 .off(offset.value()));
+
+            timeout.whenPresent(this::appendTimeout);
         });
     }
 
@@ -207,11 +221,14 @@ public class Proactor implements Submitter, AutoCloseable {
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)
+                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_OPENAT.opcode())
                                 .fd(-100) // AT_FDCWD = -100
                                 .addr(rawPath.address())
                                 .len(Bitmask.combine(mode))
                                 .openFlags(Bitmask.combine(flags)));
+
+            timeout.whenPresent(this::appendTimeout);
         });
     }
 
@@ -257,8 +274,29 @@ public class Proactor implements Submitter, AutoCloseable {
 
     @Override
     public Promise<Unit> connect(final FileDescriptor socket, final SocketAddress<?> address) {
+        /*
+        static inline void io_uring_prep_connect(struct io_uring_sqe *sqe, int fd,
+					 struct sockaddr *addr,
+					 socklen_t addrlen)
+{
+	io_uring_prep_rw(IORING_OP_CONNECT, sqe, fd, addr, 0, addrlen);
+}
+
+         */
         return Promise.promise(promise -> {
             //TODO: finish it. finish OffHeapSocketAddress.socketAddress(final SocketAddress<?> address) first.
+            final var socketAddress = OffHeapSocketAddress.socketAddress(address);
         });
+    }
+
+    private void appendTimeout(Timeout t) {
+        final OffHeapTimeSpec timeSpec = OffHeapTimeSpec.forTimeout(t);
+
+        queue.add(sqe -> sqe.clear()
+                            .userData(pendingCompletions.allocKey(entry -> timeSpec.dispose()))
+                            .fd(-1)
+                            .addr(timeSpec.address())
+                            .len(1)
+                            .opcode(AsyncOperation.IORING_OP_LINK_TIMEOUT.opcode());
     }
 }

@@ -1,6 +1,7 @@
 package org.reactivetoolbox.io.async;
 
 import org.junit.jupiter.api.Test;
+import org.reactivetoolbox.core.Errors;
 import org.reactivetoolbox.core.lang.functional.Result;
 
 import java.util.Objects;
@@ -79,7 +80,7 @@ class PromiseTest {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
 
-        final var mappedPromise = promise.mapAsync(Objects::toString)
+        final var mappedPromise = promise.asyncMap(Objects::toString)
                                          .onSuccess(holder::set);
 
         promise.ok(1234);
@@ -107,7 +108,7 @@ class PromiseTest {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
 
-        final var mappedPromise = promise.flatMapAsync((Integer o) -> Result.ok(Objects.toString(o)))
+        final var mappedPromise = promise.asyncFlatMap((Integer o) -> Result.ok(Objects.toString(o)))
                                          .onSuccess(holder::set);
 
         promise.ok(1234);
@@ -277,13 +278,34 @@ class PromiseTest {
     }
 
     @Test
+    void allFailuresResolvesAnySuccessToFailure() {
+        final var holder = new AtomicInteger(-1);
+        final var errHolder = new AtomicReference<>();
+        final var promise1 = Promise.<Integer>promise();
+        final var promise2 = Promise.<Integer>promise();
+        Promise.anySuccess(promise1, promise2).onSuccess(holder::set).onFailure(errHolder::set);
+
+        assertEquals(-1, holder.get());
+
+        promise1.fail(TIMEOUT);
+
+        assertEquals(-1, holder.get());
+
+        promise2.fail(TIMEOUT);
+
+        assertEquals(-1, holder.get());
+
+        assertEquals(Errors.CANCELLED, errHolder.get());
+    }
+
+    @Test
     void chainMapResolvesToFailureIfBasePromiseIsResolvedToFailure() {
         final var holder = new AtomicInteger(-1);
         final var stringHolder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise().onSuccess(s -> holder.set(1))
                                                       .onFailure(f -> holder.set(2));
 
-        final var chain = promise.chainMap(val -> Promise.readyOk(val.toString()))
+        final var chain = promise.andThen(val -> Promise.readyOk(val.toString()))
                                  .onSuccess(s -> stringHolder.set("success"))
                                  .onFailure(f -> stringHolder.set("failure"));
 
@@ -300,7 +322,7 @@ class PromiseTest {
         final var promise = Promise.<Integer>promise().onSuccess(s -> holder.set(1))
                                                       .onFailure(f -> holder.set(2));
 
-        final var chain = promise.chainMap(val -> Promise.readyOk(val.toString()))
+        final var chain = promise.andThen(val -> Promise.readyOk(val.toString()))
                                  .onSuccess(s -> stringHolder.set("success"))
                                  .onFailure(f -> stringHolder.set("failure"));
 

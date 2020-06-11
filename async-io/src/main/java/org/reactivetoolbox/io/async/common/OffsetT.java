@@ -19,4 +19,9 @@ public class OffsetT {
     public long value() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "OffsetT(" + value + ")";
+    }
 }

@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.reactivetoolbox.core.lang.Tuple.tuple;
 
 class ProactorTest {
     private final Proactor proactor = Proactor.proactor();
@@ -45,7 +46,7 @@ class ProactorTest {
                                     .onResult(System.out::println)
                                     .onResult(v -> v.onSuccess(fd -> assertTrue(fd.descriptor() > 0))
                                                     .onFailure(f -> fail()))
-                                    .chainMap(proactor::closeFileDescriptor)
+                                    .andThen(proactor::closeFileDescriptor)
                                     .onResult(System.out::println)
                                     .onResult(v -> v.onFailure(f -> fail()));
 
@@ -61,8 +62,12 @@ class ProactorTest {
                                         .onResult(System.out::println)
                                         .onResult(v -> v.onSuccess(fd -> assertTrue(fd.descriptor() > 0))
                                                         .onFailure(f -> fail()))
-                                        .chainMap(fd1 -> proactor.read(fd1, buffer).map(size -> Tuple.tuple(fd1, size)))
-                                        .chainMap(fdAndSize -> fdAndSize.map((fd, sz) -> proactor.closeFileDescriptor(fd)))
+                                        .andThen(fd1 -> proactor.read(fd1, buffer)
+                                                                .map(size -> tuple(fd1, size)))
+                                        .andThen(fdAndSize -> fdAndSize.map((fd, sz) -> {
+                                            System.out.println(sz);
+                                            return proactor.closeFileDescriptor(fd);
+                                        }))
                                         .onResult(System.out::println)
                                         .onResult(v -> v.onFailure(f -> fail()));
 
