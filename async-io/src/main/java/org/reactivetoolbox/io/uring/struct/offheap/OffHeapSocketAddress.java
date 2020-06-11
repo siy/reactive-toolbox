@@ -64,13 +64,13 @@ public class OffHeapSocketAddress<T extends SocketAddress<?>, R extends External
 
     @SuppressWarnings("unchecked")
     public static <SA extends SocketAddress<?>, RSA extends ExternalRawStructure<?>>
-        Result<OffHeapSocketAddress<SA, RSA>> socketAddress(final SocketAddress<?> address) {
+    OffHeapSocketAddress<SA, RSA> unsafeSocketAddress(final SocketAddress<?> address) {
         if (address instanceof SocketAddressIn addressIn) {
-            return Result.ok((OffHeapSocketAddress<SA, RSA>) addressIn(addressIn));
+            return (OffHeapSocketAddress<SA, RSA>) addressIn(addressIn);
         } else if (address instanceof SocketAddressIn6 addressIn6) {
-            return Result.ok((OffHeapSocketAddress<SA, RSA>) addressIn6(addressIn6));
+            return (OffHeapSocketAddress<SA, RSA>) addressIn6(addressIn6);
         } else {
-            return NativeError.EPFNOSUPPORT.result();
+            return null;
         }
     }
 }

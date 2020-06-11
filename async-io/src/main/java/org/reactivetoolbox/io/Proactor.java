@@ -27,7 +27,6 @@ import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapTimeSpec;
-import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
 import java.nio.file.Path;
@@ -203,6 +202,7 @@ public class Proactor implements Submitter, AutoCloseable {
 
     @Override
     public Promise<SizeT> splice(final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
+        //TODO: finish it
         return null;
     }
 
@@ -274,20 +274,30 @@ public class Proactor implements Submitter, AutoCloseable {
 
     @Override
     public Promise<Unit> connect(final FileDescriptor socket, final SocketAddress<?> address, final Option<Timeout> timeout) {
-        /*
-        static inline void io_uring_prep_connect(struct io_uring_sqe *sqe, int fd,
-					 struct sockaddr *addr,
-					 socklen_t addrlen)
-{
-	io_uring_prep_rw(IORING_OP_CONNECT, sqe, fd, addr, 0, addrlen);
-}
 
-         */
-//        return Promise.promise(promise -> {
-//            //TODO: finish it. finish OffHeapSocketAddress.socketAddress(final SocketAddress<?> address) first.
-//            final var socketAddress = OffHeapSocketAddress.socketAddress(address);
-//        });
-        return null;
+        return Promise.promise(promise -> {
+            final var clientAddress = OffHeapSocketAddress.unsafeSocketAddress(address);
+
+            if (clientAddress == null) {
+                promise.resolve(NativeError.EPFNOSUPPORT.result());
+                return;
+            }
+
+            final int key = pendingCompletions.allocKey((entry -> {
+                promise.resolve(entry.result(v -> Unit.UNIT));
+                clientAddress.dispose();
+            }));
+
+            queue.add(sqe -> sqe.clear()
+                                .userData(key)
+                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                                .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
+                                .fd(socket.descriptor())
+                                .addr(clientAddress.sockAddrPtr())
+                                .off(clientAddress.sockAddrSize()));
+
+            timeout.whenPresent(this::appendTimeout);
+        });
     }
 
     private void appendTimeout(Timeout t) {
