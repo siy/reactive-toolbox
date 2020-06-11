@@ -202,8 +202,22 @@ public class Proactor implements Submitter, AutoCloseable {
 
     @Override
     public Promise<SizeT> splice(final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
-        //TODO: finish it
-        return null;
+        return Promise.promise(promise -> {
+            final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(SizeT::sizeT)));
+
+            queue.add(sqe -> sqe.clear()
+                                .userData(key)
+                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                                .opcode(AsyncOperation.IORING_OP_SPLICE.opcode())
+                                .fd(descriptor.to().descriptor())
+                                .len((int) descriptor.toCopy().value())
+                                .off(descriptor.toOffset().value())
+                                .spliceFdIn(descriptor.from().descriptor())
+                                .spliceOffIn(descriptor.fromOffset().value())
+                                .spliceFlags(Bitmask.combine(descriptor.flags())));
+
+            timeout.whenPresent(this::appendTimeout);
+        });
     }
 
     @Override
@@ -214,10 +228,10 @@ public class Proactor implements Submitter, AutoCloseable {
         return Promise.promise(promise -> {
             final OffHeapCString rawPath = OffHeapCString.cstring(path.toString());
 
-            final int key = pendingCompletions.allocKey((entry -> {
+            final int key = pendingCompletions.allocKey(entry -> {
                 promise.resolve(entry.result(FileDescriptor::file));
                 rawPath.dispose();
-            }));
+            });
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)

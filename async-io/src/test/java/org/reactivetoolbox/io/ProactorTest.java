@@ -2,10 +2,9 @@ package org.reactivetoolbox.io;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.reactivetoolbox.core.lang.Tuple;
+import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.file.OpenFlags;
 import org.reactivetoolbox.io.async.file.OpenMode;
-import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
@@ -13,11 +12,11 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
 
+//TODO: remaining tests
 class ProactorTest {
     private final Proactor proactor = Proactor.proactor();
 
