@@ -273,7 +273,7 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
-    public Promise<Unit> connect(final FileDescriptor socket, final SocketAddress<?> address) {
+    public Promise<Unit> connect(final FileDescriptor socket, final SocketAddress<?> address, final Option<Timeout> timeout) {
         /*
         static inline void io_uring_prep_connect(struct io_uring_sqe *sqe, int fd,
 					 struct sockaddr *addr,
@@ -283,10 +283,11 @@ public class Proactor implements Submitter, AutoCloseable {
 }
 
          */
-        return Promise.promise(promise -> {
-            //TODO: finish it. finish OffHeapSocketAddress.socketAddress(final SocketAddress<?> address) first.
-            final var socketAddress = OffHeapSocketAddress.socketAddress(address);
-        });
+//        return Promise.promise(promise -> {
+//            //TODO: finish it. finish OffHeapSocketAddress.socketAddress(final SocketAddress<?> address) first.
+//            final var socketAddress = OffHeapSocketAddress.socketAddress(address);
+//        });
+        return null;
     }
 
     private void appendTimeout(Timeout t) {
@@ -297,6 +298,6 @@ public class Proactor implements Submitter, AutoCloseable {
                             .fd(-1)
                             .addr(timeSpec.address())
                             .len(1)
-                            .opcode(AsyncOperation.IORING_OP_LINK_TIMEOUT.opcode());
+                            .opcode(AsyncOperation.IORING_OP_LINK_TIMEOUT.opcode()));
     }
 }
