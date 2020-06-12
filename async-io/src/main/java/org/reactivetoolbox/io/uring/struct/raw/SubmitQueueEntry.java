@@ -63,8 +63,12 @@ public class SubmitQueueEntry extends AbstractExternalRawStructure<SubmitQueueEn
         return putShort(ioprio, data);
     }
 
-    public SubmitQueueEntry pollEvents(final short data) {
-        return putShort(poll_events, data);
+    //TODO: watch until it will be included into liburing
+//    public SubmitQueueEntry pollEvents(final short data) {
+//        return putShort(poll_events, data);
+//    }
+    public SubmitQueueEntry pollEvents(final int data) {
+        return putInt(poll_events, data);
     }
 
     public SubmitQueueEntry bufIndex(final short data) {
