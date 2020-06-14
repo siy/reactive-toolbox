@@ -17,8 +17,6 @@ package org.reactivetoolbox.io.async;
  */
 
 import org.reactivetoolbox.core.Errors;
-import org.reactivetoolbox.io.async.impl.PromiseImpl;
-import org.reactivetoolbox.core.lang.Tuple;
 import org.reactivetoolbox.core.lang.Tuple.Tuple5;
 import org.reactivetoolbox.core.lang.Tuple.Tuple6;
 import org.reactivetoolbox.core.lang.Tuple.Tuple7;
@@ -29,6 +27,7 @@ import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
+import org.reactivetoolbox.io.async.impl.PromiseImpl;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
 import java.util.Queue;
@@ -36,21 +35,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static org.reactivetoolbox.core.lang.collection.List.list;
-import static org.reactivetoolbox.io.async.util.ActionableThreshold.threshold;
 import static org.reactivetoolbox.core.lang.Tuple.Tuple1;
 import static org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import static org.reactivetoolbox.core.lang.Tuple.Tuple3;
 import static org.reactivetoolbox.core.lang.Tuple.Tuple4;
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
+import static org.reactivetoolbox.core.lang.collection.List.list;
+import static org.reactivetoolbox.io.async.util.ActionableThreshold.threshold;
 
 /**
  * Extended {@link Promise} implementation which works with {@link Result} values.
  */
 public interface Promise<T> {
     /**
-     * Perform user-provided action once this instance will be resolved. Action will be executed once regardless if instance is
-     * already resolved or not. User may add as many actions as necessary.
+     * Perform user-provided action once this instance will be resolved. Action will be executed once regardless if instance is already resolved or not. User may add as many
+     * actions as necessary.
      *
      * @param action
      *         Action to perform
@@ -67,11 +66,8 @@ public interface Promise<T> {
      */
     Promise<T> async(final Consumer<Promise<T>> task);
 
-    //Promise<T> async(final BiConsumer<Promise<T>, Submitter> task);
-
     /**
-     * Run specified task asynchronously after specified timeout expires. Current instance of {@link Promise} is passed to the task
-     * as a parameter.
+     * Run specified task asynchronously after specified timeout expires. Current instance of {@link Promise} is passed to the task as a parameter.
      *
      * @param task
      *         Task to execute with this promise
@@ -82,16 +78,14 @@ public interface Promise<T> {
     //Promise<T> async(final Timeout timeout, final BiConsumer<Promise<T>, Submitter> task);
 
     /**
-     * Synchronously wait for this instance resolution. <br/> This method is provided only for testing purposes, it is not
-     * recommended to use it in production code.
+     * Synchronously wait for this instance resolution. <br/> This method is provided only for testing purposes, it is not recommended to use it in production code.
      *
      * @return Current instance
      */
     Promise<T> syncWait();
 
     /**
-     * Synchronously wait for this instance resolution or timeout. <br/> This method is provided only for testing purposes, it is
-     * not recommended to use it in production code.
+     * Synchronously wait for this instance resolution or timeout. <br/> This method is provided only for testing purposes, it is not recommended to use it in production code.
      *
      * @param timeout
      *         Timeout amount
@@ -100,8 +94,7 @@ public interface Promise<T> {
     Promise<T> syncWait(final Timeout timeout);
 
     /**
-     * Resolve the promise with specified result. All actions already waiting for resolution will be scheduled for synchronous
-     * execution.
+     * Resolve the promise with specified result. All actions already waiting for resolution will be scheduled for synchronous execution.
      *
      * @param result
      *         The value which will be stored in this instance and make it resolved
@@ -110,8 +103,7 @@ public interface Promise<T> {
     Promise<T> resolve(final Result<T> result);
 
     /**
-     * Resolve the promise with specified result. All actions already waiting for resolution will be scheduled for asynchronous
-     * execution.
+     * Resolve the promise with specified result. All actions already waiting for resolution will be scheduled for asynchronous execution.
      *
      * @param result
      *         The value which will be stored in this instance and make it resolved
@@ -191,8 +183,7 @@ public interface Promise<T> {
     }
 
     /**
-     * Set timeout for instance resolution. When timeout expires, instance will be resolved with value returned by provided
-     * supplier. Resolution value is lazily evaluated.
+     * Set timeout for instance resolution. When timeout expires, instance will be resolved with value returned by provided supplier. Resolution value is lazily evaluated.
      *
      * @param timeout
      *         Timeout amount
@@ -215,8 +206,7 @@ public interface Promise<T> {
     }
 
     /**
-     * Resolve instance with {@link Errors#CANCELLED}. Often necessary if pending request need to be resolved prematurely, without
-     * waiting for response or timeout.
+     * Resolve instance with {@link Errors#CANCELLED}. Often necessary if pending request need to be resolved prematurely, without waiting for response or timeout.
      *
      * @return Current instance
      */
@@ -226,14 +216,14 @@ public interface Promise<T> {
     }
 
     /**
-     * The purpose of this method is enable convenient invocation of the functions which require success value from current instance
-     * as a parameter and return another {@link Promise} as a result. Invocation of the function is performed only when current
-     * instance is resolved to success. If current instance is resolved to failure, no invocation is performed.
+     * The purpose of this method is enable convenient invocation of the functions which require success value from current instance as a parameter and return another {@link
+     * Promise} as a result. Invocation of the function is performed only when current instance is resolved to success. If current instance is resolved to failure, no invocation is
+     * performed.
      *
      * @param mapper
      *         Function to call if current instance is resolved with success.
-     * @return Created instance which represents result of resolution of current instance (if current instance is resolved to
-     *         failure) or result of invocation of provided function (if current instance is resolved to success).
+     * @return Created instance which represents result of resolution of current instance (if current instance is resolved to failure) or result of invocation of provided function
+     *         (if current instance is resolved to success).
      */
     default <R> Promise<R> andThen(final FN1<Promise<R>, T> mapper) {
         return promise(promise -> onResult(result -> result.fold(error -> promise.resolve(Result.fail(error)),
@@ -242,8 +232,8 @@ public interface Promise<T> {
     }
 
     /**
-     * Convenience method which provides access to inner value of successful result. If current instance contains failure, then
-     * mapping function is not called and created instance is resolved with same error as current instance.
+     * Convenience method which provides access to inner value of successful result. If current instance contains failure, then mapping function is not called and created instance
+     * is resolved with same error as current instance.
      *
      * @param mapper
      *         Function to transform successful result value if current instance is resolved with success
@@ -273,9 +263,8 @@ public interface Promise<T> {
     CoreLogger logger();
 
     /**
-     * Configure consumer for exceptions which may happen during {@link Promise} resolution, in particular during invocation of
-     * attached actions triggered by resolution. By default these exceptions are logged, but user may define custom exception
-     * processing.
+     * Configure consumer for exceptions which may happen during {@link Promise} resolution, in particular during invocation of attached actions triggered by resolution. By default
+     * these exceptions are logged, but user may define custom exception processing.
      *
      * @param consumer
      *         Consumer for intercepted exceptions.
@@ -320,8 +309,7 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance and immediately invoke provided function with created instance. Usually this function is used to configure
-     * actions on created instance.
+     * Create instance and immediately invoke provided function with created instance. Usually this function is used to configure actions on created instance.
      *
      * @param setup
      *         Function to invoke with created instance
@@ -332,8 +320,7 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance which will be resolved once any of the promises provided as a parameters will be resolved. Remaining promises
-     * are cancelled upon resolution of any promises.
+     * Create instance which will be resolved once any of the promises provided as a parameters will be resolved. Remaining promises are cancelled upon resolution of any promises.
      *
      * @param promises
      *         Input promises
@@ -346,9 +333,8 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance which will be resolved once any of the promises provided as a parameters will be resolved with successful
-     * result. If none of the promises will be resolved with successful result, then created instance will be resolved with {@link
-     * Errors#CANCELLED}.
+     * Create instance which will be resolved once any of the promises provided as a parameters will be resolved with successful result. If none of the promises will be resolved
+     * with successful result, then created instance will be resolved with {@link Errors#CANCELLED}.
      *
      * @param promises
      *         Input promises
@@ -360,9 +346,8 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance which will be resolved once any of the promises provided as a parameters will be resolved with successful
-     * result. If none of the promises will be resolved with successful result, then created instance will be resolved with provided
-     * {@code failureResult}.
+     * Create instance which will be resolved once any of the promises provided as a parameters will be resolved with successful result. If none of the promises will be resolved
+     * with successful result, then created instance will be resolved with provided {@code failureResult}.
      *
      * @param failureResult
      *         Result in case if no instances were resolved with success
@@ -373,11 +358,11 @@ public interface Promise<T> {
     static <T> Promise<T> anySuccess(final Result<T> failureResult, final Promise<T>... promises) {
         return Promise.promise(anySuccess -> threshold(promises.length,
                                                        (at) -> list(promises)
-                                                                  .apply(pr -> pr.onSuccess(succ -> {
-                                                                                              anySuccess.ok(succ);
-                                                                                              cancelAll(promises);
-                                                                                          })
-                                                                                 .onResult($ -> at.registerEvent())),
+                                                               .apply(pr -> pr.onSuccess(succ -> {
+                                                                   anySuccess.ok(succ);
+                                                                   cancelAll(promises);
+                                                               })
+                                                                              .onResult($ -> at.registerEvent())),
                                                        () -> anySuccess.resolve(failureResult)));
     }
 
@@ -402,6 +387,10 @@ public interface Promise<T> {
     static <T> void resolveAll(final Result<T> result, final Promise<T>... promises) {
         list(promises)
                 .apply(promise -> promise.resolve(result));
+    }
+
+    static <T> Promise<Promise<T>> withIO(final FN1<Promise<T>, Submitter> submissionFunction) {
+        return PromiseImpl.withIO(submissionFunction);
     }
 
     class RethrowingCollector implements Consumer<Throwable> {
@@ -441,8 +430,9 @@ public interface Promise<T> {
     static <T1> Promise<Tuple1<T1>> all(final Promise<T1> promise1) {
         return promise(promise -> threshold(Tuple1.size(),
                                             (at) -> promise1.onResult($ -> at.registerEvent()),
-                                            () -> promise1.onResult(v1 -> promise.resolve(Tuple.tuple(v1)
-                                                                                               .map(Result::flatten)))));
+                                            () -> promise1.onResult(
+                                                    v1 -> promise.resolve(
+                                                            tuple(v1).map(Result::flatten)))));
     }
 
     static <T1, T2> Promise<Tuple2<T1, T2>> all(final Promise<T1> promise1,
@@ -452,10 +442,10 @@ public interface Promise<T> {
                                                 promise1.onResult($ -> at.registerEvent());
                                                 promise2.onResult($ -> at.registerEvent());
                                             },
-                                            () -> promise1.onResult(v1 ->
-                                                                            promise2.onResult(v2 -> promise.resolve(
-                                                                                    Tuple.tuple(v1, v2)
-                                                                                         .map(Result::flatten))))));
+                                            () -> promise1.onResult(
+                                                    v1 -> promise2.onResult(
+                                                            v2 -> promise.resolve(
+                                                                    tuple(v1, v2).map(Result::flatten))))));
     }
 
     static <T1, T2, T3> Promise<Tuple3<T1, T2, T3>> all(final Promise<T1> promise1,
@@ -467,16 +457,11 @@ public interface Promise<T> {
                                                 promise2.onResult($ -> at.registerEvent());
                                                 promise3.onResult($ -> at.registerEvent());
                                             },
-                                            () -> promise1.onResult(v1 ->
-                                                                            promise2.onResult(v2 ->
-                                                                                                      promise3.onResult(
-                                                                                                              v3 -> promise
-                                                                                                                      .resolve(
-                                                                                                                              Tuple.tuple(
-                                                                                                                                      v1,
-                                                                                                                                      v2,
-                                                                                                                                      v3)
-                                                                                                                                   .map(Result::flatten)))))));
+                                            () -> promise1.onResult(
+                                                    v1 -> promise2.onResult(
+                                                            v2 -> promise3.onResult(
+                                                                    v3 -> promise.resolve(
+                                                                            tuple(v1, v2, v3).map(Result::flatten)))))));
     }
 
     static <T1, T2, T3, T4> Promise<Tuple4<T1, T2, T3, T4>> all(final Promise<T1> promise1,
@@ -490,19 +475,12 @@ public interface Promise<T> {
                                                 promise3.onResult($ -> at.registerEvent());
                                                 promise4.onResult($ -> at.registerEvent());
                                             },
-                                            () -> promise1.onResult(v1 ->
-                                                                            promise2.onResult(v2 ->
-                                                                                                      promise3.onResult(
-                                                                                                              v3 ->
-                                                                                                                      promise4.onResult(
-                                                                                                                              v4 -> promise
-                                                                                                                                      .resolve(
-                                                                                                                                              Tuple.tuple(
-                                                                                                                                                      v1,
-                                                                                                                                                      v2,
-                                                                                                                                                      v3,
-                                                                                                                                                      v4)
-                                                                                                                                                   .map(Result::flatten))))))));
+                                            () -> promise1.onResult(
+                                                    v1 -> promise2.onResult(
+                                                            v2 -> promise3.onResult(
+                                                                    v3 -> promise4.onResult(
+                                                                            v4 -> promise.resolve(
+                                                                                    tuple(v1, v2, v3, v4).map(Result::flatten))))))));
     }
 
     static <T1, T2, T3, T4, T5> Promise<Tuple5<T1, T2, T3, T4, T5>> all(final Promise<T1> promise1,
@@ -518,22 +496,14 @@ public interface Promise<T> {
                                                 promise4.onResult($ -> at.registerEvent());
                                                 promise5.onResult($ -> at.registerEvent());
                                             },
-                                            () -> promise1.onResult(v1 ->
-                                                                            promise2.onResult(v2 ->
-                                                                                                      promise3.onResult(
-                                                                                                              v3 ->
-                                                                                                                      promise4.onResult(
-                                                                                                                              v4 ->
-                                                                                                                                      promise5.onResult(
-                                                                                                                                              v5 -> promise
-                                                                                                                                                      .resolve(
-                                                                                                                                                              Tuple.tuple(
-                                                                                                                                                                      v1,
-                                                                                                                                                                      v2,
-                                                                                                                                                                      v3,
-                                                                                                                                                                      v4,
-                                                                                                                                                                      v5)
-                                                                                                                                                                   .map(Result::flatten)))))))));
+                                            () -> promise1.onResult(
+                                                    v1 -> promise2.onResult(
+                                                            v2 -> promise3.onResult(
+                                                                    v3 -> promise4.onResult(
+                                                                            v4 -> promise5.onResult(
+                                                                                    v5 -> promise.resolve(
+                                                                                            tuple(v1, v2, v3, v4, v5)
+                                                                                                    .map(Result::flatten)))))))));
     }
 
     static <T1, T2, T3, T4, T5, T6> Promise<Tuple6<T1, T2, T3, T4, T5, T6>> all(final Promise<T1> promise1,
@@ -551,25 +521,15 @@ public interface Promise<T> {
                                                 promise5.onResult($ -> at.registerEvent());
                                                 promise6.onResult($ -> at.registerEvent());
                                             },
-                                            () -> promise1.onResult(v1 ->
-                                                                            promise2.onResult(v2 ->
-                                                                                                      promise3.onResult(
-                                                                                                              v3 ->
-                                                                                                                      promise4.onResult(
-                                                                                                                              v4 ->
-                                                                                                                                      promise5.onResult(
-                                                                                                                                              v5 ->
-                                                                                                                                                      promise6.onResult(
-                                                                                                                                                              v6 -> promise
-                                                                                                                                                                      .resolve(
-                                                                                                                                                                              Tuple.tuple(
-                                                                                                                                                                                      v1,
-                                                                                                                                                                                      v2,
-                                                                                                                                                                                      v3,
-                                                                                                                                                                                      v4,
-                                                                                                                                                                                      v5,
-                                                                                                                                                                                      v6)
-                                                                                                                                                                                   .map(Result::flatten))))))))));
+                                            () -> promise1.onResult(
+                                                    v1 -> promise2.onResult(
+                                                            v2 -> promise3.onResult(
+                                                                    v3 -> promise4.onResult(
+                                                                            v4 -> promise5.onResult(
+                                                                                    v5 -> promise6.onResult(
+                                                                                            v6 -> promise.resolve(
+                                                                                                    tuple(v1, v2, v3, v4, v5, v6)
+                                                                                                            .map(Result::flatten))))))))));
     }
 
     static <T1, T2, T3, T4, T5, T6, T7> Promise<Tuple7<T1, T2, T3, T4, T5, T6, T7>> all(final Promise<T1> promise1,
@@ -589,28 +549,16 @@ public interface Promise<T> {
                                                 promise6.onResult($ -> at.registerEvent());
                                                 promise7.onResult($ -> at.registerEvent());
                                             },
-                                            () -> promise1.onResult(v1 ->
-                                                                            promise2.onResult(v2 ->
-                                                                                                      promise3.onResult(
-                                                                                                              v3 ->
-                                                                                                                      promise4.onResult(
-                                                                                                                              v4 ->
-                                                                                                                                      promise5.onResult(
-                                                                                                                                              v5 ->
-                                                                                                                                                      promise6.onResult(
-                                                                                                                                                              v6 ->
-                                                                                                                                                                      promise7.onResult(
-                                                                                                                                                                              v7 -> promise
-                                                                                                                                                                                      .resolve(
-                                                                                                                                                                                              Tuple.tuple(
-                                                                                                                                                                                                      v1,
-                                                                                                                                                                                                      v2,
-                                                                                                                                                                                                      v3,
-                                                                                                                                                                                                      v4,
-                                                                                                                                                                                                      v5,
-                                                                                                                                                                                                      v6,
-                                                                                                                                                                                                      v7)
-                                                                                                                                                                                                   .map(Result::flatten)))))))))));
+                                            () -> promise1.onResult(
+                                                    v1 -> promise2.onResult(
+                                                            v2 -> promise3.onResult(
+                                                                    v3 -> promise4.onResult(
+                                                                            v4 -> promise5.onResult(
+                                                                                    v5 -> promise6.onResult(
+                                                                                            v6 -> promise7.onResult(
+                                                                                                    v7 -> promise.resolve(
+                                                                                                            tuple(v1, v2, v3, v4, v5, v6, v7)
+                                                                                                                    .map(Result::flatten)))))))))));
     }
 
     static <T1, T2, T3, T4, T5, T6, T7, T8> Promise<Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>> all(final Promise<T1> promise1,
@@ -632,31 +580,17 @@ public interface Promise<T> {
                                                 promise7.onResult($ -> at.registerEvent());
                                                 promise8.onResult($ -> at.registerEvent());
                                             },
-                                            () -> promise1.onResult(v1 ->
-                                                                            promise2.onResult(v2 ->
-                                                                                                      promise3.onResult(
-                                                                                                              v3 ->
-                                                                                                                      promise4.onResult(
-                                                                                                                              v4 ->
-                                                                                                                                      promise5.onResult(
-                                                                                                                                              v5 ->
-                                                                                                                                                      promise6.onResult(
-                                                                                                                                                              v6 ->
-                                                                                                                                                                      promise7.onResult(
-                                                                                                                                                                              v7 ->
-                                                                                                                                                                                      promise8.onResult(
-                                                                                                                                                                                              v8 -> promise
-                                                                                                                                                                                                      .resolve(
-                                                                                                                                                                                                              Tuple.tuple(
-                                                                                                                                                                                                                      v1,
-                                                                                                                                                                                                                      v2,
-                                                                                                                                                                                                                      v3,
-                                                                                                                                                                                                                      v4,
-                                                                                                                                                                                                                      v5,
-                                                                                                                                                                                                                      v6,
-                                                                                                                                                                                                                      v7,
-                                                                                                                                                                                                                      v8)
-                                                                                                                                                                                                                   .map(Result::flatten))))))))))));
+                                            () -> promise1.onResult(
+                                                    v1 -> promise2.onResult(
+                                                            v2 -> promise3.onResult(
+                                                                    v3 -> promise4.onResult(
+                                                                            v4 -> promise5.onResult(
+                                                                                    v5 -> promise6.onResult(
+                                                                                            v6 -> promise7.onResult(
+                                                                                                    v7 -> promise8.onResult(
+                                                                                                            v8 -> promise.resolve(
+                                                                                                                    tuple(v1, v2, v3, v4, v5, v6, v7, v8)
+                                                                                                                            .map(Result::flatten))))))))))));
     }
 
     static <T1, T2, T3, T4, T5, T6, T7, T8, T9> Promise<Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> all(final Promise<T1> promise1,
@@ -680,32 +614,17 @@ public interface Promise<T> {
                                                 promise8.onResult($ -> at.registerEvent());
                                                 promise9.onResult($ -> at.registerEvent());
                                             },
-                                            () -> promise1.onResult(v1 ->
-                                                                            promise2.onResult(v2 ->
-                                                                                                      promise3.onResult(
-                                                                                                              v3 ->
-                                                                                                                      promise4.onResult(
-                                                                                                                              v4 ->
-                                                                                                                                      promise5.onResult(
-                                                                                                                                              v5 ->
-                                                                                                                                                      promise6.onResult(
-                                                                                                                                                              v6 ->
-                                                                                                                                                                      promise7.onResult(
-                                                                                                                                                                              v7 ->
-                                                                                                                                                                                      promise8.onResult(
-                                                                                                                                                                                              v8 ->
-                                                                                                                                                                                                      promise9.onResult(
-                                                                                                                                                                                                              v9 -> promise
-                                                                                                                                                                                                                      .resolve(
-                                                                                                                                                                                                                              tuple(v1,
-                                                                                                                                                                                                                                    v2,
-                                                                                                                                                                                                                                    v3,
-                                                                                                                                                                                                                                    v4,
-                                                                                                                                                                                                                                    v5,
-                                                                                                                                                                                                                                    v6,
-                                                                                                                                                                                                                                    v7,
-                                                                                                                                                                                                                                    v8,
-                                                                                                                                                                                                                                    v9)
-                                                                                                                                                                                                                                      .map(Result::flatten)))))))))))));
+                                            () -> promise1.onResult(
+                                                    v1 -> promise2.onResult(
+                                                            v2 -> promise3.onResult(
+                                                                    v3 -> promise4.onResult(
+                                                                            v4 -> promise5.onResult(
+                                                                                    v5 -> promise6.onResult(
+                                                                                            v6 -> promise7.onResult(
+                                                                                                    v7 -> promise8.onResult(
+                                                                                                            v8 -> promise9.onResult(
+                                                                                                                    v9 -> promise.resolve(
+                                                                                                                            tuple(v1, v2, v3, v4, v5, v6, v7, v8, v9)
+                                                                                                                                    .map(Result::flatten)))))))))))));
     }
 }

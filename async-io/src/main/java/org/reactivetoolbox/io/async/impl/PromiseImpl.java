@@ -16,10 +16,12 @@ package org.reactivetoolbox.io.async.impl;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.lang.functional.Functions;
 import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.core.meta.AppMetaRepository;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.scheduler.TaskScheduler;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
@@ -117,6 +119,12 @@ public class PromiseImpl<T> implements Promise<T> {
     public Promise<T> async(final Consumer<Promise<T>> task) {
         SingletonHolder.scheduler().submit(() -> task.accept(this));
         return this;
+    }
+
+    public static <T> Promise<Promise<T>> withIO(final Functions.FN1<Promise<T>, Submitter> submissionFunction) {
+        final Promise<Promise<T>> result = new PromiseImpl<>();
+        SingletonHolder.scheduler().submit(submitter -> result.ok(submissionFunction.apply(submitter)));
+        return result;
     }
 
     @Override
