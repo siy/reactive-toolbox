@@ -32,6 +32,7 @@ import org.reactivetoolbox.io.scheduler.Timeout;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -65,6 +66,16 @@ public interface Promise<T> {
      * @return Current instance
      */
     Promise<T> async(final Consumer<Promise<T>> task);
+
+    /**
+     * Run specified task asynchronously and for I/O operations. Current instance of {@link Promise} and I/O {@link Submitter} are
+     * passed as a parameters.
+     *
+     * @param task
+     *          Task to execute
+     * @return Current instance
+     */
+    Promise<T> async(final BiConsumer<Promise<T>, Submitter> task);
 
     /**
      * Run specified task asynchronously after specified timeout expires. Current instance of {@link Promise} is passed to the task as a parameter.
@@ -282,6 +293,18 @@ public interface Promise<T> {
     }
 
     /**
+     * Create instance and immediately invoke provided function with created instance.
+     * Usually this function is used to configure actions on created instance.
+     *
+     * @param setup
+     *         Function to invoke with created instance
+     * @return Created instance
+     */
+    static <T> Promise<T> promise(final Consumer<Promise<T>> setup) {
+        return Promise.<T>promise().apply(setup);
+    }
+
+    /**
      * Create new resolved instance.
      *
      * @return Created instance
@@ -306,17 +329,6 @@ public interface Promise<T> {
      */
     static <T> Promise<T> readyFail(final Failure failure) {
         return ready(Result.fail(failure));
-    }
-
-    /**
-     * Create instance and immediately invoke provided function with created instance. Usually this function is used to configure actions on created instance.
-     *
-     * @param setup
-     *         Function to invoke with created instance
-     * @return Created instance
-     */
-    static <T> Promise<T> promise(final Consumer<Promise<T>> setup) {
-        return Promise.<T>promise().apply(setup);
     }
 
     /**
@@ -387,10 +399,6 @@ public interface Promise<T> {
     static <T> void resolveAll(final Result<T> result, final Promise<T>... promises) {
         list(promises)
                 .apply(promise -> promise.resolve(result));
-    }
-
-    static <T> Promise<Promise<T>> withIO(final FN1<Promise<T>, Submitter> submissionFunction) {
-        return PromiseImpl.withIO(submissionFunction);
     }
 
     class RethrowingCollector implements Consumer<Throwable> {

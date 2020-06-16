@@ -1,7 +1,8 @@
-package org.reactivetoolbox.io.uring.struct;
+package org.reactivetoolbox.io.uring.struct.offheap;
 
 import org.reactivetoolbox.io.raw.RawMemory;
-import org.reactivetoolbox.io.uring.struct.offheap.OffHeapStructure;
+import org.reactivetoolbox.io.uring.struct.AbstractRawStructure;
+import org.reactivetoolbox.io.uring.struct.OffHeapStructure;
 
 public abstract class AbstractOffHeapStructure<T extends AbstractOffHeapStructure<?>> extends AbstractRawStructure<T>
         implements OffHeapStructure<T>, AutoCloseable {

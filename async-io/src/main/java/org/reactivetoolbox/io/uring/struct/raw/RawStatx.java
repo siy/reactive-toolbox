@@ -1,8 +1,18 @@
 package org.reactivetoolbox.io.uring.struct.raw;
 
+import org.reactivetoolbox.io.async.file.stat.DeviceId;
+import org.reactivetoolbox.io.async.file.stat.FilePermission;
+import org.reactivetoolbox.io.async.file.stat.FileStat;
+import org.reactivetoolbox.io.async.file.stat.FileType;
+import org.reactivetoolbox.io.async.file.stat.StatAttribute;
+import org.reactivetoolbox.io.async.file.stat.StatMask;
+import org.reactivetoolbox.io.async.file.stat.StatTimestamp;
 import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.shape.StatxOffsets;
 
+import java.util.EnumSet;
+
+import static org.reactivetoolbox.io.async.file.stat.DeviceId.deviceId;
 import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_atime;
 import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_attributes;
 import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_attributes_mask;
@@ -73,12 +83,12 @@ public class RawStatx extends AbstractExternalRawStructure<RawStatx> {
     }
 
     /* User ID of owner */
-    public int uid() {
+    public int ownerUID() {
         return getInt(stx_uid);
     }
 
     /* Group ID of owner */
-    public int gid() {
+    public int ownerGID() {
         return getInt(stx_gid);
     }
 
@@ -88,7 +98,7 @@ public class RawStatx extends AbstractExternalRawStructure<RawStatx> {
     }
 
     /* Inode number */
-    public long ino() {
+    public long inode() {
         return getLong(stx_ino);
     }
 
@@ -145,5 +155,27 @@ public class RawStatx extends AbstractExternalRawStructure<RawStatx> {
     /* Last data modification time */
     public RawStatxTimestamp modificationTime() {
         return mtime;
+    }
+
+    public FileStat detach() {
+        return FileStat.fileStat(
+                StatMask.fromInt(mask()),
+                blockSize(),
+                StatAttribute.fromLong(attributes()),
+                numLinks(),
+                ownerUID(),
+                ownerGID(),
+                FileType.unsafeFromShort(mode()),
+                FilePermission.fromShort(mode()),
+                inode(),
+                fileSize(),
+                blocks(),
+                StatAttribute.fromLong(attributesMask()),
+                lastAccessTime().detach(),
+                creationTime().detach(),
+                changeTime().detach(),
+                modificationTime().detach(),
+                deviceId(rdevMajor(), rdevMinor()),
+                deviceId(devMajor(), devMinor()));
     }
 }

@@ -1,7 +1,6 @@
 package org.reactivetoolbox.io.uring.struct.offheap;
 
 import org.reactivetoolbox.io.raw.RawMemory;
-import org.reactivetoolbox.io.uring.struct.AbstractOffHeapStructure;
 
 import java.nio.charset.StandardCharsets;
 

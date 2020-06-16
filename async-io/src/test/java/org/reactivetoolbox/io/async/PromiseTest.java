@@ -12,10 +12,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.reactivetoolbox.core.Errors.TIMEOUT;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
-
 
 class PromiseTest {
     private final Executor executor = Executors.newSingleThreadExecutor();
@@ -128,8 +128,6 @@ class PromiseTest {
 
         promise.asyncOk(1).syncWait(timeout(1).seconds());
 
-        safeSleep(20);
-
         assertEquals(1, holder.get());
     }
 
@@ -142,8 +140,6 @@ class PromiseTest {
                 .onFailure(f -> holder.set(1));
 
         promise.asyncFail(TIMEOUT).syncWait(timeout(1).seconds());
-
-        safeSleep(20);
 
         assertEquals(1, holder.get());
     }
@@ -330,6 +326,19 @@ class PromiseTest {
 
         assertEquals(1, holder.get());
         assertEquals("success", stringHolder.get());
+    }
+
+    //TODO: create separate set of tests for I/O
+    @Test
+    void ioTaskCanBeSubmitted() {
+        final var promise = Promise.<String>promise()
+                                   .async((p, io) -> io.nop()
+                                                       .onResult($ -> p.ok("success")));
+
+        promise.syncWait(timeout(1).seconds())
+               .onSuccess(success -> assertEquals("success", success))
+               .onFailure(failure -> fail());
+
     }
 
     private static void safeSleep(final long delay) {

@@ -3,30 +3,35 @@ package org.reactivetoolbox.io;
 import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.lang.functional.Unit;
-import org.reactivetoolbox.io.async.net.ClientConnection;
-import org.reactivetoolbox.io.async.file.FileDescriptor;
+import org.reactivetoolbox.io.async.Promise;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.OffsetT;
+import org.reactivetoolbox.io.async.common.SizeT;
+import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.file.OpenFlags;
 import org.reactivetoolbox.io.async.file.OpenMode;
-import org.reactivetoolbox.io.async.Promise;
-import org.reactivetoolbox.io.async.net.SocketOption;
-import org.reactivetoolbox.io.async.util.OffHeapBuffer;
-import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.SpliceDescriptor;
-import org.reactivetoolbox.io.async.Submitter;
+import org.reactivetoolbox.io.async.file.stat.FileStat;
+import org.reactivetoolbox.io.async.file.stat.StatFlag;
+import org.reactivetoolbox.io.async.file.stat.StatMask;
 import org.reactivetoolbox.io.async.net.AddressFamily;
+import org.reactivetoolbox.io.async.net.ClientConnection;
 import org.reactivetoolbox.io.async.net.ServerConnector;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketFlag;
+import org.reactivetoolbox.io.async.net.SocketOption;
 import org.reactivetoolbox.io.async.net.SocketType;
+import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.AsyncOperation;
 import org.reactivetoolbox.io.uring.UringHolder;
-import org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress;
-import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
-import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
+import org.reactivetoolbox.io.uring.struct.offheap.OffHeapFileStat;
+import org.reactivetoolbox.io.uring.struct.offheap.OffHeapIoVector;
+import org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapTimeSpec;
+import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
+import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
 import java.nio.file.Path;
@@ -42,6 +47,7 @@ import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQ
 
 public class Proactor implements Submitter, AutoCloseable {
     private static final Result<Unit> UNIT = ok(Unit.UNIT);
+    private static final int AT_FDCWD = -100; // Special value used to indicate the openat/statx functions should use the current working directory.
 
     private final UringHolder uring;
     private final ObjectHeap<CompletionHandler> pendingCompletions;
@@ -158,7 +164,6 @@ public class Proactor implements Submitter, AutoCloseable {
                                final OffHeapBuffer buffer,
                                final OffsetT offset,
                                final Option<Timeout> timeout) {
-
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> {
                 buffer.used(entry.res());
@@ -183,7 +188,6 @@ public class Proactor implements Submitter, AutoCloseable {
                                 final OffHeapBuffer buffer,
                                 final OffsetT offset,
                                 final Option<Timeout> timeout) {
-
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(SizeT::sizeT)));
 
@@ -237,7 +241,7 @@ public class Proactor implements Submitter, AutoCloseable {
                                 .userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_OPENAT.opcode())
-                                .fd(-100) // AT_FDCWD = -100
+                                .fd(AT_FDCWD)
                                 .addr(rawPath.address())
                                 .len(Bitmask.combine(mode))
                                 .openFlags(Bitmask.combine(flags)));
@@ -288,7 +292,6 @@ public class Proactor implements Submitter, AutoCloseable {
 
     @Override
     public Promise<Unit> connect(final FileDescriptor socket, final SocketAddress<?> address, final Option<Timeout> timeout) {
-
         return Promise.promise(promise -> {
             final var clientAddress = OffHeapSocketAddress.unsafeSocketAddress(address);
 
@@ -309,6 +312,106 @@ public class Proactor implements Submitter, AutoCloseable {
                                 .fd(socket.descriptor())
                                 .addr(clientAddress.sockAddrPtr())
                                 .off(clientAddress.sockAddrSize()));
+
+            timeout.whenPresent(this::appendTimeout);
+        });
+    }
+
+    @Override
+    public Promise<FileStat> stat(final Path path, final EnumSet<StatFlag> flags, final EnumSet<StatMask> mask) {
+        return Promise.promise(promise -> {
+            //Reset EMPTY_PATH and enforce use of path instead.
+            final int statFlags = Bitmask.combine(flags) & ~StatFlag.EMPTY_PATH.mask();
+            final int statMask = Bitmask.combine(mask);
+
+            final OffHeapFileStat fileStat = OffHeapFileStat.fileStat();
+            final OffHeapCString rawPath = OffHeapCString.cstring(path.toString());
+
+            queue.add(sqe -> sqe.clear()
+                                .userData(pendingCompletions.allocKey(entry -> {
+                                    promise.resolve(entry.result($ -> fileStat.extract()));
+                                    fileStat.dispose();
+                                    rawPath.dispose();
+                                }))
+                                .fd(AT_FDCWD)
+                                .addr(rawPath.address())
+                                .len(statMask)
+                                .off(fileStat.address())
+                                .statxFlags(statFlags)
+                                .opcode(AsyncOperation.IORING_OP_STATX.opcode()));
+        });
+    }
+
+    @Override
+    public Promise<FileStat> stat(final FileDescriptor fd, final EnumSet<StatFlag> flags, final EnumSet<StatMask> mask) {
+        return Promise.promise(promise -> {
+            //Set EMPTY_PATH and enforce use of file descriptor instead.
+            final int statFlags = Bitmask.combine(flags) | StatFlag.EMPTY_PATH.mask();
+            final int statMask = Bitmask.combine(mask);
+
+            final OffHeapFileStat fileStat = OffHeapFileStat.fileStat();
+            final OffHeapCString rawPath = OffHeapCString.cstring("");
+
+            queue.add(sqe -> sqe.clear()
+                                .userData(pendingCompletions.allocKey(entry -> {
+                                    promise.resolve(entry.result($ -> fileStat.extract()));
+                                    fileStat.dispose();
+                                    rawPath.dispose();
+                                }))
+                                .fd(fd.descriptor())
+                                .addr(rawPath.address())
+                                .len(statMask)
+                                .off(fileStat.address())
+                                .statxFlags(statFlags)
+                                .opcode(AsyncOperation.IORING_OP_STATX.opcode()));
+        });
+    }
+
+    @Override
+    public Promise<SizeT> readVector(final FileDescriptor fileDescriptor,
+                                     final OffsetT offset,
+                                     final Option<Timeout> timeout,
+                                     final OffHeapBuffer... buffers) {
+        return Promise.promise(promise -> {
+            final OffHeapIoVector ioVector = OffHeapIoVector.withBuffers(buffers);
+            final int key = pendingCompletions.allocKey(entry -> {
+                promise.resolve(entry.result(SizeT::sizeT));
+                ioVector.dispose();
+            });
+
+            queue.add(sqe -> sqe.clear()
+                                .userData(key)
+                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                                .opcode(AsyncOperation.IORING_OP_READV.opcode())
+                                .fd(fileDescriptor.descriptor())
+                                .addr(ioVector.address())
+                                .len(ioVector.length())
+                                .off(offset.value()));
+
+            timeout.whenPresent(this::appendTimeout);
+        });
+    }
+
+    @Override
+    public Promise<SizeT> writeVector(final FileDescriptor fileDescriptor,
+                                      final OffsetT offset,
+                                      final Option<Timeout> timeout,
+                                      final OffHeapBuffer... buffers) {
+        return Promise.promise(promise -> {
+            final OffHeapIoVector ioVector = OffHeapIoVector.withBuffers(buffers);
+            final int key = pendingCompletions.allocKey(entry -> {
+                promise.resolve(entry.result(SizeT::sizeT));
+                ioVector.dispose();
+            });
+
+            queue.add(sqe -> sqe.clear()
+                                .userData(key)
+                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                                .opcode(AsyncOperation.IORING_OP_WRITEV.opcode())
+                                .fd(fileDescriptor.descriptor())
+                                .addr(ioVector.address())
+                                .len(ioVector.length())
+                                .off(offset.value()));
 
             timeout.whenPresent(this::appendTimeout);
         });

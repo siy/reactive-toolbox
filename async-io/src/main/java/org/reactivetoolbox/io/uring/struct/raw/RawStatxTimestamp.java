@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io.uring.struct.raw;
 
+import org.reactivetoolbox.io.async.file.stat.StatTimestamp;
 import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.shape.StatxTimestampOffsets;
 
@@ -21,5 +22,9 @@ public class RawStatxTimestamp extends AbstractExternalRawStructure<RawStatxTime
 
     public int nanos() {
         return getInt(tv_nsec);
+    }
+
+    public StatTimestamp detach() {
+        return StatTimestamp.timestamp(seconds(), nanos());
     }
 }

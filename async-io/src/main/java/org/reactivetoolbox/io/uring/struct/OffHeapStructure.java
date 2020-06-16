@@ -1,6 +1,4 @@
-package org.reactivetoolbox.io.uring.struct.offheap;
-
-import org.reactivetoolbox.io.uring.struct.RawStructure;
+package org.reactivetoolbox.io.uring.struct;
 
 /**
  * Base class for classes which are used for passing data to JNI side.

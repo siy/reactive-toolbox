@@ -1,12 +1,10 @@
 package org.reactivetoolbox.io.uring.struct.offheap;
 
 import org.reactivetoolbox.core.lang.functional.Result;
-import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.async.net.SocketAddressIn6;
 import org.reactivetoolbox.io.raw.RawProperty;
-import org.reactivetoolbox.io.uring.struct.AbstractOffHeapStructure;
 import org.reactivetoolbox.io.uring.struct.ExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.raw.RawSocketAddress;
 import org.reactivetoolbox.io.uring.struct.raw.RawSocketAddressIn;

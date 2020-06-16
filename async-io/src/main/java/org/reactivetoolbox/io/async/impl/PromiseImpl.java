@@ -32,6 +32,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -117,19 +118,22 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> async(final Consumer<Promise<T>> task) {
-        SingletonHolder.scheduler().submit(() -> task.accept(this));
+        SingletonHolder.scheduler()
+                       .submit(() -> task.accept(this));
         return this;
-    }
-
-    public static <T> Promise<Promise<T>> withIO(final Functions.FN1<Promise<T>, Submitter> submissionFunction) {
-        final Promise<Promise<T>> result = new PromiseImpl<>();
-        SingletonHolder.scheduler().submit(submitter -> result.ok(submissionFunction.apply(submitter)));
-        return result;
     }
 
     @Override
     public Promise<T> async(final Timeout timeout, final Consumer<Promise<T>> task) {
-        SingletonHolder.scheduler().submit(timeout, () -> task.accept(this));
+        SingletonHolder.scheduler()
+                       .submit(timeout, () -> task.accept(this));
+        return this;
+    }
+
+    @Override
+    public Promise<T> async(final BiConsumer<Promise<T>, Submitter> task) {
+        SingletonHolder.scheduler()
+                       .submit(submitter -> task.accept(this, submitter));
         return this;
     }
 

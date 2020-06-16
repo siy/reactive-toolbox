@@ -1,7 +1,7 @@
 package org.reactivetoolbox.io.async.util;
 
 import org.reactivetoolbox.io.raw.RawMemory;
-import org.reactivetoolbox.io.uring.struct.AbstractOffHeapStructure;
+import org.reactivetoolbox.io.uring.struct.offheap.AbstractOffHeapStructure;
 
 public class OffHeapBuffer extends AbstractOffHeapStructure<OffHeapBuffer> {
     private int used;
@@ -30,7 +30,7 @@ public class OffHeapBuffer extends AbstractOffHeapStructure<OffHeapBuffer> {
     }
 
     public OffHeapBuffer used(final int used) {
-        this.used = used;
+        this.used = Math.min(size(), used);
         return this;
     }
 }

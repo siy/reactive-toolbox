@@ -1,7 +1,6 @@
 package org.reactivetoolbox.io.uring.struct.offheap;
 
 import org.reactivetoolbox.io.scheduler.Timeout;
-import org.reactivetoolbox.io.uring.struct.AbstractOffHeapStructure;
 import org.reactivetoolbox.io.uring.struct.shape.TimeSpecOffsets;
 
 import static org.reactivetoolbox.io.uring.struct.shape.TimeSpecOffsets.tv_nsec;
