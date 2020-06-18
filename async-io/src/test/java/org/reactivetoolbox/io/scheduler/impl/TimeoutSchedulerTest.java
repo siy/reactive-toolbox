@@ -47,7 +47,7 @@ class TimeoutSchedulerTest {
         executor.shutdown();
         assertTrue(executor.awaitTermination(15, TimeUnit.SECONDS));
 
-        Thread.sleep(300);
+        Thread.sleep(100);
 
         assertEquals(N_TASKS * N_ITEMS_PER_TASK, List.of(counters).stream().mapToLong(AtomicLong::get).sum());
     }

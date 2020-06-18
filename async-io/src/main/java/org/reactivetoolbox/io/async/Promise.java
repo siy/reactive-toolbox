@@ -281,7 +281,9 @@ public interface Promise<T> {
      *         Consumer for intercepted exceptions.
      * @return current {@link Promise} instance
      */
-    Promise<T> exceptionConsumer(final Consumer<Throwable> consumer);
+    static void exceptionConsumer(final Consumer<Throwable> consumer) {
+        PromiseImpl.exceptionConsumer(consumer);
+    }
 
     /**
      * Create new unresolved instance.om
@@ -401,6 +403,7 @@ public interface Promise<T> {
                 .apply(promise -> promise.resolve(result));
     }
 
+    //TODO: expose it or remove it
     class RethrowingCollector implements Consumer<Throwable> {
         private final Queue<Throwable> list = new ConcurrentLinkedQueue<>();
 

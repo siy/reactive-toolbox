@@ -2,6 +2,7 @@ package org.reactivetoolbox.io.async.file;
 
 import org.reactivetoolbox.io.Bitmask;
 
+//TODO: cleanup constant naming
 public enum OpenMode implements Bitmask {
     S_IRWXU(00700), /* user (file owner) has read, write, and execute permission */
     S_IRUSR(00400), /* user has read permission */

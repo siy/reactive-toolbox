@@ -2,6 +2,7 @@ package org.reactivetoolbox.io.async.file.stat;
 
 import java.util.EnumSet;
 
+//TODO: toString
 public class FileStat {
     private final EnumSet<StatMask> mask;
     private final int blockSize;

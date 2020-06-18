@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io.async.file.stat;
 
+//TODO: toString
 public class DeviceId {
     private final int major;
     private final int minor;

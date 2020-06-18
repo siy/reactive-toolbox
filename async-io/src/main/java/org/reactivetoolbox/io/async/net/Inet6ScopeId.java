@@ -1,6 +1,7 @@
 package org.reactivetoolbox.io.async.net;
 
 //TODO: finish it
+//TODO: toString
 public class Inet6ScopeId {
     private final int scopeId;
 

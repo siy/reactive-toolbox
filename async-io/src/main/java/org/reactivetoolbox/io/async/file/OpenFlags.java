@@ -1,7 +1,7 @@
 package org.reactivetoolbox.io.async.file;
 
 import org.reactivetoolbox.io.Bitmask;
-
+//TODO: cleanup constant naming
 public enum OpenFlags implements Bitmask {
     O_RDONLY(00000000),
     O_WRONLY(00000001),

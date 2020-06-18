@@ -7,11 +7,16 @@ public class InetPort {
         this.port = port;
     }
 
-    public static InetPort inetPort(final short port) {
-        return new InetPort(port);
+    public static InetPort inetPort(final int port) {
+        return new InetPort((short) port);
     }
 
     public short port() {
         return port;
+    }
+
+    @Override
+    public String toString() {
+        return "InetPort(" + port + ")";
     }
 }

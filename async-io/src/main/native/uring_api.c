@@ -1,10 +1,10 @@
 #include <liburing.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netinet/in.h>
+#include <errno.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <errno.h>
+#include <netinet/in.h>
 #include <linux/stat.h>
 #include "include/org_reactivetoolbox_io_uring_Uring.h"
 

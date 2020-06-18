@@ -1,5 +1,7 @@
 package org.reactivetoolbox.io.async;
 
+import org.reactivetoolbox.core.lang.Tuple;
+import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Unit;
 import org.reactivetoolbox.io.async.common.OffsetT;
@@ -78,35 +80,39 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    Promise<SizeT> read(final FileDescriptor fdIn,
-                        final OffHeapBuffer buffer,
-                        final OffsetT offset,
-                        final Option<Timeout> timeout);
+    Promise<Tuple2<FileDescriptor, SizeT>> read(final FileDescriptor fdIn,
+                                                final OffHeapBuffer buffer,
+                                                final OffsetT offset,
+                                                final Option<Timeout> timeout);
 
     /**
      * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no timeout is specified.
      */
-    default Promise<SizeT> read(final FileDescriptor fdIn,
-                                final OffHeapBuffer buffer,
-                                final OffsetT offset) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> read(final FileDescriptor fdIn,
+                                                        final OffHeapBuffer buffer,
+                                                        final OffsetT offset) {
         return read(fdIn, buffer, offset, empty());
     }
 
     /**
      * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified. Convenient for using with sockets or reading file at current position.
+     *
+     * @return
      */
-    default Promise<SizeT> read(final FileDescriptor fdIn,
-                                final OffHeapBuffer buffer,
-                                final Option<Timeout> timeout) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> read(final FileDescriptor fdIn,
+                                                        final OffHeapBuffer buffer,
+                                                        final Option<Timeout> timeout) {
         return read(fdIn, buffer, OffsetT.ZERO, timeout);
     }
 
     /**
      * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset and no timeout is specified. Convenient for using with sockets or reading file at
      * current position.
+     *
+     * @return
      */
-    default Promise<SizeT> read(final FileDescriptor fdIn,
-                                final OffHeapBuffer buffer) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> read(final FileDescriptor fdIn,
+                                                        final OffHeapBuffer buffer) {
         return read(fdIn, buffer, OffsetT.ZERO, empty());
     }
 
@@ -123,35 +129,41 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    Promise<SizeT> write(final FileDescriptor fdOut,
-                         final OffHeapBuffer buffer,
-                         final OffsetT offset,
-                         final Option<Timeout> timeout);
+    Promise<Tuple2<FileDescriptor, SizeT>> write(final FileDescriptor fdOut,
+                                                 final OffHeapBuffer buffer,
+                                                 final OffsetT offset,
+                                                 final Option<Timeout> timeout);
 
     /**
      * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no timeout is specified.
+     *
+     * @return
      */
-    default Promise<SizeT> write(final FileDescriptor fdOut,
-                                 final OffHeapBuffer buffer,
-                                 final OffsetT offset) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> write(final FileDescriptor fdOut,
+                                                         final OffHeapBuffer buffer,
+                                                         final OffsetT offset) {
         return write(fdOut, buffer, offset, empty());
     }
 
     /**
      * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified. Convenient for using with sockets or writing file at current position.
+     *
+     * @return
      */
-    default Promise<SizeT> write(final FileDescriptor fdOut,
-                                 final OffHeapBuffer buffer,
-                                 final Option<Timeout> timeout) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> write(final FileDescriptor fdOut,
+                                                         final OffHeapBuffer buffer,
+                                                         final Option<Timeout> timeout) {
         return write(fdOut, buffer, OffsetT.ZERO, timeout);
     }
 
     /**
      * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset and no timeout is specified. Convenient for using with sockets or writing file at
      * current position.
+     *
+     * @return
      */
-    default Promise<SizeT> write(final FileDescriptor fdOut,
-                                 final OffHeapBuffer buffer) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> write(final FileDescriptor fdOut,
+                                                         final OffHeapBuffer buffer) {
         return write(fdOut, buffer, OffsetT.ZERO, empty());
     }
 
@@ -227,6 +239,7 @@ public interface Submitter {
      * @param queueDepth
      *         Depth of the listening queue
      * @param options
+     *         Socket options. See {@link SocketOption} for more details
      */
     Promise<ServerConnector> server(final SocketAddress<?> socketAddress,
                                     final SocketType socketType,
@@ -242,7 +255,6 @@ public interface Submitter {
      *         Server socket to accept connections on.
      * @param flags
      *         Accept flags (see {@link SocketFlag} for more details)
-     * @return
      */
     Promise<ClientConnection<?>> accept(final FileDescriptor socket,
                                         final EnumSet<SocketFlag> flags);
@@ -254,13 +266,13 @@ public interface Submitter {
      * @param socket
      *         Socket to connect
      * @param address
-     *         Address to connect to
+     *         Address to connect
      * @param timeout
      *         Optional operation timeout.
      */
-    Promise<Unit> connect(final FileDescriptor socket,
-                          final SocketAddress<?> address,
-                          final Option<Timeout> timeout);
+    Promise<FileDescriptor> connect(final FileDescriptor socket,
+                                    final SocketAddress<?> address,
+                                    final Option<Timeout> timeout);
 
     /**
      * Same as {@link #connect(FileDescriptor, SocketAddress, Option)} except no timeout is specified.
@@ -268,10 +280,10 @@ public interface Submitter {
      * @param socket
      *         Socket to use for connection.
      * @param address
-     *         Remote address to connect.
+     *         Address to connect
      */
-    default Promise<Unit> connect(final FileDescriptor socket,
-                                  final SocketAddress<?> address) {
+    default Promise<FileDescriptor> connect(final FileDescriptor socket,
+                                            final SocketAddress<?> address) {
         return connect(socket, address, empty());
     }
 
@@ -315,22 +327,22 @@ public interface Submitter {
      *         Set of buffers where read information will be put. Each buffer should have it's {@link OffHeapBuffer#used()} property set to actual number of bytes which application
      *         expects to see in this buffer.
      */
-    Promise<SizeT> readVector(final FileDescriptor fileDescriptor,
-                              final OffsetT offset,
-                              final Option<Timeout> timeout,
-                              final OffHeapBuffer... buffers);
+    Promise<Tuple2<FileDescriptor, SizeT>> readVector(final FileDescriptor fileDescriptor,
+                                                      final OffsetT offset,
+                                                      final Option<Timeout> timeout,
+                                                      final OffHeapBuffer... buffers);
 
     /**
      * Same as {@link #readVector(FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except offset is set to zero.
      */
-    default Promise<SizeT> readVector(final FileDescriptor fileDescriptor, final Option<Timeout> timeout, final OffHeapBuffer... buffers) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> readVector(final FileDescriptor fileDescriptor, final Option<Timeout> timeout, final OffHeapBuffer... buffers) {
         return readVector(fileDescriptor, OffsetT.ZERO, timeout, buffers);
     }
 
     /**
      * Same as {@link #readVector(FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except offset is set to zero and timeout is omitted.
      */
-    default Promise<SizeT> readVector(final FileDescriptor fileDescriptor, final OffHeapBuffer... buffers) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> readVector(final FileDescriptor fileDescriptor, final OffHeapBuffer... buffers) {
         return readVector(fileDescriptor, OffsetT.ZERO, empty(), buffers);
     }
 
@@ -348,19 +360,19 @@ public interface Submitter {
      * @param buffers
      *         Set of buffers to write from
      */
-    Promise<SizeT> writeVector(final FileDescriptor fileDescriptor, final OffsetT offset, final Option<Timeout> timeout, final OffHeapBuffer... buffers);
+    Promise<Tuple2<FileDescriptor, SizeT>> writeVector(final FileDescriptor fileDescriptor, final OffsetT offset, final Option<Timeout> timeout, final OffHeapBuffer... buffers);
 
     /**
      * Same as {@link #writeVector(FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except offset is set to zero.
      */
-    default Promise<SizeT> writeVector(final FileDescriptor fileDescriptor, final Option<Timeout> timeout, final OffHeapBuffer... buffers) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> writeVector(final FileDescriptor fileDescriptor, final Option<Timeout> timeout, final OffHeapBuffer... buffers) {
         return writeVector(fileDescriptor, OffsetT.ZERO, timeout, buffers);
     }
 
     /**
      * Same as {@link #writeVector(FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except offset is set to zero and timeout is omitted.
      */
-    default Promise<SizeT> writeVector(final FileDescriptor fileDescriptor, final OffHeapBuffer... buffers) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> writeVector(final FileDescriptor fileDescriptor, final OffHeapBuffer... buffers) {
         return writeVector(fileDescriptor, OffsetT.ZERO, empty(), buffers);
     }
 
@@ -368,15 +380,15 @@ public interface Submitter {
     //Submitter batch(final Consumer<Submitter> submitterConsumer);
 
     //TODO: recv, send - implement full support later, when special cases handling will be necessary
-    default Promise<SizeT> send(final FileDescriptor socket,
-                                final OffHeapBuffer buffer,
-                                final Option<Timeout> timeout) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> send(final FileDescriptor socket,
+                                                        final OffHeapBuffer buffer,
+                                                        final Option<Timeout> timeout) {
         return write(socket, buffer, OffsetT.ZERO, timeout);
     }
 
-    default Promise<SizeT> recv(final FileDescriptor socket,
-                                final OffHeapBuffer buffer,
-                                final Option<Timeout> timeout) {
+    default Promise<Tuple2<FileDescriptor, SizeT>> recv(final FileDescriptor socket,
+                                                        final OffHeapBuffer buffer,
+                                                        final Option<Timeout> timeout) {
         return read(socket, buffer, OffsetT.ZERO, timeout);
     }
 }

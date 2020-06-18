@@ -33,4 +33,8 @@ public class OffHeapBuffer extends AbstractOffHeapStructure<OffHeapBuffer> {
         this.used = Math.min(size(), used);
         return this;
     }
+
+    public byte[] export() {
+        return RawMemory.getByteArray(address(), used);
+    }
 }

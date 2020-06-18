@@ -2,6 +2,9 @@ package org.reactivetoolbox.io.async.net;
 
 import org.reactivetoolbox.core.lang.functional.Result;
 
+import java.util.Arrays;
+import java.util.StringJoiner;
+
 import static org.reactivetoolbox.io.NativeError.EFAULT;
 
 public class Inet4Address implements InetAddress {
@@ -15,14 +18,22 @@ public class Inet4Address implements InetAddress {
     }
 
     public static Result<Inet4Address> inet4Address(final byte[] address) {
-        if (address.length != SIZE) {
-            return EFAULT.result();
-        }
-        return Result.ok(new Inet4Address(address));
+        return address.length != SIZE
+               ? Result.fail(EFAULT.asFailure())
+               : Result.ok(new Inet4Address(address));
     }
 
     @Override
     public byte[] asBytes() {
         return address;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Inet4Address(%d.%d.%d.%d)",
+                             (int) address[0] & 0xFF,
+                             (int) address[1] & 0xFF,
+                             (int) address[2] & 0xFF,
+                             (int) address[3] & 0xFF);
     }
 }

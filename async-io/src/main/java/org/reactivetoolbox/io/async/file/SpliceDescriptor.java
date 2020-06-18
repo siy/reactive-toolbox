@@ -10,6 +10,7 @@ import java.util.EnumSet;
  * This operation performs copying from one file descriptor to another completely
  * at kernel space without involving any user space code or memory.
  */
+//TODO: toString
 public class SpliceDescriptor {
     private final FileDescriptor from;
     private final FileDescriptor to;

@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io;
 
+import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.lang.functional.Unit;
@@ -41,7 +42,10 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.function.Consumer;
 
+import static java.time.Duration.ofSeconds;
+import static org.reactivetoolbox.core.lang.Tuple.tuple;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
+import static org.reactivetoolbox.io.async.common.SizeT.sizeT;
 import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
 import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
 
@@ -127,10 +131,10 @@ public class Proactor implements Submitter, AutoCloseable {
                 final long totalNanos = endNanos - startNanos;
 
                 if (Math.abs(entry.res()) != NativeError.ETIME.typeCode()) {
-                    promise.resolve(NativeError.failure(entry.res()));
+                    promise.fail(NativeError.fromCode(entry.res()).asFailure());
                 } else {
-                    promise.ok(Duration.ofSeconds(totalNanos / OffHeapTimeSpec.NANO_SCALE,
-                                                  totalNanos % OffHeapTimeSpec.NANO_SCALE));
+                    promise.ok(ofSeconds(totalNanos / OffHeapTimeSpec.NANO_SCALE,
+                                         totalNanos % OffHeapTimeSpec.NANO_SCALE));
                 }
             });
 
@@ -160,21 +164,23 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
-    public Promise<SizeT> read(final FileDescriptor fdIn,
-                               final OffHeapBuffer buffer,
-                               final OffsetT offset,
-                               final Option<Timeout> timeout) {
+    public Promise<Tuple2<FileDescriptor, SizeT>> read(final FileDescriptor fd,
+                                                       final OffHeapBuffer buffer,
+                                                       final OffsetT offset,
+                                                       final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> {
-                buffer.used(entry.res());
-                promise.resolve(entry.result(SizeT::sizeT));
+                promise.resolve(entry.result(bytesRead -> {
+                    buffer.used(bytesRead);
+                    return tuple(fd, sizeT(bytesRead));
+                }));
             });
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_READ.opcode())
-                                .fd(fdIn.descriptor())
+                                .fd(fd.descriptor())
                                 .addr(buffer.address())
                                 .len(buffer.size())
                                 .off(offset.value()));
@@ -184,20 +190,20 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
-    public Promise<SizeT> write(final FileDescriptor fdOut,
-                                final OffHeapBuffer buffer,
-                                final OffsetT offset,
-                                final Option<Timeout> timeout) {
+    public Promise<Tuple2<FileDescriptor, SizeT>> write(final FileDescriptor fd,
+                                                        final OffHeapBuffer buffer,
+                                                        final OffsetT offset,
+                                                        final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(SizeT::sizeT)));
+            final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesWritten -> tuple(fd, sizeT(bytesWritten)))));
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_WRITE.opcode())
-                                .fd(fdOut.descriptor())
+                                .fd(fd.descriptor())
                                 .addr(buffer.address())
-                                .len(buffer.size())
+                                .len(buffer.used())
                                 .off(offset.value()));
 
             timeout.whenPresent(this::appendTimeout);
@@ -291,24 +297,24 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
-    public Promise<Unit> connect(final FileDescriptor socket, final SocketAddress<?> address, final Option<Timeout> timeout) {
+    public Promise<FileDescriptor> connect(final FileDescriptor socket, final SocketAddress<?> address, final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
             final var clientAddress = OffHeapSocketAddress.unsafeSocketAddress(address);
 
             if (clientAddress == null) {
-                promise.resolve(NativeError.EPFNOSUPPORT.result());
+                promise.fail(NativeError.EPFNOSUPPORT.asFailure());
                 return;
             }
 
             final int key = pendingCompletions.allocKey((entry -> {
-                promise.resolve(entry.result(v -> Unit.UNIT));
+                promise.resolve(entry.result(v -> socket));
                 clientAddress.dispose();
             }));
 
             queue.add(sqe -> sqe.clear()
                                 .userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
-                                .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
+                                .opcode(AsyncOperation.IORING_OP_CONNECT.opcode())
                                 .fd(socket.descriptor())
                                 .addr(clientAddress.sockAddrPtr())
                                 .off(clientAddress.sockAddrSize()));
@@ -368,14 +374,14 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
-    public Promise<SizeT> readVector(final FileDescriptor fileDescriptor,
-                                     final OffsetT offset,
-                                     final Option<Timeout> timeout,
-                                     final OffHeapBuffer... buffers) {
+    public Promise<Tuple2<FileDescriptor, SizeT>> readVector(final FileDescriptor fileDescriptor,
+                                                             final OffsetT offset,
+                                                             final Option<Timeout> timeout,
+                                                             final OffHeapBuffer... buffers) {
         return Promise.promise(promise -> {
             final OffHeapIoVector ioVector = OffHeapIoVector.withBuffers(buffers);
             final int key = pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result(SizeT::sizeT));
+                promise.resolve(entry.result(bytesRead -> tuple(fileDescriptor, sizeT(bytesRead))));
                 ioVector.dispose();
             });
 
@@ -393,14 +399,14 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
-    public Promise<SizeT> writeVector(final FileDescriptor fileDescriptor,
-                                      final OffsetT offset,
-                                      final Option<Timeout> timeout,
-                                      final OffHeapBuffer... buffers) {
+    public Promise<Tuple2<FileDescriptor, SizeT>> writeVector(final FileDescriptor fileDescriptor,
+                                                              final OffsetT offset,
+                                                              final Option<Timeout> timeout,
+                                                              final OffHeapBuffer... buffers) {
         return Promise.promise(promise -> {
             final OffHeapIoVector ioVector = OffHeapIoVector.withBuffers(buffers);
             final int key = pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result(SizeT::sizeT));
+                promise.resolve(entry.result(bytesWritten -> tuple(fileDescriptor, sizeT(bytesWritten))));
                 ioVector.dispose();
             });
 

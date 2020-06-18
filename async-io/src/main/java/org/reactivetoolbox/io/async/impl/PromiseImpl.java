@@ -29,6 +29,7 @@ import java.util.StringJoiner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,16 +41,14 @@ import java.util.function.Consumer;
  */
 public class PromiseImpl<T> implements Promise<T> {
     private final AtomicMarkableReference<Result<T>> value = new AtomicMarkableReference<>(null, false);
-    private final BlockingQueue<Consumer<Result<T>>> thenActions = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Consumer<Result<T>>> thenActions = new LinkedTransferQueue<>();
     private final CountDownLatch actionsHandled = new CountDownLatch(1);
-    //TODO: make it global instead of per-instance?
-    private final AtomicReference<Consumer<Throwable>> exceptionConsumer =
-            new AtomicReference<>(e -> logger().debug("Exception while applying handlers", e));
 
-    @Override
-    public Promise<T> exceptionConsumer(final Consumer<Throwable> consumer) {
+    private static final AtomicReference<Consumer<Throwable>> exceptionConsumer =
+            new AtomicReference<>(e -> SingletonHolder.logger().debug("Exception while applying handlers", e));
+
+    public static void exceptionConsumer(final Consumer<Throwable> consumer) {
         exceptionConsumer.set(consumer);
-        return this;
     }
 
     /**

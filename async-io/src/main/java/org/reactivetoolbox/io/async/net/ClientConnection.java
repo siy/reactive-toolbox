@@ -2,6 +2,7 @@ package org.reactivetoolbox.io.async.net;
 
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 
+//TODO: toString
 public class ClientConnection<T extends SocketAddress<?>> {
     private final FileDescriptor socket;
     private final T address;

@@ -1,5 +1,5 @@
 package org.reactivetoolbox.io.async.net;
-
+//TODO: toString
 public class Inet6FlowInfo {
     private final int flowInfo;
 

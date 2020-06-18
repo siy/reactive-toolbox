@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io.async.file.stat;
 
+//TODO: toString
 public class StatTimestamp {
     private final long seconds;
     private final int nanos;

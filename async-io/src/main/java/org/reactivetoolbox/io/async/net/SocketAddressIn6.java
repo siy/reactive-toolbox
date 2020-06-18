@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io.async.net;
 
+//TODO: toString
 public class SocketAddressIn6 implements SocketAddress<Inet6Address> {
     private final AddressFamily family;
     private final InetPort port;
