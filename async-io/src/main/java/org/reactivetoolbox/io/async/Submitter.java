@@ -1,6 +1,5 @@
 package org.reactivetoolbox.io.async;
 
-import org.reactivetoolbox.core.lang.Tuple;
 import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Unit;
@@ -8,7 +7,7 @@ import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.file.OpenFlags;
-import org.reactivetoolbox.io.async.file.OpenMode;
+import org.reactivetoolbox.io.async.file.FilePermission;
 import org.reactivetoolbox.io.async.file.SpliceDescriptor;
 import org.reactivetoolbox.io.async.file.stat.FileStat;
 import org.reactivetoolbox.io.async.file.stat.StatFlag;
@@ -32,16 +31,18 @@ import static org.reactivetoolbox.core.lang.functional.Option.empty;
 /**
  * Low level externally accessible API for submission of I/O operations.
  */
-//TODO: add missing methods (see list at the end), cleanup, extract enums, do sanity checks (make sure port/address passed properly)
-//TODO: carefully check javadocs
 public interface Submitter {
     /**
-     * Submit NOP operation. This operation actually does nothing except performing round trip to OS kernel and back.
+     * Submit NOP operation.
+     * <p>
+     * This operation actually does nothing except performing round trip to OS kernel and back.
      */
     Promise<Unit> nop();
 
     /**
-     * Submit DELAY (TIMEOUT) operation. This operation resolves after specified timeout. More or less precise value of the actual delay provided as a result of the operation.
+     * Submit DELAY (TIMEOUT) operation.
+     * <p>
+     * This operation resolves after specified timeout. More or less precise value of the actual delay provided as a result of the operation.
      *
      * @param timeout
      *         Requested timeout delay.
@@ -49,7 +50,9 @@ public interface Submitter {
     Promise<Duration> delay(final Timeout timeout);
 
     /**
-     * Submit SPLICE operation. Copies data from one file descriptor to another. Returned {@link Promise} is used to deliver error or number of successfully copied bytes.
+     * Submit SPLICE operation.
+     * <p>
+     * Copies data from one file descriptor to another. Returned {@link Promise} is used to deliver error or number of successfully copied bytes.
      *
      * @param descriptor
      *         Splice operation details container
@@ -67,9 +70,10 @@ public interface Submitter {
     }
 
     /**
-     * Submit READ operation. Read from specified file descriptor. The number of bytes to read is defined by the provided buffer {@link OffHeapBuffer#size()}. Upon successful
-     * completion but before {@code completionHandler} is invoked, {@code buffer} {@code used} value is set to number of bytes actually read. Returned {@link Promise} is used to
-     * deliver error or number of successfully read bytes.
+     * Submit READ operation.
+     * <p>
+     * Read from specified file descriptor. The number of bytes to read is defined by the provided buffer {@link OffHeapBuffer#size()}. Upon successful completion {@code buffer}
+     * has its {@link OffHeapBuffer#used(int)} value set to number of bytes actually read. Returned {@link Promise} is used to deliver error or number of successfully read bytes.
      *
      * @param fdIn
      *         File descriptor to read from.
@@ -95,9 +99,9 @@ public interface Submitter {
     }
 
     /**
-     * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified. Convenient for using with sockets or reading file at current position.
-     *
-     * @return
+     * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified.
+     * <p>
+     * Convenient for using with sockets or reading file at current position.
      */
     default Promise<Tuple2<FileDescriptor, SizeT>> read(final FileDescriptor fdIn,
                                                         final OffHeapBuffer buffer,
@@ -106,10 +110,9 @@ public interface Submitter {
     }
 
     /**
-     * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset and no timeout is specified. Convenient for using with sockets or reading file at
-     * current position.
-     *
-     * @return
+     * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset and no timeout is specified.
+     * <p>
+     * Convenient for using with sockets or reading file at current position.
      */
     default Promise<Tuple2<FileDescriptor, SizeT>> read(final FileDescriptor fdIn,
                                                         final OffHeapBuffer buffer) {
@@ -117,8 +120,10 @@ public interface Submitter {
     }
 
     /**
-     * Submit WRITE operation. Writes data into specified file descriptor at specified offset. The number of bytes to write is defined by the provided buffer {@link
-     * OffHeapBuffer#used()}. Returned {@link Promise} is used to deliver error or number of successfully written bytes.
+     * Submit WRITE operation.
+     * <p>
+     * Writes data into specified file descriptor at specified offset. The number of bytes to write is defined by the provided buffer {@link OffHeapBuffer#used()}. Returned {@link
+     * Promise} is used to deliver error or number of successfully written bytes.
      *
      * @param fdOut
      *         File descriptor to write to.
@@ -136,8 +141,6 @@ public interface Submitter {
 
     /**
      * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no timeout is specified.
-     *
-     * @return
      */
     default Promise<Tuple2<FileDescriptor, SizeT>> write(final FileDescriptor fdOut,
                                                          final OffHeapBuffer buffer,
@@ -146,9 +149,9 @@ public interface Submitter {
     }
 
     /**
-     * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified. Convenient for using with sockets or writing file at current position.
-     *
-     * @return
+     * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified.
+     * <p>
+     * Convenient for using with sockets or writing file at current position.
      */
     default Promise<Tuple2<FileDescriptor, SizeT>> write(final FileDescriptor fdOut,
                                                          final OffHeapBuffer buffer,
@@ -157,10 +160,9 @@ public interface Submitter {
     }
 
     /**
-     * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset and no timeout is specified. Convenient for using with sockets or writing file at
-     * current position.
-     *
-     * @return
+     * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset and no timeout is specified.
+     * <p>
+     * Convenient for using with sockets or writing file at current position.
      */
     default Promise<Tuple2<FileDescriptor, SizeT>> write(final FileDescriptor fdOut,
                                                          final OffHeapBuffer buffer) {
@@ -168,8 +170,9 @@ public interface Submitter {
     }
 
     /**
-     * Submit CLOSE operation. Closes specified file descriptor (either file or socket). Returned {@link Promise} is necessary only to deliver error and notify when operation is
-     * done.
+     * Submit CLOSE operation.
+     * <p>
+     * Closes specified file descriptor (either file or socket). Returned {@link Promise} is necessary only to deliver error and notify when operation is done.
      *
      * @param fd
      *         File descriptor to close.
@@ -186,21 +189,24 @@ public interface Submitter {
     }
 
     /**
-     * Submit OPEN operation. Open file at specified location. Note that this method only partially covers functionality of the underlying {@code openat(2)} call. Instead simple
-     * {@code open(2)} semantics is implemented.
+     * Submit OPEN operation.
+     * <p>
+     * Open file at specified location.
+     * <p>
+     * Note that this method only partially covers functionality of the underlying {@code openat(2)} call. Instead simpler {@code open(2)} semantics is implemented.
      *
      * @param path
      *         File path.
      * @param flags
      *         File open flags.
      * @param mode
-     *         File open mode. Must be present only if {@code flags} contains {@link OpenFlags#O_CREAT} or {@link OpenFlags#O_TMPFILE}.
+     *         File open mode. Must be present only if {@code flags} contains {@link OpenFlags#CREATE} or {@link OpenFlags#TMPFILE}.
      * @param timeout
      *         Optional operation timeout.
      */
     Promise<FileDescriptor> open(final Path path,
                                  final EnumSet<OpenFlags> flags,
-                                 final EnumSet<OpenMode> mode,
+                                 final EnumSet<FilePermission> mode,
                                  final Option<Timeout> timeout);
 
     /**
@@ -208,24 +214,67 @@ public interface Submitter {
      */
     default Promise<FileDescriptor> open(final Path path,
                                          final EnumSet<OpenFlags> flags,
-                                         final EnumSet<OpenMode> mode) {
+                                         final EnumSet<FilePermission> mode) {
         return open(path, flags, mode, empty());
     }
 
-    //TODO: finish Javadoc
+    /**
+     * Same as {@link #open(Path, EnumSet, EnumSet, Option)} except no timeout and no file permissions are provided.
+     * <p>
+     * Note that this method should not be used if call assumes file cration semantics (flags contain {@link OpenFlags#CREATE} or {@link OpenFlags#TMPFILE}).
+     */
+    default Promise<FileDescriptor> open(final Path path,
+                                         final EnumSet<OpenFlags> flags) {
+        return open(path, flags, FilePermission.empty(), empty());
+    }
+
+    /**
+     * Same as {@link #open(Path, EnumSet, EnumSet, Option)} except no file permissions are provided.
+     * <p>
+     * Note that this method should not be used if call assumes file cration semantics (flags contain {@link OpenFlags#CREATE} or {@link OpenFlags#TMPFILE}).
+     */
+    default Promise<FileDescriptor> open(final Path path,
+                                         final EnumSet<OpenFlags> flags,
+                                         final Option<Timeout> timeout) {
+        return open(path, flags, FilePermission.empty(), timeout);
+    }
 
     /**
      * Create socket for making client-side connections/requests.
      *
      * @param addressFamily
+     *         Socket address family (see {@link AddressFamily})
      * @param socketType
+     *         Socket type. Usually it's {@link SocketType#STREAM} for TCP and {@link SocketType#DGRAM} for UDP.
      * @param openFlags
+     *         Socket open flags. See {@link SocketFlag} for more details.
      * @param options
+     *         Additional socket options. See {@link SocketOption} for more details.
      */
     Promise<FileDescriptor> socket(final AddressFamily addressFamily,
                                    final SocketType socketType,
                                    final EnumSet<SocketFlag> openFlags,
                                    final EnumSet<SocketOption> options);
+
+    default Promise<FileDescriptor> socketTcpV4(final EnumSet<SocketFlag> openFlags,
+                                                final EnumSet<SocketOption> options) {
+        return socket(AddressFamily.INET, SocketType.STREAM, openFlags, options);
+    }
+
+    default Promise<FileDescriptor> socketUdpV4(final EnumSet<SocketFlag> openFlags,
+                                                final EnumSet<SocketOption> options) {
+        return socket(AddressFamily.INET, SocketType.DGRAM, openFlags, options);
+    }
+
+    default Promise<FileDescriptor> socketTcpV6(final EnumSet<SocketFlag> openFlags,
+                                                final EnumSet<SocketOption> options) {
+        return socket(AddressFamily.INET6, SocketType.STREAM, openFlags, options);
+    }
+
+    default Promise<FileDescriptor> socketUdpV6(final EnumSet<SocketFlag> openFlags,
+                                                final EnumSet<SocketOption> options) {
+        return socket(AddressFamily.INET6, SocketType.DGRAM, openFlags, options);
+    }
 
     /**
      * Create server connector bound to specified address/port and is ready to accept incoming connection.
@@ -248,8 +297,11 @@ public interface Submitter {
                                     final EnumSet<SocketOption> options);
 
     /**
-     * Submit ACCEPT operation. Accept incoming connection for server socket. Accepted connection receives its own socket which then need to be used to communicate (read/write)
-     * with particular client.
+     * Submit ACCEPT operation.
+     * <p>
+     * Accept incoming connection for server socket.
+     * <p>
+     * Accepted connection receives its own socket which then can be used to communicate (read/write) with particular client.
      *
      * @param socket
      *         Server socket to accept connections on.
@@ -260,8 +312,11 @@ public interface Submitter {
                                         final EnumSet<SocketFlag> flags);
 
     /**
-     * Submit CONNECT operation. Connect to external server at provided address (host/port). Returned {@link Promise} is necessary only to deliver error and notify when socket can
-     * be used.
+     * Submit CONNECT operation.
+     * <p>
+     * Connect to external server at provided address (host/port).
+     * <p>
+     * Returned {@link Promise} for convenience holds the same file descriptor as passed in {@code socket} parameter.
      *
      * @param socket
      *         Socket to connect
@@ -316,6 +371,8 @@ public interface Submitter {
      * <p>
      * Note that for proper operation this method requires that every passed buffer should have set {@link OffHeapBuffer#used()} value to actual number of bytes to be read into
      * this buffer.
+     * <p>
+     * For convenience returned {@link Promise} contains tuple with file descriptor and number of read bytes.
      *
      * @param fileDescriptor
      *         File descriptor to read from
@@ -350,6 +407,8 @@ public interface Submitter {
      * Write from buffers passed as a parameters.
      * <p>
      * Note that only {@link OffHeapBuffer#used()} portion of the buffer is written.
+     * <p>
+     * For convenience returned {@link Promise} contains tuple with file descriptor and number of written bytes.
      *
      * @param fileDescriptor
      *         File descriptor to read from

@@ -1,5 +1,8 @@
 package org.reactivetoolbox.io.async.file.stat;
 
+/**
+ * File descriptor types.
+ */
 public enum FileType {
     REGULAR(0100000),   /* Regular file.  */
     DIRECTORY(0040000), /* Directory.  */

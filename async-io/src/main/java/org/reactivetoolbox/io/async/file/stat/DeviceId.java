@@ -1,6 +1,8 @@
 package org.reactivetoolbox.io.async.file.stat;
 
-//TODO: toString
+/**
+ * Container for Unix-like device ID.
+ */
 public class DeviceId {
     private final int major;
     private final int minor;
@@ -20,5 +22,10 @@ public class DeviceId {
 
     public int minor() {
         return minor;
+    }
+
+    @Override
+    public String toString() {
+        return "DeviceId(" + major + ", " + minor + ")";
     }
 }

@@ -4,6 +4,9 @@ import org.reactivetoolbox.io.Bitmask;
 
 import java.util.EnumSet;
 
+/**
+ * Flags which control which information is requested and returned in the {@link FileStat}.
+ */
 public enum StatMask implements Bitmask {
     TYPE(0x000000001),    /* Want/got stx_mode & S_IFMT */
     MODE(0x000000002),    /* Want/got stx_mode & ~S_IFMT */

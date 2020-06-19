@@ -25,7 +25,7 @@ public enum SocketFlag implements Bitmask {
         return mask;
     }
 
-    public static EnumSet<SocketFlag> noFlags() {
+    public static EnumSet<SocketFlag> none() {
         return NONE;
     }
 

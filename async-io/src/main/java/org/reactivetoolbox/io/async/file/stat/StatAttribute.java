@@ -2,6 +2,9 @@ package org.reactivetoolbox.io.async.file.stat;
 
 import java.util.EnumSet;
 
+/**
+ * File attributes.
+ */
 public enum StatAttribute {
     COMPRESSED(0x00000004L), /* [I] File is compressed by the fs */
     IMMUTABLE(0x00000010L),  /* [I] File is marked immutable */

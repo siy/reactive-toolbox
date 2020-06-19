@@ -5,6 +5,9 @@ import org.reactivetoolbox.core.lang.functional.Result;
 
 import static org.reactivetoolbox.io.NativeError.EPFNOSUPPORT;
 
+/**
+ * Protocol address families (domains) which can be used for communication.
+ */
 public enum AddressFamily {
     UNIX(1),           // Local communication
     LOCAL(1),          // Synonym for AF_UNIX

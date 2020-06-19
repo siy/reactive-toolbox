@@ -10,7 +10,7 @@ import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.file.OpenFlags;
-import org.reactivetoolbox.io.async.file.OpenMode;
+import org.reactivetoolbox.io.async.file.FilePermission;
 import org.reactivetoolbox.io.async.file.SpliceDescriptor;
 import org.reactivetoolbox.io.async.file.stat.FileStat;
 import org.reactivetoolbox.io.async.file.stat.StatFlag;
@@ -233,7 +233,7 @@ public class Proactor implements Submitter, AutoCloseable {
     @Override
     public Promise<FileDescriptor> open(final Path path,
                                         final EnumSet<OpenFlags> flags,
-                                        final EnumSet<OpenMode> mode,
+                                        final EnumSet<FilePermission> mode,
                                         final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
             final OffHeapCString rawPath = OffHeapCString.cstring(path.toString());

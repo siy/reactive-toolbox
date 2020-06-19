@@ -1,5 +1,9 @@
 package org.reactivetoolbox.io.async.file.stat;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.StringJoiner;
+
 //TODO: toString
 public class StatTimestamp {
     private final long seconds;
@@ -20,5 +24,14 @@ public class StatTimestamp {
 
     public int nanos() {
         return nanos;
+    }
+
+    public LocalDateTime localDateTime() {
+        return LocalDateTime.ofEpochSecond(seconds, nanos, ZoneOffset.UTC);
+    }
+
+    @Override
+    public String toString() {
+        return localDateTime().toString();
     }
 }

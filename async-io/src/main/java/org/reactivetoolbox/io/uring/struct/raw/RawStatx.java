@@ -1,16 +1,12 @@
 package org.reactivetoolbox.io.uring.struct.raw;
 
-import org.reactivetoolbox.io.async.file.stat.DeviceId;
-import org.reactivetoolbox.io.async.file.stat.FilePermission;
+import org.reactivetoolbox.io.async.file.FilePermission;
 import org.reactivetoolbox.io.async.file.stat.FileStat;
 import org.reactivetoolbox.io.async.file.stat.FileType;
 import org.reactivetoolbox.io.async.file.stat.StatAttribute;
 import org.reactivetoolbox.io.async.file.stat.StatMask;
-import org.reactivetoolbox.io.async.file.stat.StatTimestamp;
 import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.shape.StatxOffsets;
-
-import java.util.EnumSet;
 
 import static org.reactivetoolbox.io.async.file.stat.DeviceId.deviceId;
 import static org.reactivetoolbox.io.uring.struct.shape.StatxOffsets.stx_atime;

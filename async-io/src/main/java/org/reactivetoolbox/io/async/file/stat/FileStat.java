@@ -1,8 +1,13 @@
 package org.reactivetoolbox.io.async.file.stat;
 
-import java.util.EnumSet;
+import org.reactivetoolbox.io.async.file.FilePermission;
 
-//TODO: toString
+import java.util.EnumSet;
+import java.util.StringJoiner;
+
+/**
+ * Extended Linux file status information.
+ */
 public class FileStat {
     private final EnumSet<StatMask> mask;
     private final int blockSize;
@@ -170,5 +175,29 @@ public class FileStat {
 
     public DeviceId fsDevice() {
         return fsDevice;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", "FileStat(", ")")
+                .add("mask:" + mask)
+                .add("blockSize:" + blockSize)
+                .add("attributes:" + attributes)
+                .add("numLinks:" + numLinks)
+                .add("ownerUID:" + ownerUID)
+                .add("ownerGID:" + ownerGID)
+                .add("fileType:" + fileType)
+                .add("permissions:" + permissions)
+                .add("inode:" + inode)
+                .add("size:" + size)
+                .add("blocks:" + blocks)
+                .add("attributeMask:" + attributeMask)
+                .add("accessTime:" + accessTime)
+                .add("creationTime: " + creationTime.localDateTime())
+                .add("attributeChangeTime: " + attributeChangeTime.localDateTime())
+                .add("modificationTime: " + modificationTime.localDateTime())
+                .add("rDevice: " + rDevice)
+                .add("fsDevice: " + fsDevice)
+                .toString();
     }
 }

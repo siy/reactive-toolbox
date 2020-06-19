@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.file.OpenFlags;
-import org.reactivetoolbox.io.async.file.OpenMode;
+import org.reactivetoolbox.io.async.file.FilePermission;
 import org.reactivetoolbox.io.async.net.AddressFamily;
 import org.reactivetoolbox.io.async.net.InetPort;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
@@ -58,8 +58,8 @@ class ProactorTest {
     void fileCanBeOpenedAndClosed() {
         final var finalResult = new AtomicReference<Result<?>>();
         final var promise = proactor.open(Path.of("target/classes/org/reactivetoolbox/io/Proactor.class"),
-                                          EnumSet.of(OpenFlags.O_RDONLY),
-                                          EnumSet.noneOf(OpenMode.class))
+                                          EnumSet.of(OpenFlags.READ_ONLY),
+                                          EnumSet.noneOf(FilePermission.class))
                                     .onResult(System.out::println)
                                     .onResult(v -> v.onSuccess(fd -> assertTrue(fd.descriptor() > 0))
                                                     .onFailure(f -> fail()))
@@ -76,8 +76,8 @@ class ProactorTest {
         final var finalResult = new AtomicReference<Result<?>>();
         try (final OffHeapBuffer buffer = OffHeapBuffer.fixedSize(1024 * 1024)) {
             final var promise = proactor.open(Path.of("target/classes/org/reactivetoolbox/io/Proactor.class"),
-                                              EnumSet.of(OpenFlags.O_RDONLY),
-                                              EnumSet.noneOf(OpenMode.class))
+                                              EnumSet.of(OpenFlags.READ_ONLY),
+                                              EnumSet.noneOf(FilePermission.class))
                                         .onResult(System.out::println)
                                         .onResult(v -> v.onSuccess(fd -> assertTrue(fd.descriptor() > 0))
                                                         .onFailure(f -> fail()))
@@ -107,11 +107,11 @@ class ProactorTest {
         System.out.println("Address: " + address);
 
         try (final OffHeapBuffer preparedText = OffHeapBuffer.fromBytes("GET /\n".getBytes(StandardCharsets.US_ASCII))) {
-            try (final OffHeapBuffer buffer = OffHeapBuffer.fixedSize(8192)) {
+            try (final OffHeapBuffer buffer = OffHeapBuffer.fixedSize(256)) {
                 buffer.clear().used(buffer.size());
                 final var promise = proactor.socket(AddressFamily.INET,
                                                     SocketType.STREAM,
-                                                    SocketFlag.noFlags(),
+                                                    SocketFlag.none(),
                                                     SocketOption.reuseAll())
                                             .onResult(r1 -> System.out.println("Socket created: " + r1))
                                             .andThen(fd -> proactor.connect(fd, address, option(timeout(1).seconds()))

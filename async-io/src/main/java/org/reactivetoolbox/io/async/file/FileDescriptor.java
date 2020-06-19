@@ -5,6 +5,9 @@ import org.reactivetoolbox.core.lang.functional.Result;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+/**
+ * General purpose Linux file descriptor.
+ */
 public class FileDescriptor {
     private final int fd;
     private final boolean isSocket;
