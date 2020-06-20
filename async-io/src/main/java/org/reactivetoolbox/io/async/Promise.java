@@ -68,11 +68,10 @@ public interface Promise<T> {
     Promise<T> async(final Consumer<Promise<T>> task);
 
     /**
-     * Run specified task asynchronously and for I/O operations. Current instance of {@link Promise} and I/O {@link Submitter} are
-     * passed as a parameters.
+     * Run specified task asynchronously and for I/O operations. Current instance of {@link Promise} and I/O {@link Submitter} are passed as a parameters.
      *
      * @param task
-     *          Task to execute
+     *         Task to execute
      * @return Current instance
      */
     Promise<T> async(final BiConsumer<Promise<T>, Submitter> task);
@@ -295,8 +294,7 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance and immediately invoke provided function with created instance.
-     * Usually this function is used to configure actions on created instance.
+     * Create instance and immediately invoke provided function with created instance. Usually this function is used to configure actions on created instance.
      *
      * @param setup
      *         Function to invoke with created instance
@@ -334,7 +332,9 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance which will be resolved once any of the promises provided as a parameters will be resolved. Remaining promises are cancelled upon resolution of any promises.
+     * Create instance for synchronization point of type {@code ANY}.
+     * <p>
+     * The returned instance will be resolved once any of the promises provided as a parameters will be resolved. Remaining promises are cancelled.
      *
      * @param promises
      *         Input promises
@@ -347,8 +347,10 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance which will be resolved once any of the promises provided as a parameters will be resolved with successful result. If none of the promises will be resolved
-     * with successful result, then created instance will be resolved with {@link Errors#CANCELLED}.
+     * Create instance for synchronization point of type {@code ANY}.
+     * <p>
+     * The returned instance which will be resolved once any of the promises provided as a parameters will be resolved with success. If none of the promises will be resolved with
+     * success, then created instance will be resolved with {@link Errors#CANCELLED}.
      *
      * @param promises
      *         Input promises
@@ -360,8 +362,10 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance which will be resolved once any of the promises provided as a parameters will be resolved with successful result. If none of the promises will be resolved
-     * with successful result, then created instance will be resolved with provided {@code failureResult}.
+     * Create instance for synchronization point of type {@code ANY}.
+     * <p>
+     * The returned instance will be resolved once any of the promises provided as a parameters will be resolved with success. If none of the promises will be resolved with
+     * success, then created instance will be resolved with provided {@code failureResult}.
      *
      * @param failureResult
      *         Result in case if no instances were resolved with success
@@ -391,7 +395,7 @@ public interface Promise<T> {
     }
 
     /**
-     * Resolve several promises at once.
+     * Resolve several promises at once with the same result.
      *
      * @param result
      *         Resolution result
@@ -403,49 +407,33 @@ public interface Promise<T> {
                 .apply(promise -> promise.resolve(result));
     }
 
-    //TODO: expose it or remove it
-    class RethrowingCollector implements Consumer<Throwable> {
-        private final Queue<Throwable> list = new ConcurrentLinkedQueue<>();
-
-        private RethrowingCollector() {
-        }
-
-        @Override
-        public void accept(final Throwable throwable) {
-            list.add(throwable);
-        }
-
-        public List<Throwable> collected() {
-            return List.from(list);
-        }
-
-        public void rethrow() {
-            if (list.isEmpty()) {
-                return;
-            }
-
-            final Throwable throwable = list.iterator().next();
-
-            if (throwable instanceof RuntimeException rt) {
-                throw rt;
-            }
-
-            throw new RuntimeException(throwable);
-        }
-
-        public static RethrowingCollector collector() {
-            return new RethrowingCollector();
-        }
-    }
-
+    /**
+     * Create instance for synchronization point of type {@code ALL}.
+     * <p>
+     * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     *
+     * @param promise1
+     *         Input promise
+     * @return Created instance
+     */
     static <T1> Promise<Tuple1<T1>> all(final Promise<T1> promise1) {
         return promise(promise -> threshold(Tuple1.size(),
                                             (at) -> promise1.onResult($ -> at.registerEvent()),
                                             () -> promise1.onResult(
-                                                    v1 -> promise.resolve(
-                                                            tuple(v1).map(Result::flatten)))));
+                                                    v1 -> promise.resolve(tuple(v1).map(Result::flatten)))));
     }
 
+    /**
+     * Create instance for synchronization point of type {@code ALL}.
+     * <p>
+     * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     *
+     * @param promise1
+     *         Input promise
+     * @param promise2
+     *         Input promise
+     * @return Created instance
+     */
     static <T1, T2> Promise<Tuple2<T1, T2>> all(final Promise<T1> promise1,
                                                 final Promise<T2> promise2) {
         return promise(promise -> threshold(Tuple2.size(),
@@ -459,6 +447,19 @@ public interface Promise<T> {
                                                                     tuple(v1, v2).map(Result::flatten))))));
     }
 
+    /**
+     * Create instance for synchronization point of type {@code ALL}.
+     * <p>
+     * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     *
+     * @param promise1
+     *         Input promise
+     * @param promise2
+     *         Input promise
+     * @param promise3
+     *         Input promise
+     * @return Created instance
+     */
     static <T1, T2, T3> Promise<Tuple3<T1, T2, T3>> all(final Promise<T1> promise1,
                                                         final Promise<T2> promise2,
                                                         final Promise<T3> promise3) {
@@ -475,6 +476,21 @@ public interface Promise<T> {
                                                                             tuple(v1, v2, v3).map(Result::flatten)))))));
     }
 
+    /**
+     * Create instance for synchronization point of type {@code ALL}.
+     * <p>
+     * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     *
+     * @param promise1
+     *         Input promise
+     * @param promise2
+     *         Input promise
+     * @param promise3
+     *         Input promise
+     * @param promise4
+     *         Input promise
+     * @return Created instance
+     */
     static <T1, T2, T3, T4> Promise<Tuple4<T1, T2, T3, T4>> all(final Promise<T1> promise1,
                                                                 final Promise<T2> promise2,
                                                                 final Promise<T3> promise3,
@@ -494,6 +510,23 @@ public interface Promise<T> {
                                                                                     tuple(v1, v2, v3, v4).map(Result::flatten))))))));
     }
 
+    /**
+     * Create instance for synchronization point of type {@code ALL}.
+     * <p>
+     * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     *
+     * @param promise1
+     *         Input promise
+     * @param promise2
+     *         Input promise
+     * @param promise3
+     *         Input promise
+     * @param promise4
+     *         Input promise
+     * @param promise5
+     *         Input promise
+     * @return Created instance
+     */
     static <T1, T2, T3, T4, T5> Promise<Tuple5<T1, T2, T3, T4, T5>> all(final Promise<T1> promise1,
                                                                         final Promise<T2> promise2,
                                                                         final Promise<T3> promise3,
@@ -517,6 +550,25 @@ public interface Promise<T> {
                                                                                                     .map(Result::flatten)))))))));
     }
 
+    /**
+     * Create instance for synchronization point of type {@code ALL}.
+     * <p>
+     * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     *
+     * @param promise1
+     *         Input promise
+     * @param promise2
+     *         Input promise
+     * @param promise3
+     *         Input promise
+     * @param promise4
+     *         Input promise
+     * @param promise5
+     *         Input promise
+     * @param promise6
+     *         Input promise
+     * @return Created instance
+     */
     static <T1, T2, T3, T4, T5, T6> Promise<Tuple6<T1, T2, T3, T4, T5, T6>> all(final Promise<T1> promise1,
                                                                                 final Promise<T2> promise2,
                                                                                 final Promise<T3> promise3,
@@ -543,6 +595,27 @@ public interface Promise<T> {
                                                                                                             .map(Result::flatten))))))))));
     }
 
+    /**
+     * Create instance for synchronization point of type {@code ALL}.
+     * <p>
+     * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     *
+     * @param promise1
+     *         Input promise
+     * @param promise2
+     *         Input promise
+     * @param promise3
+     *         Input promise
+     * @param promise4
+     *         Input promise
+     * @param promise5
+     *         Input promise
+     * @param promise6
+     *         Input promise
+     * @param promise7
+     *         Input promise
+     * @return Created instance
+     */
     static <T1, T2, T3, T4, T5, T6, T7> Promise<Tuple7<T1, T2, T3, T4, T5, T6, T7>> all(final Promise<T1> promise1,
                                                                                         final Promise<T2> promise2,
                                                                                         final Promise<T3> promise3,
@@ -572,6 +645,29 @@ public interface Promise<T> {
                                                                                                                     .map(Result::flatten)))))))))));
     }
 
+    /**
+     * Create instance for synchronization point of type {@code ALL}.
+     * <p>
+     * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     *
+     * @param promise1
+     *         Input promise
+     * @param promise2
+     *         Input promise
+     * @param promise3
+     *         Input promise
+     * @param promise4
+     *         Input promise
+     * @param promise5
+     *         Input promise
+     * @param promise6
+     *         Input promise
+     * @param promise7
+     *         Input promise
+     * @param promise8
+     *         Input promise
+     * @return Created instance
+     */
     static <T1, T2, T3, T4, T5, T6, T7, T8> Promise<Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>> all(final Promise<T1> promise1,
                                                                                                 final Promise<T2> promise2,
                                                                                                 final Promise<T3> promise3,
@@ -604,6 +700,31 @@ public interface Promise<T> {
                                                                                                                             .map(Result::flatten))))))))))));
     }
 
+    /**
+     * Create instance for synchronization point of type {@code ALL}.
+     * <p>
+     * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     *
+     * @param promise1
+     *         Input promise
+     * @param promise2
+     *         Input promise
+     * @param promise3
+     *         Input promise
+     * @param promise4
+     *         Input promise
+     * @param promise5
+     *         Input promise
+     * @param promise6
+     *         Input promise
+     * @param promise7
+     *         Input promise
+     * @param promise8
+     *         Input promise
+     * @param promise9
+     *         Input promise
+     * @return Created instance
+     */
     static <T1, T2, T3, T4, T5, T6, T7, T8, T9> Promise<Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> all(final Promise<T1> promise1,
                                                                                                         final Promise<T2> promise2,
                                                                                                         final Promise<T3> promise3,
