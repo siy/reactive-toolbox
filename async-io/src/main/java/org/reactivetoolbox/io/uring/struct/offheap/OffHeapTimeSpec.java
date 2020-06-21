@@ -24,21 +24,4 @@ public class OffHeapTimeSpec extends AbstractOffHeapStructure<OffHeapTimeSpec> {
         return timeout.secondsWithAdjustment()
                       .map(OffHeapTimeSpec::forSecondsNanos);
     }
-
-    //TODO: cleanup?
-//    public long seconds() {
-//        return getLong(tv_sec);
-//    }
-//
-//    public long nanos() {
-//        return getLong(tv_nsec);
-//    }
-//
-//    public OffHeapTimeSpec seconds(final long seconds) {
-//        return putLong(tv_sec, seconds);
-//    }
-//
-//    public OffHeapTimeSpec nanos(final long nanos) {
-//        return putLong(tv_nsec, nanos);
-//    }
 }

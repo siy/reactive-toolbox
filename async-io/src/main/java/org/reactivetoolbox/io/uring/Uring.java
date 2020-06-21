@@ -28,15 +28,6 @@ final class Uring {
 
     public static native void close(long baseAddress);
 
-    public interface RingOpenFlags {
-        int IORING_SETUP_IOPOLL = (1 << 0);    /* io_context is polled */
-        int IORING_SETUP_SQPOLL = (1 << 1);    /* SQ poll thread */
-        int IORING_SETUP_SQ_AFF = (1 << 2);    /* sq_thread_cpu is valid */
-        int IORING_SETUP_CQSIZE = (1 << 3);    /* app defines CQ size */
-        int IORING_SETUP_CLAMP = (1 << 4);    /* clamp SQ/CQ ring sizes */
-        int IORING_SETUP_ATTACH_WQ = (1 << 5);    /* attach to existing wq */
-    }
-
     // Completion
     public static native int peekCQ(long baseAddress, long completionsAddress, long count);
 

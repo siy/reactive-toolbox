@@ -26,6 +26,7 @@ import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.AsyncOperation;
 import org.reactivetoolbox.io.uring.UringHolder;
+import org.reactivetoolbox.io.uring.UringSetupFlags;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapFileStat;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapIoVector;
@@ -48,25 +49,41 @@ import static org.reactivetoolbox.io.async.common.SizeT.sizeT;
 import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
 import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
 
+/**
+ * Input/Output Proactor.
+ * <p>
+ * This class provides implementation of {@link Submitter} interface using <a href="https://en.wikipedia.org/wiki/Proactor_pattern">Proactor</a> pattern.
+ * <p>
+ * WARNING: this class is part of low level internal classes. It's written with specific assumptions in mind and most likely will be hard or inconvenient to use in other
+ * environment. In particular class is designed to be used by single thread at a time and does not perform synchronization at all.
+ */
 public class Proactor implements Submitter, AutoCloseable {
     private static final Result<Unit> UNIT = ok(Unit.UNIT);
     private static final int AT_FDCWD = -100; // Special value used to indicate the openat/statx functions should use the current working directory.
 
-    private final UringHolder uring;
+    private final UringHolder uringHolder;
     private final ObjectHeap<CompletionHandler> pendingCompletions;
     private final Deque<Consumer<SubmitQueueEntry>> queue = new LinkedList<>();
 
-    private Proactor(final int queueLen) {
-        uring = UringHolder.create(queueLen).fold(f -> null, h -> h);
-        pendingCompletions = ObjectHeap.objectHeap(uring.numEntries());
+    private Proactor(final UringHolder uringHolder) {
+        this.uringHolder = uringHolder;
+        pendingCompletions = ObjectHeap.objectHeap(uringHolder.numEntries());
     }
 
     public static Proactor proactor() {
-        return proactor(DEFAULT_QUEUE_SIZE);
+        return proactor(DEFAULT_QUEUE_SIZE, UringSetupFlags.defaultFlags());
     }
 
     public static Proactor proactor(final int queueSize) {
-        return new Proactor(queueSize);
+        return proactor(queueSize, UringSetupFlags.defaultFlags());
+    }
+
+    public static Proactor proactor(final int queueSize, final EnumSet<UringSetupFlags> openFlags) {
+        return new Proactor(UringHolder.create(queueSize, openFlags)
+                                       .fold(f -> {
+                                                 throw new IllegalStateException("Unable to instialize IO_URING interface");
+                                             },
+                                             h -> h));
     }
 
     @FunctionalInterface
@@ -76,11 +93,14 @@ public class Proactor implements Submitter, AutoCloseable {
 
     @Override
     public void close() {
-        uring.close();
+        uringHolder.close();
     }
 
+    /**
+     * This method should be periodically called to perform submissions and handle completions to/from IO_URING.
+     */
     public Proactor processIO() {
-        uring.processCompletions(this::handleCompletions);
+        uringHolder.processCompletions(this::handleCompletions);
 
         //TODO: how to conveniently handle submissions with timeouts (i.e. linked pairs of submissions)?
         //      and should we? (it is possible that kernel will handle subsequent timeout even if it delivered later).
@@ -90,14 +110,14 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     private void processSubmissions() {
-        int count = uring.availableSQSpace();
+        int count = uringHolder.availableSQSpace();
 
         while (count > 0 && !queue.isEmpty()) {
-            uring.submit(queue.removeFirst());
+            uringHolder.submit(queue.removeFirst());
             count--;
         }
 
-        uring.notifySubmission();
+        uringHolder.notifySubmission();
     }
 
     private void handleCompletions(final CompletionQueueEntry entry) {
@@ -110,8 +130,7 @@ public class Proactor implements Submitter, AutoCloseable {
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey((entry -> promise.resolve(UNIT)));
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .opcode(AsyncOperation.IORING_OP_NOP.opcode()));
         });
     }
@@ -136,8 +155,7 @@ public class Proactor implements Submitter, AutoCloseable {
                 }
             });
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .opcode(AsyncOperation.IORING_OP_TIMEOUT.opcode())
                                 .addr(timeSpec.address())
                                 .fd(-1)
@@ -151,8 +169,7 @@ public class Proactor implements Submitter, AutoCloseable {
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(v -> Unit.UNIT)));
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_CLOSE.opcode())
                                 .fd(fd.descriptor()));
@@ -174,8 +191,7 @@ public class Proactor implements Submitter, AutoCloseable {
                 }));
             });
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_READ.opcode())
                                 .fd(fd.descriptor())
@@ -195,8 +211,7 @@ public class Proactor implements Submitter, AutoCloseable {
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesWritten -> tuple(fd, sizeT(bytesWritten)))));
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_WRITE.opcode())
                                 .fd(fd.descriptor())
@@ -213,8 +228,7 @@ public class Proactor implements Submitter, AutoCloseable {
         return Promise.promise(promise -> {
             final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(SizeT::sizeT)));
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_SPLICE.opcode())
                                 .fd(descriptor.to().descriptor())
@@ -241,8 +255,7 @@ public class Proactor implements Submitter, AutoCloseable {
                 rawPath.dispose();
             });
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_OPENAT.opcode())
                                 .fd(AT_FDCWD)
@@ -278,14 +291,13 @@ public class Proactor implements Submitter, AutoCloseable {
             final var clientAddress = OffHeapSocketAddress.addressIn();
 
             final int key = pendingCompletions.allocKey((entry -> {
-                promise.resolve(entry.result(FileDescriptor::file)
+                promise.resolve(entry.result(FileDescriptor::socket)
                                      .flatMap(fd -> Result.flatten(Result.ok(fd), clientAddress.extract())
                                                           .map(tuple -> tuple.map(ClientConnection::connectionIn))));
                 clientAddress.dispose();
             }));
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
                                 .fd(socket.descriptor())
                                 .addr(clientAddress.sockAddrPtr())
@@ -309,8 +321,7 @@ public class Proactor implements Submitter, AutoCloseable {
                 clientAddress.dispose();
             }));
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_CONNECT.opcode())
                                 .fd(socket.descriptor())
@@ -331,12 +342,11 @@ public class Proactor implements Submitter, AutoCloseable {
             final OffHeapFileStat fileStat = OffHeapFileStat.fileStat();
             final OffHeapCString rawPath = OffHeapCString.cstring(path.toString());
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(pendingCompletions.allocKey(entry -> {
-                                    promise.resolve(entry.result($ -> fileStat.extract()));
-                                    fileStat.dispose();
-                                    rawPath.dispose();
-                                }))
+            queue.add(sqe -> sqe.userData(pendingCompletions.allocKey(entry -> {
+                promise.resolve(entry.result($ -> fileStat.extract()));
+                fileStat.dispose();
+                rawPath.dispose();
+            }))
                                 .fd(AT_FDCWD)
                                 .addr(rawPath.address())
                                 .len(statMask)
@@ -356,12 +366,11 @@ public class Proactor implements Submitter, AutoCloseable {
             final OffHeapFileStat fileStat = OffHeapFileStat.fileStat();
             final OffHeapCString rawPath = OffHeapCString.cstring("");
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(pendingCompletions.allocKey(entry -> {
-                                    promise.resolve(entry.result($ -> fileStat.extract()));
-                                    fileStat.dispose();
-                                    rawPath.dispose();
-                                }))
+            queue.add(sqe -> sqe.userData(pendingCompletions.allocKey(entry -> {
+                promise.resolve(entry.result($ -> fileStat.extract()));
+                fileStat.dispose();
+                rawPath.dispose();
+            }))
                                 .fd(fd.descriptor())
                                 .addr(rawPath.address())
                                 .len(statMask)
@@ -383,8 +392,7 @@ public class Proactor implements Submitter, AutoCloseable {
                 ioVector.dispose();
             });
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_READV.opcode())
                                 .fd(fileDescriptor.descriptor())
@@ -408,8 +416,7 @@ public class Proactor implements Submitter, AutoCloseable {
                 ioVector.dispose();
             });
 
-            queue.add(sqe -> sqe.clear()
-                                .userData(key)
+            queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_WRITEV.opcode())
                                 .fd(fileDescriptor.descriptor())
@@ -424,8 +431,7 @@ public class Proactor implements Submitter, AutoCloseable {
     private void appendTimeout(Timeout t) {
         final OffHeapTimeSpec timeSpec = OffHeapTimeSpec.forTimeout(t);
 
-        queue.add(sqe -> sqe.clear()
-                            .userData(pendingCompletions.allocKey(entry -> timeSpec.dispose()))
+        queue.add(sqe -> sqe.userData(pendingCompletions.allocKey(entry -> timeSpec.dispose()))
                             .fd(-1)
                             .addr(timeSpec.address())
                             .len(1)

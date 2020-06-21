@@ -5,20 +5,28 @@ import org.reactivetoolbox.core.lang.functional.Result;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import static org.reactivetoolbox.io.async.file.DescriptorType.FILE;
+import static org.reactivetoolbox.io.async.file.DescriptorType.SOCKET;
+import static org.reactivetoolbox.io.async.file.DescriptorType.SOCKET6;
+
 /**
  * General purpose Linux file descriptor.
  */
 public class FileDescriptor {
     private final int fd;
-    private final boolean isSocket;
+    private final DescriptorType type;
 
-    private FileDescriptor(final int fd, final boolean isSocket) {
+    private FileDescriptor(final int fd, final DescriptorType type) {
         this.fd = fd;
-        this.isSocket = isSocket;
+        this.type = type;
     }
 
     public boolean isSocket() {
-        return isSocket;
+        return type != FILE;
+    }
+
+    public boolean isSocket6() {
+        return type == SOCKET6;
     }
 
     public int descriptor() {
@@ -26,19 +34,15 @@ public class FileDescriptor {
     }
 
     public static FileDescriptor file(final int fd) {
-        return new FileDescriptor(fd, false);
+        return new FileDescriptor(fd, FILE);
     }
 
     public static FileDescriptor socket(final int fd) {
-        return new FileDescriptor(fd, true);
+        return new FileDescriptor(fd, SOCKET);
     }
 
-    public static Result<FileDescriptor> fileResult(final int fd) {
-        return Result.ok(file(fd));
-    }
-
-    public static Result<FileDescriptor> socketResult(final int fd) {
-        return Result.ok(socket(fd));
+    public static FileDescriptor socket6(final int fd) {
+        return new FileDescriptor(fd, SOCKET6);
     }
 
     @Override
@@ -47,23 +51,19 @@ public class FileDescriptor {
             return true;
         }
 
-        if (o instanceof FileDescriptor that) {
-            return fd == that.fd &&
-                   isSocket == that.isSocket;
+        if (o instanceof FileDescriptor other) {
+            return fd == other.fd && type == other.type;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fd, isSocket);
+        return Objects.hash(fd, type);
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", "FileDescriptor(", ")")
-                .add("" + fd)
-                .add(isSocket ? "socket" : "file")
-                .toString();
+        return "FileDescriptor(" + fd + ", " + type + ")";
     }
 }

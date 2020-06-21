@@ -17,7 +17,7 @@ public interface SubmitQueueEntryOffsets {
     RawProperty len = raw(24, 4);
     RawProperty rw_flags = raw(28, 4);
     RawProperty fsync_flags = raw(28, 4);
-    RawProperty poll_events = raw(28, 4);   //TODO: watch until it will be included into liburing
+    RawProperty poll_events = raw(28, 2);
     RawProperty sync_range_flags = raw(28, 4);
     RawProperty msg_flags = raw(28, 4);
     RawProperty timeout_flags = raw(28, 4);

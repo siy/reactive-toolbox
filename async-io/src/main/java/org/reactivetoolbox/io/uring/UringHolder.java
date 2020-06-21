@@ -4,9 +4,16 @@ import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.NativeError;
-import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.common.SizeT;
-import org.reactivetoolbox.io.async.net.*;
+import org.reactivetoolbox.io.async.file.FileDescriptor;
+import org.reactivetoolbox.io.async.net.AddressFamily;
+import org.reactivetoolbox.io.async.net.ServerConnector;
+import org.reactivetoolbox.io.async.net.SocketAddress;
+import org.reactivetoolbox.io.async.net.SocketAddressIn;
+import org.reactivetoolbox.io.async.net.SocketAddressIn6;
+import org.reactivetoolbox.io.async.net.SocketFlag;
+import org.reactivetoolbox.io.async.net.SocketOption;
+import org.reactivetoolbox.io.async.net.SocketType;
 import org.reactivetoolbox.io.raw.RawMemory;
 import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
@@ -16,6 +23,7 @@ import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
 import static org.reactivetoolbox.core.lang.functional.Result.fail;
+import static org.reactivetoolbox.io.NativeError.ENOTSOCK;
 import static org.reactivetoolbox.io.NativeError.EPFNOSUPPORT;
 import static org.reactivetoolbox.io.NativeError.result;
 import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.addressIn;
@@ -23,7 +31,6 @@ import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.a
 
 public class UringHolder implements AutoCloseable {
     public static final int DEFAULT_QUEUE_SIZE = 128; //128 looks like a "sweet spot" for my HW/kernel
-    public static final int DEFAULT_QUEUE_FLAGS = 0;
 
     private static final int ENTRY_SIZE = 8;    // each entry is a 64-bit pointer
 
@@ -80,7 +87,6 @@ public class UringHolder implements AutoCloseable {
         return (int) Uring.spaceLeft(ringBase);
     }
 
-    //TODO: error checking
     public UringHolder submit(final Consumer<SubmitQueueEntry> submitter) {
         sqEntry.reposition(Uring.nextSQEntry(ringBase));
         submitter.accept(sqEntry.clear());
@@ -92,11 +98,10 @@ public class UringHolder implements AutoCloseable {
         return this;
     }
 
-    //TODO: add support for ring open flags
-    public static Result<UringHolder> create(final int requestedEntries) {
+    public static Result<UringHolder> create(final int requestedEntries, final EnumSet<UringSetupFlags> openFlags) {
         final long ringBase = RawMemory.allocate(Uring.SIZE);
         final int numEntries = calculateNumEntries(requestedEntries);
-        final int rc = Uring.init(numEntries, ringBase, DEFAULT_QUEUE_FLAGS);
+        final int rc = Uring.init(numEntries, ringBase, Bitmask.combine(openFlags));
 
         if (rc != 0) {
             RawMemory.dispose(ringBase);
@@ -123,9 +128,10 @@ public class UringHolder implements AutoCloseable {
                                                 final EnumSet<SocketFlag> openFlags,
                                                 final EnumSet<SocketOption> options) {
         return result(Uring.socket(addressFamily.familyId(),
-                                               socketType.code() | Bitmask.combine(openFlags),
+                                   socketType.code() | Bitmask.combine(openFlags),
                                    Bitmask.combine(options)),
-                      FileDescriptor::socket);
+                      (addressFamily == AddressFamily.INET6) ? FileDescriptor::socket6
+                                                             : FileDescriptor::socket);
     }
 
     public static Result<ServerConnector> server(final SocketAddress<?> socketAddress,
@@ -141,26 +147,52 @@ public class UringHolder implements AutoCloseable {
     private static Result<Tuple2<FileDescriptor, SocketAddress<?>>> configureForListen(final FileDescriptor fileDescriptor,
                                                                                        final SocketAddress<?> socketAddress,
                                                                                        final int queueDepth) {
-        int rc;
+
+        if (!fileDescriptor.isSocket()) {
+            return fail(ENOTSOCK.asFailure());
+        }
+
+        int rc = switch (socketAddress.family()) {
+            case INET -> configureForInet(fileDescriptor, socketAddress, queueDepth);
+            case INET6 -> configureForInet6(fileDescriptor, socketAddress, queueDepth);
+            default -> EPFNOSUPPORT.typeCode();
+        };
+
+        return result(rc, $ -> tuple(fileDescriptor, socketAddress));
+    }
+
+    private static int configureForInet6(final FileDescriptor fileDescriptor, final SocketAddress<?> socketAddress, final int queueDepth) {
+        if (!fileDescriptor.isSocket6() || socketAddress.family() != AddressFamily.INET6) {
+            return -EPFNOSUPPORT.typeCode();
+        }
+
+        if (socketAddress instanceof SocketAddressIn6 socketAddressIn6) {
+            var addressIn6 = addressIn6(socketAddressIn6);
+
+            return Uring.prepareForListen(fileDescriptor.descriptor(),
+                                          addressIn6.address(),
+                                          addressIn6.size(),
+                                          queueDepth);
+        }
+
+        return -EPFNOSUPPORT.typeCode();
+    }
+
+    private static int configureForInet(final FileDescriptor fileDescriptor, final SocketAddress<?> socketAddress, final int queueDepth) {
+        if (fileDescriptor.isSocket6() || socketAddress.family() == AddressFamily.INET6) {
+            return -EPFNOSUPPORT.typeCode();
+        }
+
         if (socketAddress instanceof SocketAddressIn socketAddressIn) {
             var addressIn = addressIn(socketAddressIn);
 
-            rc = Uring.prepareForListen(fileDescriptor.descriptor(),
-                                        addressIn.address(),
-                                        addressIn.size(),
-                                        queueDepth);
+            return Uring.prepareForListen(fileDescriptor.descriptor(),
+                                          addressIn.address(),
+                                          addressIn.size(),
+                                          queueDepth);
 
-        } else if (socketAddress instanceof SocketAddressIn6 socketAddressIn6) {
-            var addressIn6 = addressIn6(socketAddressIn6);
-
-            rc = Uring.prepareForListen(fileDescriptor.descriptor(),
-                                        addressIn6.address(),
-                                        addressIn6.size(),
-                                        queueDepth);
-        } else {
-            return fail(EPFNOSUPPORT.asFailure());
         }
 
-        return result(rc, $ -> tuple(fileDescriptor, socketAddress));
+        return -EPFNOSUPPORT.typeCode();
     }
 }
