@@ -8,18 +8,15 @@ import java.time.ZoneOffset;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Simple Clock suitable for testing purposes.
- * <br/>
+ * Simple Clock suitable for testing purposes. <br/>
  */
-
-//TODO: does not work properly for steps below 1ms
 public class ClockMock extends Clock {
     private final AtomicLong counter;
     private final long tickDuration;
 
     private ClockMock(final LocalDateTime base, final Timeout step) {
-        counter = new AtomicLong(base.toInstant(ZoneOffset.UTC).toEpochMilli());
-        tickDuration = step.timeout();
+        counter = new AtomicLong(base.toInstant(ZoneOffset.UTC).getNano());
+        tickDuration = step.nanos();
     }
 
     public static ClockMock with(final LocalDateTime startingPoint, final Timeout stepDuration) {
@@ -38,6 +35,9 @@ public class ClockMock extends Clock {
 
     @Override
     public Instant instant() {
-        return Instant.ofEpochMilli(counter.addAndGet(tickDuration));
+        return Timeout.timeout(counter.addAndGet(tickDuration))
+                      .nanos()
+                      .secondsWithAdjustment()
+                      .map(Instant::ofEpochSecond);
     }
 }

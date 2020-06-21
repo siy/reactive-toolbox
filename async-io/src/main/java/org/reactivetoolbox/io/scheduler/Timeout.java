@@ -15,13 +15,18 @@ package org.reactivetoolbox.io.scheduler;
  * limitations under the License.
  */
 
+import org.reactivetoolbox.core.lang.Tuple;
+import org.reactivetoolbox.core.lang.Tuple.Tuple2;
+
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Task timeout (in milliseconds)
+ * Representation of timeout value.
  */
 public final class Timeout {
+    private static final long NANOS_IN_SECOND = 1_000_000_000L;
     private final long timeout;
 
     private Timeout(final long timeout) {
@@ -32,12 +37,20 @@ public final class Timeout {
         return new TimeoutBuilder(value);
     }
 
-    public long timeout() {
-        return timeout;
+    public long millis() {
+        return TimeUnit.NANOSECONDS.toMillis(timeout);
     }
 
     public long nanos() {
-        return TimeUnit.MILLISECONDS.toNanos(timeout);
+        return timeout;
+    }
+
+    public Tuple2<Long, Integer> secondsWithAdjustment() {
+        return Tuple.tuple(timeout/NANOS_IN_SECOND, (int) (timeout % NANOS_IN_SECOND));
+    }
+
+    public Duration asDuration() {
+        return secondsWithAdjustment().map(Duration::ofSeconds);
     }
 
     @Override
@@ -46,12 +59,11 @@ public final class Timeout {
             return true;
         }
 
-        if (!(o instanceof Timeout)) {
-            return false;
+        if (o instanceof Timeout other) {
+            return timeout == other.timeout;
         }
 
-        final Timeout timeout1 = (Timeout) o;
-        return timeout == timeout1.timeout;
+        return false;
     }
 
     @Override
@@ -61,7 +73,7 @@ public final class Timeout {
 
     @Override
     public String toString() {
-        return "Timeout{ timeout=" + timeout + "ms }";
+        return "Timeout(" + timeout + "ns)";
     }
 
     /**
@@ -75,12 +87,30 @@ public final class Timeout {
         }
 
         /**
+         * Create {@link Timeout} instance by interpreting value as nanoseconds.
+         *
+         * @return Created instance
+         */
+        public Timeout nanos() {
+            return new Timeout(value);
+        }
+
+        /**
+         * Create {@link Timeout} instance by interpreting value as microseconds.
+         *
+         * @return Created instance
+         */
+        public Timeout micros() {
+            return new Timeout(TimeUnit.MICROSECONDS.toNanos(value));
+        }
+
+        /**
          * Create {@link Timeout} instance by interpreting value as milliseconds.
          *
          * @return Created instance
          */
         public Timeout millis() {
-            return new Timeout(value);
+            return new Timeout(TimeUnit.MILLISECONDS.toNanos(value));
         }
 
         /**
@@ -89,7 +119,7 @@ public final class Timeout {
          * @return Created instance
          */
         public Timeout seconds() {
-            return new Timeout(TimeUnit.SECONDS.toMillis(value));
+            return new Timeout(TimeUnit.SECONDS.toNanos(value));
         }
 
         /**
@@ -98,7 +128,7 @@ public final class Timeout {
          * @return Created instance
          */
         public Timeout minutes() {
-            return new Timeout(TimeUnit.MINUTES.toMillis(value));
+            return new Timeout(TimeUnit.MINUTES.toNanos(value));
         }
 
         /**
@@ -107,7 +137,15 @@ public final class Timeout {
          * @return Created instance
          */
         public Timeout hours() {
-            return new Timeout(TimeUnit.HOURS.toMillis(value));
+            return new Timeout(TimeUnit.HOURS.toNanos(value));
+        }
+        /**
+         * Create {@link Timeout} instance by interpreting value as days.
+         *
+         * @return Created instance
+         */
+        public Timeout days() {
+            return new Timeout(TimeUnit.DAYS.toNanos(value));
         }
     }
 }

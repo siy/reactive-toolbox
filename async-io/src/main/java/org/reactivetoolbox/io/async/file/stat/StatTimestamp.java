@@ -2,9 +2,10 @@ package org.reactivetoolbox.io.async.file.stat;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.StringJoiner;
 
-//TODO: toString
+/**
+ * File status timestamps.
+ */
 public class StatTimestamp {
     private final long seconds;
     private final int nanos;

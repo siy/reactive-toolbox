@@ -9,8 +9,8 @@ import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
-import org.reactivetoolbox.io.async.file.OpenFlags;
 import org.reactivetoolbox.io.async.file.FilePermission;
+import org.reactivetoolbox.io.async.file.OpenFlags;
 import org.reactivetoolbox.io.async.file.SpliceDescriptor;
 import org.reactivetoolbox.io.async.file.stat.FileStat;
 import org.reactivetoolbox.io.async.file.stat.StatFlag;
@@ -42,7 +42,6 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.function.Consumer;
 
-import static java.time.Duration.ofSeconds;
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.io.async.common.SizeT.sizeT;
@@ -133,8 +132,7 @@ public class Proactor implements Submitter, AutoCloseable {
                 if (Math.abs(entry.res()) != NativeError.ETIME.typeCode()) {
                     promise.fail(NativeError.fromCode(entry.res()).asFailure());
                 } else {
-                    promise.ok(ofSeconds(totalNanos / OffHeapTimeSpec.NANO_SCALE,
-                                         totalNanos % OffHeapTimeSpec.NANO_SCALE));
+                    promise.ok(Timeout.timeout(totalNanos).nanos().asDuration());
                 }
             });
 

@@ -16,7 +16,6 @@ package org.reactivetoolbox.io.async.impl;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.core.lang.functional.Functions;
 import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
@@ -28,7 +27,6 @@ import org.reactivetoolbox.io.scheduler.Timeout;
 import java.util.StringJoiner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicMarkableReference;
@@ -105,7 +103,7 @@ public class PromiseImpl<T> implements Promise<T> {
     @Override
     public Promise<T> syncWait(final Timeout timeout) {
         try {
-            actionsHandled.await(timeout.timeout(), TimeUnit.MILLISECONDS);
+            actionsHandled.await(timeout.millis(), TimeUnit.MILLISECONDS);
         } catch (final InterruptedException e) {
             logger().debug("Exception in syncWait(timeout)", e);
         }

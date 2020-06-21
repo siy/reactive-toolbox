@@ -7,10 +7,9 @@ import java.util.EnumSet;
 
 /**
  * Container for all necessary details of the SPLICE operation.
- * This operation performs copying from one file descriptor to another completely
- * at kernel space without involving any user space code or memory.
+ * <p>
+ * This operation performs copying from one file descriptor to another completely at kernel space without involving any user space code or memory.
  */
-//TODO: toString
 public class SpliceDescriptor {
     private final FileDescriptor from;
     private final FileDescriptor to;
@@ -75,91 +74,51 @@ public class SpliceDescriptor {
         return flags;
     }
 
-    public static SpliceDescriptorBuilder0 builder() {
-        return new SpliceDescriptorBuilder0();
+    @Override
+    public String toString() {
+        return "SpliceDescriptor(" +
+               "from: " + from +
+               ", to: " + to +
+               ", fromOffset: " + fromOffset +
+               ", toOffset: " + toOffset +
+               ", toCopy: " + toCopy +
+               ", flags: " + flags +
+               ')';
     }
 
-    private static class SpliceDescriptorBuilder0 {
-        private final MutableSpliceDescriptor descriptor = new MutableSpliceDescriptor();
-
-        public SpliceDescriptorBuilder1 from(final FileDescriptor from) {
-            descriptor.from(from);
-            return to -> {
-                descriptor.to(to);
-                return (SpliceDescriptorBuilder2) fromOffset -> {
-                    descriptor.fromOffset(fromOffset);
-                    return (SpliceDescriptorBuilder3) toOffset -> {
-                        descriptor.toOffset(toOffset);
-                        return (SpliceDescriptorBuilder4) toCopy -> {
-                            descriptor.toCopy(toCopy);
-                            return (SpliceDescriptorBuilder5) flags -> descriptor.flags(flags).toImmutable();
-                        };
-                    };
-                };
-            };
-        }
-
-        public interface SpliceDescriptorBuilder1 {
-            SpliceDescriptorBuilder2 to(final FileDescriptor to);
-        }
-
-        public interface SpliceDescriptorBuilder2 {
-            SpliceDescriptorBuilder3 fromOffset(final OffsetT fromOffset);
-        }
-
-        public interface SpliceDescriptorBuilder3 {
-            SpliceDescriptorBuilder4 toOffset(final OffsetT toOffset);
-        }
-
-        public interface SpliceDescriptorBuilder4 {
-            SpliceDescriptorBuilder5 toCopy(final SizeT toCopy);
-        }
-
-        public interface SpliceDescriptorBuilder5 {
-            SpliceDescriptor flags(final EnumSet<SpliceFlags> flags);
-        }
+    /**
+     * Create new builder for assembling complete {@link SpliceDescriptor} instance.
+     */
+    public static SpliceDescriptorBuilder builder() {
+        return from -> to -> fromOffset -> toOffset -> toCopy -> flags ->
+                () -> new SpliceDescriptor(from, to, fromOffset, toOffset, toCopy, flags);
     }
 
-    private static class MutableSpliceDescriptor {
-        private FileDescriptor from;
-        private FileDescriptor to;
-        private OffsetT fromOffset;
-        private OffsetT toOffset;
-        private SizeT toCopy;
-        private EnumSet<SpliceFlags> flags;
+    public interface SpliceDescriptorBuilder {
+        Stage1 from(final FileDescriptor from);
 
-        public MutableSpliceDescriptor from(final FileDescriptor from) {
-            this.from = from;
-            return this;
+        interface Stage1 {
+            Stage2 to(final FileDescriptor to);
         }
 
-        public MutableSpliceDescriptor to(final FileDescriptor to) {
-            this.to = to;
-            return this;
+        interface Stage2 {
+            Stage3 fromOffset(final OffsetT fromOffset);
         }
 
-        public MutableSpliceDescriptor fromOffset(final OffsetT fromOffset) {
-            this.fromOffset = fromOffset;
-            return this;
+        interface Stage3 {
+            Stage4 toOffset(final OffsetT toOffset);
         }
 
-        public MutableSpliceDescriptor toOffset(final OffsetT toOffset) {
-            this.toOffset = toOffset;
-            return this;
+        interface Stage4 {
+            Stage5 toCopy(final SizeT toCopy);
         }
 
-        public MutableSpliceDescriptor toCopy(final SizeT toCopy) {
-            this.toCopy = toCopy;
-            return this;
+        interface Stage5 {
+            Stage6 flags(final EnumSet<SpliceFlags> flags);
         }
 
-        public MutableSpliceDescriptor flags(final EnumSet<SpliceFlags> flags) {
-            this.flags = flags;
-            return this;
-        }
-
-        public SpliceDescriptor toImmutable() {
-            return new SpliceDescriptor(from, to, fromOffset, toOffset, toCopy, flags);
+        interface Stage6 {
+            SpliceDescriptor build();
         }
     }
 }

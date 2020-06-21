@@ -10,33 +10,35 @@ import static org.reactivetoolbox.io.uring.struct.shape.TimeSpecOffsets.tv_sec;
  * Container for data equivalent to {@code struct __kernel_timespec}.
  */
 public class OffHeapTimeSpec extends AbstractOffHeapStructure<OffHeapTimeSpec> {
-    public static final long NANO_SCALE = 1_000_000_000L;
-
     private OffHeapTimeSpec() {
         super(TimeSpecOffsets.SIZE);
     }
 
+    public static OffHeapTimeSpec forSecondsNanos(final long seconds, final long nanos) {
+        return new OffHeapTimeSpec()
+                .putLong(tv_sec, seconds)
+                .putLong(tv_nsec, nanos);
+    }
+
     public static OffHeapTimeSpec forTimeout(final Timeout timeout) {
-        final long nanos = timeout.nanos();
-        final long seconds = nanos / NANO_SCALE;
-
-        return new OffHeapTimeSpec().seconds(seconds)
-                                    .nanos(nanos % NANO_SCALE);
+        return timeout.secondsWithAdjustment()
+                      .map(OffHeapTimeSpec::forSecondsNanos);
     }
 
-    public long seconds() {
-        return getLong(tv_sec);
-    }
-
-    public long nanos() {
-        return getLong(tv_nsec);
-    }
-
-    public OffHeapTimeSpec seconds(final long seconds) {
-        return putLong(tv_sec, seconds);
-    }
-
-    public OffHeapTimeSpec nanos(final long nanos) {
-        return putLong(tv_nsec, nanos);
-    }
+    //TODO: cleanup?
+//    public long seconds() {
+//        return getLong(tv_sec);
+//    }
+//
+//    public long nanos() {
+//        return getLong(tv_nsec);
+//    }
+//
+//    public OffHeapTimeSpec seconds(final long seconds) {
+//        return putLong(tv_sec, seconds);
+//    }
+//
+//    public OffHeapTimeSpec nanos(final long nanos) {
+//        return putLong(tv_nsec, nanos);
+//    }
 }
