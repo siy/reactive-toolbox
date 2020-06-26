@@ -22,7 +22,6 @@ import org.reactivetoolbox.core.lang.Tuple.Tuple6;
 import org.reactivetoolbox.core.lang.Tuple.Tuple7;
 import org.reactivetoolbox.core.lang.Tuple.Tuple8;
 import org.reactivetoolbox.core.lang.Tuple.Tuple9;
-import org.reactivetoolbox.core.lang.collection.List;
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 import org.reactivetoolbox.core.lang.functional.Result;
@@ -30,8 +29,6 @@ import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.io.async.impl.PromiseImpl;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -302,6 +299,31 @@ public interface Promise<T> {
      */
     static <T> Promise<T> promise(final Consumer<Promise<T>> setup) {
         return Promise.<T>promise().apply(setup);
+    }
+
+    /**
+     * Create instance and asynchronously start specified task with created instance.
+     *
+     * @param task
+     *          Function to invoke with created instance
+     * @return Created instance
+     */
+    static <T> Promise<T> doAsync(final Consumer<Promise<T>> task) {
+        return Promise.<T>promise().async(task);
+    }
+
+    /**
+     * Create instance and asynchronously start specified I/O task with created instance.
+     * <p>
+     * This method is similar to {@link Promise#doAsync(Consumer)} except task can perform I/O
+     * operations using {@link Submitter} passed as a parameter.
+     *
+     * @param task
+     *          Function to invoke with created instance
+     * @return Created instance
+     */
+    static <T> Promise<T> doAsync(final BiConsumer<Promise<T>, Submitter> task) {
+        return Promise.<T>promise().async(task);
     }
 
     /**

@@ -6,8 +6,8 @@ import org.reactivetoolbox.core.lang.functional.Unit;
 import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
-import org.reactivetoolbox.io.async.file.OpenFlags;
 import org.reactivetoolbox.io.async.file.FilePermission;
+import org.reactivetoolbox.io.async.file.OpenFlags;
 import org.reactivetoolbox.io.async.file.SpliceDescriptor;
 import org.reactivetoolbox.io.async.file.stat.FileStat;
 import org.reactivetoolbox.io.async.file.stat.StatFlag;
@@ -290,11 +290,11 @@ public interface Submitter {
      * @param options
      *         Socket options. See {@link SocketOption} for more details
      */
-    Promise<ServerConnector> server(final SocketAddress<?> socketAddress,
-                                    final SocketType socketType,
-                                    final EnumSet<SocketFlag> openFlags,
-                                    final SizeT queueDepth,
-                                    final EnumSet<SocketOption> options);
+    Promise<ServerConnector<?>> server(final SocketAddress<?> socketAddress,
+                                       final SocketType socketType,
+                                       final EnumSet<SocketFlag> openFlags,
+                                       final SizeT queueDepth,
+                                       final EnumSet<SocketOption> options);
 
     /**
      * Submit ACCEPT operation.

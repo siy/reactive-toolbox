@@ -1,5 +1,8 @@
 package org.reactivetoolbox.io.async.net;
-//TODO: toString
+
+/**
+ * IPv6 flow info.
+ */
 public class Inet6FlowInfo {
     private final int flowInfo;
 
@@ -13,5 +16,10 @@ public class Inet6FlowInfo {
 
     public int value() {
         return flowInfo;
+    }
+
+    @Override
+    public String toString() {
+        return "Inet6FlowInfo(" + flowInfo + ')';
     }
 }

@@ -276,11 +276,11 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     @Override
-    public Promise<ServerConnector> server(final SocketAddress<?> socketAddress,
-                                           final SocketType socketType,
-                                           final EnumSet<SocketFlag> openFlags,
-                                           final SizeT queueDepth,
-                                           final EnumSet<SocketOption> options) {
+    public Promise<ServerConnector<?>> server(final SocketAddress<?> socketAddress,
+                                              final SocketType socketType,
+                                              final EnumSet<SocketFlag> openFlags,
+                                              final SizeT queueDepth,
+                                              final EnumSet<SocketOption> options) {
         return nop().flatMap($ -> UringHolder.server(socketAddress, socketType, openFlags, options, queueDepth));
     }
 

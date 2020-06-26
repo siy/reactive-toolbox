@@ -2,7 +2,9 @@ package org.reactivetoolbox.io.async.net;
 
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 
-//TODO: toString
+/**
+ * Client connection descriptor holds client address and file descriptor which can be used to communicate with client.
+ */
 public class ClientConnection<T extends SocketAddress<?>> {
     private final FileDescriptor socket;
     private final T address;
@@ -26,5 +28,10 @@ public class ClientConnection<T extends SocketAddress<?>> {
 
     public static ClientConnection<SocketAddressIn6> connectionIn6(final FileDescriptor fileDescriptor, final SocketAddressIn6 addressIn6) {
         return new ClientConnection<>(fileDescriptor, addressIn6);
+    }
+
+    @Override
+    public String toString() {
+        return "ClientConnection(" + socket + ", " + address + ')';
     }
 }

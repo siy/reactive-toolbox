@@ -1,6 +1,6 @@
 package org.reactivetoolbox.io.uring;
 
-import org.reactivetoolbox.core.lang.Tuple.Tuple2;
+import org.reactivetoolbox.core.lang.Tuple.Tuple3;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.NativeError;
@@ -134,19 +134,19 @@ public class UringHolder implements AutoCloseable {
                                                              : FileDescriptor::socket);
     }
 
-    public static Result<ServerConnector> server(final SocketAddress<?> socketAddress,
-                                                 final SocketType socketType,
-                                                 final EnumSet<SocketFlag> openFlags,
-                                                 final EnumSet<SocketOption> options,
-                                                 final SizeT queueDepth) {
+    public static Result<ServerConnector<?>> server(final SocketAddress<?> socketAddress,
+                                                    final SocketType socketType,
+                                                    final EnumSet<SocketFlag> openFlags,
+                                                    final EnumSet<SocketOption> options,
+                                                    final SizeT queueDepth) {
         return socket(socketAddress.family(), socketType, openFlags, options)
                 .flatMap(fileDescriptor -> configureForListen(fileDescriptor, socketAddress, (int) queueDepth.value()))
                 .map(tuple -> tuple.map(ServerConnector::connector));
     }
 
-    private static Result<Tuple2<FileDescriptor, SocketAddress<?>>> configureForListen(final FileDescriptor fileDescriptor,
-                                                                                       final SocketAddress<?> socketAddress,
-                                                                                       final int queueDepth) {
+    private static Result<Tuple3<FileDescriptor, SocketAddress<?>, Integer>> configureForListen(final FileDescriptor fileDescriptor,
+                                                                                                final SocketAddress<?> socketAddress,
+                                                                                                final int queueDepth) {
 
         if (!fileDescriptor.isSocket()) {
             return fail(ENOTSOCK.asFailure());
@@ -158,7 +158,7 @@ public class UringHolder implements AutoCloseable {
             default -> EPFNOSUPPORT.typeCode();
         };
 
-        return result(rc, $ -> tuple(fileDescriptor, socketAddress));
+        return result(rc, $ -> tuple(fileDescriptor, socketAddress, queueDepth));
     }
 
     private static int configureForInet6(final FileDescriptor fileDescriptor, final SocketAddress<?> socketAddress, final int queueDepth) {

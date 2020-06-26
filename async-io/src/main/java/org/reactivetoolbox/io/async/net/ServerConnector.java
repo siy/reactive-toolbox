@@ -2,9 +2,31 @@ package org.reactivetoolbox.io.async.net;
 
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 
-public interface ServerConnector {
-    //TODO: finish implementation
-    static ServerConnector connector(FileDescriptor fileDescriptor, SocketAddress<?> socketAddress) {
-        return null;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ * Server connector handles incoming external connections.
+ */
+//TODO: finish implementation
+public class ServerConnector<T extends SocketAddress<?>> {
+    private final FileDescriptor socket;
+    private final T address;
+    private final int queueDepth;
+    private final AtomicBoolean stopInProgress = new AtomicBoolean(false);
+
+    private ServerConnector(final FileDescriptor socket, final T address, final int queueDepth) {
+        this.socket = socket;
+        this.address = address;
+        this.queueDepth = queueDepth;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends SocketAddress<?>> ServerConnector<T> connector(final FileDescriptor socket, final SocketAddress<?> address, final int queueDepth) {
+        return new ServerConnector<>(socket, (T) address, queueDepth);
+    }
+
+    @Override
+    public String toString() {
+        return "ServerConnector(" + socket + ", " + address + ')';
     }
 }
