@@ -239,6 +239,20 @@ public interface Promise<T> {
     }
 
     /**
+     * Same as {@link Promise#andThen(FN1)} except that all processing is done asynchronously.
+     *
+     * @param mapper
+     *         Function to call if current instance is resolved with success.
+     * @return Created instance which represents result of resolution of current instance (if current instance is resolved to failure) or result of invocation of provided function
+     *         (if current instance is resolved to success).
+     */
+    default <R> Promise<R> andThenAsync(final FN1<Promise<R>, T> mapper) {
+        return doAsync(promise -> onResult(result -> result.fold(error -> promise.resolve(Result.fail(error)),
+                                                                 success -> mapper.apply(success)
+                                                                                  .onResult(promise::resolve))));
+    }
+
+    /**
      * Convenience method which provides access to inner value of successful result. If current instance contains failure, then mapping function is not called and created instance
      * is resolved with same error as current instance.
      *
