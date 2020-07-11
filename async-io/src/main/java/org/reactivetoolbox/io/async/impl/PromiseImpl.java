@@ -81,9 +81,9 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> onResult(final Consumer<Result<T>> action) {
-        final Consumer<Result<T>> safeAction = value -> {
+        final Consumer<Result<T>> safeAction = result -> {
             try {
-                action.accept(value);
+                action.accept(result);
             } catch (final Throwable t) {
                 exceptionConsumer.get().accept(t);
             }
@@ -108,10 +108,10 @@ public class PromiseImpl<T> implements Promise<T> {
     }
 
     private void handleActions() {
-        final var value = this.value.get();
+        final var result = this.value.get();
 
         while (true) {
-            if (!actions.swapAndApply(action -> action.accept(value))) {
+            if (!actions.swapAndApply(action -> action.accept(result))) {
                 break;
             }
         }

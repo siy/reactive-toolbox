@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io.uring.struct.raw;
 
+//TODO: move to enum
 public class SubmitQueueEntryFlags {
     public static final byte IOSQE_FIXED_FILE    = 0x001; /* use fixed fileset */
     public static final byte IOSQE_IO_DRAIN      = 0x002; /* issue after inflight IO */

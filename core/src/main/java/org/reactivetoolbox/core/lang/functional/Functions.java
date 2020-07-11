@@ -62,7 +62,7 @@ public interface Functions {
         }
 
         static <T> FN1<T, T> id() {
-            return (v) -> v;
+            return v -> v;
         }
     }
 

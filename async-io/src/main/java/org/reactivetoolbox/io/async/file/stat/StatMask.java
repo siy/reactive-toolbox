@@ -22,8 +22,8 @@ public enum StatMask implements Bitmask {
     BTIME(0x000000800);   /* Want/got stx_btime */
 
     private final int mask;
-    private static EnumSet<StatMask> BASIC = EnumSet.complementOf(EnumSet.of(BTIME));
-    private static EnumSet<StatMask> ALL = EnumSet.allOf(StatMask.class);
+    private static final EnumSet<StatMask> BASIC = EnumSet.complementOf(EnumSet.of(BTIME));
+    private static final EnumSet<StatMask> ALL = EnumSet.allOf(StatMask.class);
 
     public static EnumSet<StatMask> basic() {
         return BASIC;

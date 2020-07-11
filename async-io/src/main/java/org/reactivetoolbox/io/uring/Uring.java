@@ -11,6 +11,8 @@ import org.reactivetoolbox.io.uring.struct.raw.RawSocketAddressIn6;
 import org.reactivetoolbox.io.uring.utils.LibraryLoader;
 
 final class Uring {
+    private Uring() {}
+
     // Actual size of struct io_uring is 160 bytes at the moment of writing: May 2020
     public static final long SIZE = 256;
 

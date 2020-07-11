@@ -41,6 +41,8 @@ public class Base62 {
         }
     }
 
+    private Base62() {}
+
     /**
      * Encodes a sequence of bytes in Base62 encoding.
      *
@@ -133,14 +135,5 @@ public class Base62 {
         }
 
         return reversed;
-    }
-
-    private static byte[] createLookupTable(final byte[] alphabet) {
-        final var lookup = new byte[256];
-
-        for (int i = 0; i < alphabet.length; i++) {
-            lookup[alphabet[i]] = (byte) (i & 0xFF);
-        }
-        return lookup;
     }
 }

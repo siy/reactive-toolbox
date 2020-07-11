@@ -27,22 +27,26 @@ public class ThreadPi {
     }
 
     private static long executorTest(final int numTasks, final FN1<Runnable, Integer> taskFactory, final ExecutorWithShutdown executor) throws InterruptedException {
-        final CountDownLatch latch = new CountDownLatch(numTasks);
+        //final CountDownLatch latch = new CountDownLatch(numTasks);
 
         final long start = System.nanoTime();
+        final CountDownLatch[] latches = new CountDownLatch[numTasks];
 
         for (int i = 0; i < numTasks; i++) {
             var task = taskFactory.apply(i);
+            var latch = new CountDownLatch(1);
+            latches[i] = latch;
             final var cnt = i;
 
             executor.execute(() -> {
-//                System.out.println("Running " + cnt);
                 task.run();
                 latch.countDown();
             });
         }
 
-        latch.await();
+        for(int i = 0; i < numTasks; i++) {
+            latches[i].await();
+        }
         final long result = System.nanoTime() - start;
         executor.shutdown();
 
@@ -51,15 +55,14 @@ public class ThreadPi {
 
     public static void main(String arg[]) throws Exception {
         runTest("FixedThreadPool", ThreadPi::newTraditionalExecutor);
-//        runTest("FixedThreadPool with LTQ", ThreadPi::newLTQExecutor);
-//        runTest("ForkJoinPool", ThreadPi::newForkJoinExecutor);
+        runTest("FixedThreadPool with LTQ", ThreadPi::newLTQExecutor);
+        runTest("ForkJoinPool", ThreadPi::newForkJoinExecutor);
         runTest("PipelinedTaskScheduler", ThreadPi::newPipelinedTaskScheduler);
     }
 
     private static void runTest(final String message, final FN1<ExecutorWithShutdown, Integer> executorFactory) throws InterruptedException {
         final int NUM_ITERATIONS_PER_TASK = 1;
         final int NUM_TASKS = 500_000;
-//        final int NUM_TASKS = 1;
         final int MAX_ACT = 10;
         final int START_ACT = 4;
         String[] results = new String[MAX_ACT];

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -39,5 +40,24 @@ public class ClockMock extends Clock {
                       .nanos()
                       .asSecondsAndNanos()
                       .map(Instant::ofEpochSecond);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o instanceof ClockMock clockMock) {
+            return tickDuration == clockMock.tickDuration &&
+                   counter.get() == clockMock.counter.get();
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), counter, tickDuration);
     }
 }

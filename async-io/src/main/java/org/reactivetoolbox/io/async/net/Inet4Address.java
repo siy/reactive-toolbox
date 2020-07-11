@@ -2,9 +2,6 @@ package org.reactivetoolbox.io.async.net;
 
 import org.reactivetoolbox.core.lang.functional.Result;
 
-import java.util.Arrays;
-import java.util.StringJoiner;
-
 import static org.reactivetoolbox.io.NativeError.EFAULT;
 
 public class Inet4Address implements InetAddress {
