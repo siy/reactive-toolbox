@@ -16,7 +16,7 @@ public class ClockMock extends Clock {
 
     private ClockMock(final LocalDateTime base, final Timeout step) {
         counter = new AtomicLong(base.toInstant(ZoneOffset.UTC).getNano());
-        tickDuration = step.nanos();
+        tickDuration = step.asNanos();
     }
 
     public static ClockMock with(final LocalDateTime startingPoint, final Timeout stepDuration) {
@@ -37,7 +37,7 @@ public class ClockMock extends Clock {
     public Instant instant() {
         return Timeout.timeout(counter.addAndGet(tickDuration))
                       .nanos()
-                      .secondsWithAdjustment()
+                      .asSecondsAndNanos()
                       .map(Instant::ofEpochSecond);
     }
 }

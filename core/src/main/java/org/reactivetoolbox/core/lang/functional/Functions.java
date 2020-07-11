@@ -60,6 +60,10 @@ public interface Functions {
         default <N> FN1<R, N> before(final FN1<T1, N> function) {
             return v1 -> apply(function.apply(v1));
         }
+
+        static <T> FN1<T, T> id() {
+            return (v) -> v;
+        }
     }
 
     @FunctionalInterface

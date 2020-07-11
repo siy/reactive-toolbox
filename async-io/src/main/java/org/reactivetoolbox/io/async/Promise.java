@@ -22,6 +22,7 @@ import org.reactivetoolbox.core.lang.Tuple.Tuple6;
 import org.reactivetoolbox.core.lang.Tuple.Tuple7;
 import org.reactivetoolbox.core.lang.Tuple.Tuple8;
 import org.reactivetoolbox.core.lang.Tuple.Tuple9;
+import org.reactivetoolbox.core.lang.collection.List;
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 import org.reactivetoolbox.core.lang.functional.Result;
@@ -92,7 +93,11 @@ public interface Promise<T> {
     Promise<T> syncWait();
 
     /**
-     * Synchronously wait for this instance resolution or timeout. <br/> This method is provided only for testing purposes, it is not recommended to use it in production code.
+     * Synchronously wait for this instance resolution or timeout.
+     * <p>
+     * If timeout expires and instance is not resolved, then it is resolved with {@link Errors#TIMEOUT}.
+     * <p>
+     * This method is provided only for testing purposes, it is not recommended to use it in production code.
      *
      * @param timeout
      *         Timeout amount
@@ -107,7 +112,7 @@ public interface Promise<T> {
      *         The value which will be stored in this instance and make it resolved
      * @return Current instance
      */
-    Promise<T> resolve(final Result<T> result);
+    Promise<T> syncResolve(final Result<T> result);
 
     /**
      * Resolve the promise with specified result. All actions already waiting for resolution will be scheduled for asynchronous execution.
@@ -116,12 +121,21 @@ public interface Promise<T> {
      *         The value which will be stored in this instance and make it resolved
      * @return Current instance
      */
-    default Promise<T> asyncResolve(final Result<T> result) {
-        return async(promise -> promise.resolve(result));
-    }
+    Promise<T> resolve(final Result<T> result);
 
     /**
      * Resolve current instance with successful result.
+     *
+     * @param result
+     *         Successful result value
+     * @return Current instance
+     */
+    default Promise<T> syncOk(final T result) {
+        return syncResolve(Result.ok(result));
+    }
+
+    /**
+     * Resolve current instance with successful result asynchronously.
      *
      * @param result
      *         Successful result value
@@ -132,25 +146,14 @@ public interface Promise<T> {
     }
 
     /**
-     * Resolve current instance with successful result asynchronously.
-     *
-     * @param result
-     *         Successful result value
-     * @return Current instance
-     */
-    default Promise<T> asyncOk(final T result) {
-        return asyncResolve(Result.ok(result));
-    }
-
-    /**
      * Resolve current instance with failure result.
      *
      * @param failure
      *         Failure result value
      * @return Current instance
      */
-    default Promise<T> fail(final Failure failure) {
-        return resolve(Result.fail(failure));
+    default Promise<T> syncFail(final Failure failure) {
+        return syncResolve(Result.fail(failure));
     }
 
     /**
@@ -160,20 +163,8 @@ public interface Promise<T> {
      *         Failure result value
      * @return Current instance
      */
-    default Promise<T> asyncFail(final Failure failure) {
-        return asyncResolve(Result.fail(failure));
-    }
-
-    /**
-     * Convenience method for performing some actions with current promise instance.
-     *
-     * @param consumer
-     *         Action to perform on current instance.
-     * @return Current instance
-     */
-    default Promise<T> apply(final Consumer<Promise<T>> consumer) {
-        consumer.accept(this);
-        return this;
+    default Promise<T> fail(final Failure failure) {
+        return resolve(Result.fail(failure));
     }
 
     /**
@@ -199,7 +190,7 @@ public interface Promise<T> {
      * @return Current instance
      */
     default Promise<T> when(final Timeout timeout, final Supplier<Result<T>> timeoutResultSupplier) {
-        return async(timeout, promise -> promise.resolve(timeoutResultSupplier.get()));
+        return async(timeout, promise -> promise.syncResolve(timeoutResultSupplier.get()));
     }
 
     default Promise<T> onSuccess(final Consumer<T> consumer) {
@@ -217,39 +208,43 @@ public interface Promise<T> {
      *
      * @return Current instance
      */
+    default Promise<T> syncCancel() {
+        syncFail(Errors.CANCELLED);
+        return this;
+    }
+
     default Promise<T> cancel() {
         fail(Errors.CANCELLED);
         return this;
     }
 
     /**
-     * The purpose of this method is enable convenient invocation of the functions which require success value from current instance as a parameter and return another {@link
-     * Promise} as a result. Invocation of the function is performed only when current instance is resolved to success. If current instance is resolved to failure, no invocation is
-     * performed.
+     * Invoke provided mapping function once successful result will be available. If current instance is resolved to failure, no invocation is performed and error value is returned
+     * instead.
      *
      * @param mapper
      *         Function to call if current instance is resolved with success.
      * @return Created instance which represents result of resolution of current instance (if current instance is resolved to failure) or result of invocation of provided function
      *         (if current instance is resolved to success).
      */
-    default <R> Promise<R> andThen(final FN1<Promise<R>, T> mapper) {
+    default <R> Promise<R> flatMap(final FN1<Promise<R>, T> mapper) {
         return promise(promise -> onResult(result -> result.fold(error -> promise.resolve(Result.fail(error)),
                                                                  success -> mapper.apply(success)
                                                                                   .onResult(promise::resolve))));
     }
 
     /**
-     * Same as {@link Promise#andThen(FN1)} except that all processing is done asynchronously.
+     * Same as {@link Promise#flatMap(FN1)} except that synchronous versions of resolution methods are used.
      *
      * @param mapper
      *         Function to call if current instance is resolved with success.
      * @return Created instance which represents result of resolution of current instance (if current instance is resolved to failure) or result of invocation of provided function
      *         (if current instance is resolved to success).
      */
-    default <R> Promise<R> andThenAsync(final FN1<Promise<R>, T> mapper) {
-        return doAsync(promise -> onResult(result -> result.fold(error -> promise.resolve(Result.fail(error)),
+    default <R> Promise<R> syncFlatMap(final FN1<Promise<R>, T> mapper) {
+        return promise(promise -> onResult(result -> result.fold(error -> promise.syncResolve(Result.fail(error)),
                                                                  success -> mapper.apply(success)
-                                                                                  .onResult(promise::resolve))));
+                                                                                  .onResult(promise::syncResolve))));
     }
 
     /**
@@ -260,20 +255,28 @@ public interface Promise<T> {
      *         Function to transform successful result value if current instance is resolved with success
      * @return Created instance
      */
+    default <R> Promise<R> syncMap(final FN1<R, T> mapper) {
+        final var result = Promise.<R>promise();
+        this.onResult(value -> result.syncResolve(value.map(mapper)));
+        return result;
+    }
+
     default <R> Promise<R> map(final FN1<R, T> mapper) {
-        return promise(promise -> onResult(result -> promise.resolve(result.map(mapper))));
+        final var result = Promise.<R>promise();
+        onResult(value -> result.resolve(value.map(mapper)));
+        return result;
     }
 
-    default <R> Promise<R> asyncMap(final FN1<R, T> mapper) {
-        return Promise.<R>promise().async(promise -> onResult(result -> promise.resolve(result.map(mapper))));
+    default <R> Promise<R> syncMapResult(final FN1<Result<R>, T> mapper) {
+        final var result = Promise.<R>promise();
+        onResult(value -> result.syncResolve(value.flatMap(mapper)));
+        return result;
     }
 
-    default <R> Promise<R> flatMap(final FN1<Result<R>, T> mapper) {
-        return promise(promise -> onResult(result -> promise.resolve(result.flatMap(mapper))));
-    }
-
-    default <R> Promise<R> asyncFlatMap(final FN1<Result<R>, T> mapper) {
-        return Promise.<R>promise().async(promise -> onResult(result -> promise.resolve(result.flatMap(mapper))));
+    default <R> Promise<R> mapResult(final FN1<Result<R>, T> mapper) {
+        final var result = Promise.<R>promise();
+        onResult(value -> result.resolve(value.flatMap(mapper)));
+        return result;
     }
 
     /**
@@ -289,7 +292,6 @@ public interface Promise<T> {
      *
      * @param consumer
      *         Consumer for intercepted exceptions.
-     * @return current {@link Promise} instance
      */
     static void exceptionConsumer(final Consumer<Throwable> consumer) {
         PromiseImpl.exceptionConsumer(consumer);
@@ -301,7 +303,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> promise() {
-        return new PromiseImpl<>();
+        return PromiseImpl.promise();
     }
 
     /**
@@ -312,31 +314,34 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> promise(final Consumer<Promise<T>> setup) {
-        return Promise.<T>promise().apply(setup);
+        final var result = Promise.<T>promise();
+
+        setup.accept(result);
+
+        return result;
     }
 
     /**
      * Create instance and asynchronously start specified task with created instance.
      *
      * @param task
-     *          Function to invoke with created instance
+     *         Function to invoke with created instance
      * @return Created instance
      */
-    static <T> Promise<T> doAsync(final Consumer<Promise<T>> task) {
+    static <T> Promise<T> asyncPromise(final Consumer<Promise<T>> task) {
         return Promise.<T>promise().async(task);
     }
 
     /**
      * Create instance and asynchronously start specified I/O task with created instance.
      * <p>
-     * This method is similar to {@link Promise#doAsync(Consumer)} except task can perform I/O
-     * operations using {@link Submitter} passed as a parameter.
+     * This method is similar to {@link Promise#asyncPromise(Consumer)} except task can perform I/O operations using {@link Submitter} passed as a parameter.
      *
      * @param task
-     *          Function to invoke with created instance
+     *         Function to invoke with created instance
      * @return Created instance
      */
-    static <T> Promise<T> doAsync(final BiConsumer<Promise<T>, Submitter> task) {
+    static <T> Promise<T> asyncPromise(final BiConsumer<Promise<T>, Submitter> task) {
         return Promise.<T>promise().async(task);
     }
 
@@ -346,7 +351,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> ready(final Result<T> result) {
-        return Promise.<T>promise().resolve(result);
+        return Promise.<T>promise().syncResolve(result);
     }
 
     /**
@@ -378,8 +383,10 @@ public interface Promise<T> {
      */
     @SafeVarargs
     static <T> Promise<T> any(final Promise<T>... promises) {
-        return promise(result -> list(promises).apply(promise -> promise.onResult(result::resolve)
-                                                                        .onResult(v -> cancelAll(promises))));
+        return promise(result -> list(promises).apply(promise -> promise.onResult(v -> {
+            result.syncResolve(v);
+            cancelAll(promises);
+        })));
     }
 
     /**
@@ -411,13 +418,15 @@ public interface Promise<T> {
      */
     static <T> Promise<T> anySuccess(final Result<T> failureResult, final Promise<T>... promises) {
         return Promise.promise(anySuccess -> threshold(promises.length,
-                                                       (at) -> list(promises)
-                                                               .apply(pr -> pr.onSuccess(succ -> {
-                                                                   anySuccess.ok(succ);
-                                                                   cancelAll(promises);
-                                                               })
-                                                                              .onResult($ -> at.registerEvent())),
-                                                       () -> anySuccess.resolve(failureResult)));
+                                                       at -> list(promises)
+                                                               .apply(promise -> promise.onResult(result -> {
+                                                                   result.onSuccess(succ -> {
+                                                                       anySuccess.syncOk(succ);
+                                                                       cancelAll(promises);
+                                                                   });
+                                                                   at.registerEvent();
+                                                               })),
+                                                       () -> anySuccess.syncResolve(failureResult)));
     }
 
     /**
@@ -427,7 +436,7 @@ public interface Promise<T> {
      *         Promises to cancel.
      */
     static <T> void cancelAll(final Promise<T>... promises) {
-        list(promises).apply(Promise::cancel);
+        list(promises).apply(Promise::syncCancel);
     }
 
     /**
@@ -440,7 +449,31 @@ public interface Promise<T> {
      */
     static <T> void resolveAll(final Result<T> result, final Promise<T>... promises) {
         list(promises)
-                .apply(promise -> promise.resolve(result));
+                .apply(promise -> promise.syncResolve(result));
+    }
+
+    static <T> Promise<List<Result<T>>> allOf(final List<Promise<T>> promises) {
+        final var results = new Result[promises.size()];
+
+        return promise(result -> threshold(Tuple1.size(),
+                                           at -> promises.applyN((ndx, element) -> element.onResult(value -> {
+                                               results[ndx] = value;
+                                               at.registerEvent();
+                                           })),
+                                           () -> result.ok(list(results))));
+    }
+
+    @SafeVarargs
+    static <T> Promise<List<Result<T>>> allOf(final Promise<T>... promises) {
+        return allOf(List.list(promises));
+    }
+
+    static <T> Promise<List<T>> flatAllOf(final List<Promise<T>> promises) {
+        return allOf(promises).syncMapResult(Result::flatten);
+    }
+
+    static <T> Promise<List<T>> flatAllOf(final Promise<T>... promises) {
+        return flatAllOf(List.list(promises));
     }
 
     /**
@@ -454,9 +487,9 @@ public interface Promise<T> {
      */
     static <T1> Promise<Tuple1<T1>> all(final Promise<T1> promise1) {
         return promise(promise -> threshold(Tuple1.size(),
-                                            (at) -> promise1.onResult($ -> at.registerEvent()),
+                                            at -> promise1.onResult($ -> at.registerEvent()),
                                             () -> promise1.onResult(
-                                                    v1 -> promise.resolve(tuple(v1).map(Result::flatten)))));
+                                                    v1 -> promise.syncResolve(tuple(v1).map(Result::flatten)))));
     }
 
     /**
@@ -473,13 +506,13 @@ public interface Promise<T> {
     static <T1, T2> Promise<Tuple2<T1, T2>> all(final Promise<T1> promise1,
                                                 final Promise<T2> promise2) {
         return promise(promise -> threshold(Tuple2.size(),
-                                            (at) -> {
+                                            at -> {
                                                 promise1.onResult($ -> at.registerEvent());
                                                 promise2.onResult($ -> at.registerEvent());
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
-                                                            v2 -> promise.resolve(
+                                                            v2 -> promise.syncResolve(
                                                                     tuple(v1, v2).map(Result::flatten))))));
     }
 
@@ -500,7 +533,7 @@ public interface Promise<T> {
                                                         final Promise<T2> promise2,
                                                         final Promise<T3> promise3) {
         return promise(promise -> threshold(Tuple3.size(),
-                                            (at) -> {
+                                            at -> {
                                                 promise1.onResult($ -> at.registerEvent());
                                                 promise2.onResult($ -> at.registerEvent());
                                                 promise3.onResult($ -> at.registerEvent());
@@ -508,7 +541,7 @@ public interface Promise<T> {
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
                                                             v2 -> promise3.onResult(
-                                                                    v3 -> promise.resolve(
+                                                                    v3 -> promise.syncResolve(
                                                                             tuple(v1, v2, v3).map(Result::flatten)))))));
     }
 
@@ -532,7 +565,7 @@ public interface Promise<T> {
                                                                 final Promise<T3> promise3,
                                                                 final Promise<T4> promise4) {
         return promise(promise -> threshold(Tuple4.size(),
-                                            (at) -> {
+                                            at -> {
                                                 promise1.onResult($ -> at.registerEvent());
                                                 promise2.onResult($ -> at.registerEvent());
                                                 promise3.onResult($ -> at.registerEvent());
@@ -542,7 +575,7 @@ public interface Promise<T> {
                                                     v1 -> promise2.onResult(
                                                             v2 -> promise3.onResult(
                                                                     v3 -> promise4.onResult(
-                                                                            v4 -> promise.resolve(
+                                                                            v4 -> promise.syncResolve(
                                                                                     tuple(v1, v2, v3, v4).map(Result::flatten))))))));
     }
 
@@ -569,7 +602,7 @@ public interface Promise<T> {
                                                                         final Promise<T4> promise4,
                                                                         final Promise<T5> promise5) {
         return promise(promise -> threshold(Tuple5.size(),
-                                            (at) -> {
+                                            at -> {
                                                 promise1.onResult($ -> at.registerEvent());
                                                 promise2.onResult($ -> at.registerEvent());
                                                 promise3.onResult($ -> at.registerEvent());
@@ -581,7 +614,7 @@ public interface Promise<T> {
                                                             v2 -> promise3.onResult(
                                                                     v3 -> promise4.onResult(
                                                                             v4 -> promise5.onResult(
-                                                                                    v5 -> promise.resolve(
+                                                                                    v5 -> promise.syncResolve(
                                                                                             tuple(v1, v2, v3, v4, v5)
                                                                                                     .map(Result::flatten)))))))));
     }
@@ -612,7 +645,7 @@ public interface Promise<T> {
                                                                                 final Promise<T5> promise5,
                                                                                 final Promise<T6> promise6) {
         return promise(promise -> threshold(Tuple6.size(),
-                                            (at) -> {
+                                            at -> {
                                                 promise1.onResult($ -> at.registerEvent());
                                                 promise2.onResult($ -> at.registerEvent());
                                                 promise3.onResult($ -> at.registerEvent());
@@ -626,7 +659,7 @@ public interface Promise<T> {
                                                                     v3 -> promise4.onResult(
                                                                             v4 -> promise5.onResult(
                                                                                     v5 -> promise6.onResult(
-                                                                                            v6 -> promise.resolve(
+                                                                                            v6 -> promise.syncResolve(
                                                                                                     tuple(v1, v2, v3, v4, v5, v6)
                                                                                                             .map(Result::flatten))))))))));
     }
@@ -660,7 +693,7 @@ public interface Promise<T> {
                                                                                         final Promise<T6> promise6,
                                                                                         final Promise<T7> promise7) {
         return promise(promise -> threshold(Tuple7.size(),
-                                            (at) -> {
+                                            at -> {
                                                 promise1.onResult($ -> at.registerEvent());
                                                 promise2.onResult($ -> at.registerEvent());
                                                 promise3.onResult($ -> at.registerEvent());
@@ -676,7 +709,7 @@ public interface Promise<T> {
                                                                             v4 -> promise5.onResult(
                                                                                     v5 -> promise6.onResult(
                                                                                             v6 -> promise7.onResult(
-                                                                                                    v7 -> promise.resolve(
+                                                                                                    v7 -> promise.syncResolve(
                                                                                                             tuple(v1, v2, v3, v4, v5, v6, v7)
                                                                                                                     .map(Result::flatten)))))))))));
     }
@@ -713,7 +746,7 @@ public interface Promise<T> {
                                                                                                 final Promise<T7> promise7,
                                                                                                 final Promise<T8> promise8) {
         return promise(promise -> threshold(Tuple8.size(),
-                                            (at) -> {
+                                            at -> {
                                                 promise1.onResult($ -> at.registerEvent());
                                                 promise2.onResult($ -> at.registerEvent());
                                                 promise3.onResult($ -> at.registerEvent());
@@ -731,7 +764,7 @@ public interface Promise<T> {
                                                                                     v5 -> promise6.onResult(
                                                                                             v6 -> promise7.onResult(
                                                                                                     v7 -> promise8.onResult(
-                                                                                                            v8 -> promise.resolve(
+                                                                                                            v8 -> promise.syncResolve(
                                                                                                                     tuple(v1, v2, v3, v4, v5, v6, v7, v8)
                                                                                                                             .map(Result::flatten))))))))))));
     }
@@ -771,7 +804,7 @@ public interface Promise<T> {
                                                                                                         final Promise<T8> promise8,
                                                                                                         final Promise<T9> promise9) {
         return promise(promise -> threshold(Tuple9.size(),
-                                            (at) -> {
+                                            at -> {
                                                 promise1.onResult($ -> at.registerEvent());
                                                 promise2.onResult($ -> at.registerEvent());
                                                 promise3.onResult($ -> at.registerEvent());
@@ -791,7 +824,7 @@ public interface Promise<T> {
                                                                                             v6 -> promise7.onResult(
                                                                                                     v7 -> promise8.onResult(
                                                                                                             v8 -> promise9.onResult(
-                                                                                                                    v9 -> promise.resolve(
+                                                                                                                    v9 -> promise.syncResolve(
                                                                                                                             tuple(v1, v2, v3, v4, v5, v6, v7, v8, v9)
                                                                                                                                     .map(Result::flatten)))))))))))));
     }

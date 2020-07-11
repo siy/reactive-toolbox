@@ -26,8 +26,10 @@ import org.reactivetoolbox.core.lang.Tuple.Tuple6;
 import org.reactivetoolbox.core.lang.Tuple.Tuple7;
 import org.reactivetoolbox.core.lang.Tuple.Tuple8;
 import org.reactivetoolbox.core.lang.Tuple.Tuple9;
+import org.reactivetoolbox.core.lang.collection.List;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
@@ -235,18 +237,28 @@ public interface Result<T> extends Either<Failure, T> {
         };
     }
 
+    static <T> Result<List<T>> flatten(List<Result<T>> resultList) {
+        Failure[] failure = new Failure[1];
+        var values = new ArrayList<T>();
+
+        resultList.apply(val -> val.fold(f -> failure[0] = f, values::add));
+
+        return failure[0] != null ? Result.fail(failure[0])
+                                  : Result.ok(List.from(values));
+    }
+
     static <T1> Result<Tuple1<T1>> flatten(final Result<T1> value) {
-        return value.flatMap(vv1 -> ok(Tuple.tuple(vv1)));
+        return value.flatMap(vv1 -> ok(tuple(vv1)));
     }
 
     static <T1, T2> Result<Tuple2<T1, T2>> flatten(final Result<T1> value1, final Result<T2> value2) {
-        return value1.flatMap(vv1 -> value2.flatMap(vv2 -> ok(Tuple.tuple(vv1, vv2))));
+        return value1.flatMap(vv1 -> value2.flatMap(vv2 -> ok(tuple(vv1, vv2))));
     }
 
     static <T1, T2, T3> Result<Tuple3<T1, T2, T3>> flatten(final Result<T1> value1, final Result<T2> value2, final Result<T3> value3) {
         return value1.flatMap(vv1 ->
                  value2.flatMap(vv2 ->
-                   value3.flatMap(vv3 -> ok(Tuple.tuple(vv1, vv2, vv3)))));
+                   value3.flatMap(vv3 -> ok(tuple(vv1, vv2, vv3)))));
     }
 
     static <T1, T2, T3, T4> Result<Tuple4<T1, T2, T3, T4>> flatten(final Result<T1> value1,
@@ -256,7 +268,7 @@ public interface Result<T> extends Either<Failure, T> {
         return value1.flatMap(vv1 ->
                  value2.flatMap(vv2 ->
                    value3.flatMap(vv3 ->
-                     value4.flatMap(vv4 -> ok(Tuple.tuple(vv1, vv2, vv3, vv4))))));
+                     value4.flatMap(vv4 -> ok(tuple(vv1, vv2, vv3, vv4))))));
     }
 
     static <T1, T2, T3, T4, T5> Result<Tuple5<T1, T2, T3, T4, T5>> flatten(final Result<T1> value1,
@@ -268,7 +280,7 @@ public interface Result<T> extends Either<Failure, T> {
                  value2.flatMap(vv2 ->
                    value3.flatMap(vv3 ->
                      value4.flatMap(vv4 ->
-                       value5.flatMap(vv5 -> ok(Tuple.tuple(vv1, vv2, vv3, vv4, vv5)))))));
+                       value5.flatMap(vv5 -> ok(tuple(vv1, vv2, vv3, vv4, vv5)))))));
     }
 
     static <T1, T2, T3, T4, T5, T6> Result<Tuple6<T1, T2, T3, T4, T5, T6>> flatten(final Result<T1> value1,
@@ -282,7 +294,7 @@ public interface Result<T> extends Either<Failure, T> {
                    value3.flatMap(vv3 ->
                      value4.flatMap(vv4 ->
                        value5.flatMap(vv5 ->
-                         value6.flatMap(vv6 -> ok(Tuple.tuple(vv1, vv2, vv3, vv4, vv5, vv6))))))));
+                         value6.flatMap(vv6 -> ok(tuple(vv1, vv2, vv3, vv4, vv5, vv6))))))));
     }
 
     static <T1, T2, T3, T4, T5, T6, T7> Result<Tuple7<T1, T2, T3, T4, T5, T6, T7>> flatten(final Result<T1> value1,
@@ -298,7 +310,7 @@ public interface Result<T> extends Either<Failure, T> {
                      value4.flatMap(vv4 ->
                        value5.flatMap(vv5 ->
                          value6.flatMap(vv6 ->
-                           value7.flatMap(vv7 -> ok(Tuple.tuple(vv1, vv2, vv3, vv4, vv5, vv6, vv7)))))))));
+                           value7.flatMap(vv7 -> ok(tuple(vv1, vv2, vv3, vv4, vv5, vv6, vv7)))))))));
     }
 
     static <T1, T2, T3, T4, T5, T6, T7, T8> Result<Tuple8<T1, T2, T3, T4, T5, T6, T7, T8>> flatten(final Result<T1> value1,
@@ -316,7 +328,7 @@ public interface Result<T> extends Either<Failure, T> {
                        value5.flatMap(vv5 ->
                          value6.flatMap(vv6 ->
                            value7.flatMap(vv7 ->
-                             value8.flatMap(vv8 -> ok(Tuple.tuple(vv1, vv2, vv3, vv4, vv5, vv6, vv7, vv8))))))))));
+                             value8.flatMap(vv8 -> ok(tuple(vv1, vv2, vv3, vv4, vv5, vv6, vv7, vv8))))))))));
     }
 
     static <T1, T2, T3, T4, T5, T6, T7, T8, T9> Result<Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> flatten(final Result<T1> value1,

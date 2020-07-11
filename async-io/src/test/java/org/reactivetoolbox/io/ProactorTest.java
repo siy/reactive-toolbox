@@ -63,7 +63,7 @@ class ProactorTest {
                                     .onResult(System.out::println)
                                     .onResult(v -> v.onSuccess(fd -> assertTrue(fd.descriptor() > 0))
                                                     .onFailure(f -> fail()))
-                                    .andThen(proactor::closeFileDescriptor)
+                                    .flatMap(proactor::closeFileDescriptor)
                                     .onResult(System.out::println)
                                     .onResult(finalResult::set);
 
@@ -81,9 +81,9 @@ class ProactorTest {
                                         .onResult(System.out::println)
                                         .onResult(v -> v.onSuccess(fd -> assertTrue(fd.descriptor() > 0))
                                                         .onFailure(f -> fail()))
-                                        .andThen(fd1 -> proactor.read(fd1, buffer))
+                                        .flatMap(fd1 -> proactor.read(fd1, buffer))
                                         .onResult(System.out::println)
-                                        .andThen(fdAndSize -> fdAndSize.map((fd, sz) -> {
+                                        .flatMap(fdAndSize -> fdAndSize.map((fd, sz) -> {
                                             System.out.println(sz);
                                             return proactor.closeFileDescriptor(fd);
                                         }))
@@ -114,15 +114,15 @@ class ProactorTest {
                                                     SocketFlag.none(),
                                                     SocketOption.reuseAll())
                                             .onResult(r1 -> System.out.println("Socket created: " + r1))
-                                            .andThen(fd -> proactor.connect(fd, address, option(timeout(1).seconds()))
+                                            .flatMap(fd -> proactor.connect(fd, address, option(timeout(1).seconds()))
                                                                    .onFailure($ -> proactor.closeFileDescriptor(fd)))
                                             .onResult(r1 -> System.out.println("Socket connected: " + r1))
-                                            .andThen(fd -> proactor.write(fd, preparedText, option(timeout(1).seconds()))
+                                            .flatMap(fd -> proactor.write(fd, preparedText, option(timeout(1).seconds()))
                                                                    .map(t -> t.map((fd1, sz1) -> fd1)))
-                                            .andThen(fd -> proactor.read(fd, buffer, option(timeout(1).seconds()))
+                                            .flatMap(fd -> proactor.read(fd, buffer, option(timeout(1).seconds()))
                                                                    .onFailure($ -> proactor.closeFileDescriptor(fd)))
                                             .onResult(System.out::println)
-                                            .andThen(fd_size -> fd_size.map((fd, sz) -> proactor.closeFileDescriptor(fd)))
+                                            .flatMap(fd_size -> fd_size.map((fd, sz) -> proactor.closeFileDescriptor(fd)))
                                             .onResult(finalResult::set);
                 waitForResult(promise);
                 finalResult.get().onFailure($ -> fail());
@@ -141,5 +141,7 @@ class ProactorTest {
             proactor.processIO(); //For submission
             proactor.processIO(); //For completion
         } while (!ready.get());
+
+        promise.syncWait();
     }
 }

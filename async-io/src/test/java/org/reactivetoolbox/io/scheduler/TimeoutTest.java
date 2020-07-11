@@ -10,12 +10,12 @@ import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 class TimeoutTest {
     @Test
     void timeoutCreatedProperly() {
-        assertEquals(1234, timeout(1_234_000_000L).nanos().millis());
-        assertEquals(1234, timeout(1_234_000L).micros().millis());
-        assertEquals(TimeUnit.SECONDS.toMillis(123), timeout(123).seconds().millis());
-        assertEquals(TimeUnit.MINUTES.toMillis(12), timeout(12).minutes().millis());
-        assertEquals(TimeUnit.HOURS.toMillis(32), timeout(32).hours().millis());
-        assertEquals(TimeUnit.NANOSECONDS.toNanos(32), timeout(32).nanos().nanos());
+        assertEquals(1234, timeout(1_234_000_000L).nanos().asMillis());
+        assertEquals(1234, timeout(1_234_000L).micros().asMillis());
+        assertEquals(TimeUnit.SECONDS.toMillis(123), timeout(123).seconds().asMillis());
+        assertEquals(TimeUnit.MINUTES.toMillis(12), timeout(12).minutes().asMillis());
+        assertEquals(TimeUnit.HOURS.toMillis(32), timeout(32).hours().asMillis());
+        assertEquals(TimeUnit.NANOSECONDS.toNanos(32), timeout(32).nanos().asNanos());
     }
 
     @Test

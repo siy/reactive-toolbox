@@ -19,71 +19,85 @@ package org.reactivetoolbox.io.scheduler.impl;
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.core.meta.AppMetaRepository;
 import org.reactivetoolbox.io.Proactor;
-import org.reactivetoolbox.io.scheduler.Action;
+import org.reactivetoolbox.io.async.Submitter;
+import org.reactivetoolbox.io.async.util.StackingCollector;
 import org.reactivetoolbox.io.scheduler.TaskScheduler;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static java.util.stream.IntStream.range;
-import static org.reactivetoolbox.core.lang.collection.List.list;
-import static org.reactivetoolbox.io.Proactor.proactor;
-import static org.reactivetoolbox.io.scheduler.impl.ActionProcessor.actionProcessor;
 
 /**
- * Task scheduler tuned to large number of short tasks.
+ * Task scheduler tuned to handle large number of short tasks.
  */
-public class DoubleQueueTaskScheduler implements TaskScheduler {
+public class PipelinedTaskScheduler implements TaskScheduler {
     private final ExecutorService executor;
-    private final ActionProcessor[] processors;
-    private final Proactor[] proactors;
+    private final java.util.List<StackingCollector<Runnable>> processors = new ArrayList<>();
+    private final ThreadLocal<Proactor> proactors = new ThreadLocal<>();
     private int counter = 0;
 
-    private DoubleQueueTaskScheduler(final int size) {
+    private PipelinedTaskScheduler(final int size) {
         executor = Executors.newFixedThreadPool(size, DaemonThreadFactory.of("Task Scheduler Thread #%d"));
-        processors = new ActionProcessor[size];
-        proactors = new Proactor[size];
 
         range(0, size).forEach(n -> {
-            processors[n] = actionProcessor();
-            proactors[n] = proactor();
-            executor.execute(() -> {
-                while (!executor.isShutdown()) {
-                    processors[n].processTasks(proactors[n]);
-                    proactors[n].processIO();
-                    try {
-                        Thread.sleep(0);
-                    } catch (final InterruptedException e){
-                        logger().debug("Exception in scheduler processing loop", e);
-                    }
-                }
-            });
+            final var pipeline = StackingCollector.<Runnable>stackingCollector();
+            processors.add(pipeline);
+            executor.execute(createWorker(pipeline));
         });
     }
 
-    public static DoubleQueueTaskScheduler with(final int size) {
-        return new DoubleQueueTaskScheduler(size);
+    public static PipelinedTaskScheduler with(final int size) {
+        return new PipelinedTaskScheduler(size);
     }
 
     @Override
-    public TaskScheduler submit(final Action action) {
+    public TaskScheduler submit(final Runnable runnable) {
         if (executor.isShutdown()) {
             throw new IllegalStateException("Attempt to submit new task after scheduler is shut down");
         }
-        final int index = counter = (counter + 1) % processors.length;
-        processors[index].submit(action);
+        final var index = counter = (counter + 1) % processors.size();
+        processors.get(index).push(runnable);
         return this;
     }
 
     @Override
     public void shutdown() {
         executor.shutdown();
-        list(proactors).apply(Proactor::close);
     }
 
     @Override
     public CoreLogger logger() {
         return SingletonHolder.logger();
+    }
+
+    @Override
+    public Submitter localSubmitter() {
+        return proactors.get();
+    }
+
+    private Runnable createWorker(final StackingCollector<Runnable> pipeline) {
+        return () -> {
+            final var proactor = Proactor.proactor();
+            proactors.set(proactor);
+
+            int idleRunCount = 0;
+
+            while (!executor.isShutdown()) {
+                if (!pipeline.swapAndApply(Runnable::run)) {
+                    idleRunCount++;
+
+                    if (idleRunCount == 2048) {
+                        Thread.yield();
+                        idleRunCount = 0;
+                    }
+                }
+                proactor.processIO();
+            }
+            proactors.remove();
+            proactor.close();
+        };
     }
 
     private static final class SingletonHolder {

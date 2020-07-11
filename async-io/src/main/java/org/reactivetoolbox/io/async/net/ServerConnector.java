@@ -25,6 +25,14 @@ public class ServerConnector<T extends SocketAddress<?>> {
         return new ServerConnector<>(socket, (T) address, queueDepth);
     }
 
+    public FileDescriptor socket() {
+        return socket;
+    }
+
+    public T address() {
+        return address;
+    }
+
     @Override
     public String toString() {
         return "ServerConnector(" + socket + ", " + address + ')';

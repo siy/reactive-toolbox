@@ -11,39 +11,39 @@ import java.util.EnumSet;
  * This operation performs copying from one file descriptor to another completely at kernel space without involving any user space code or memory.
  */
 public class SpliceDescriptor {
-    private final FileDescriptor from;
-    private final FileDescriptor to;
+    private final FileDescriptor fromDescriptor;
+    private final FileDescriptor toDescriptor;
     private final OffsetT fromOffset;
     private final OffsetT toOffset;
-    private final SizeT toCopy;
+    private final SizeT bytesToCopy;
     private final EnumSet<SpliceFlags> flags;
 
-    private SpliceDescriptor(final FileDescriptor from,
-                             final FileDescriptor to,
+    private SpliceDescriptor(final FileDescriptor fromDescriptor,
+                             final FileDescriptor toDescriptor,
                              final OffsetT fromOffset,
                              final OffsetT toOffset,
-                             final SizeT toCopy,
+                             final SizeT bytesToCopy,
                              final EnumSet<SpliceFlags> flags) {
-        this.from = from;
-        this.to = to;
+        this.fromDescriptor = fromDescriptor;
+        this.toDescriptor = toDescriptor;
         this.fromOffset = fromOffset;
         this.toOffset = toOffset;
-        this.toCopy = toCopy;
+        this.bytesToCopy = bytesToCopy;
         this.flags = flags;
     }
 
     /**
      * Source file descriptor.
      */
-    public FileDescriptor from() {
-        return from;
+    public FileDescriptor fromDescriptor() {
+        return fromDescriptor;
     }
 
     /**
      * Destination file descriptor.
      */
-    public FileDescriptor to() {
-        return to;
+    public FileDescriptor toDescriptor() {
+        return toDescriptor;
     }
 
     /**
@@ -63,8 +63,8 @@ public class SpliceDescriptor {
     /**
      * Number of bytes to copy.
      */
-    public SizeT toCopy() {
-        return toCopy;
+    public SizeT bytesToCopy() {
+        return bytesToCopy;
     }
 
     /**
@@ -77,11 +77,11 @@ public class SpliceDescriptor {
     @Override
     public String toString() {
         return "SpliceDescriptor(" +
-               "from: " + from +
-               ", to: " + to +
+               "from: " + fromDescriptor +
+               ", to: " + toDescriptor +
                ", fromOffset: " + fromOffset +
                ", toOffset: " + toOffset +
-               ", toCopy: " + toCopy +
+               ", toCopy: " + bytesToCopy +
                ", flags: " + flags +
                ')';
     }
@@ -90,15 +90,19 @@ public class SpliceDescriptor {
      * Create new builder for assembling complete {@link SpliceDescriptor} instance.
      */
     public static SpliceDescriptorBuilder builder() {
-        return from -> to -> fromOffset -> toOffset -> toCopy -> flags ->
-                () -> new SpliceDescriptor(from, to, fromOffset, toOffset, toCopy, flags);
+        return fromDescriptor ->
+                toDescriptor ->
+                 fromOffset ->
+                  toOffset ->
+                   bytesToCopy ->
+                     flags -> new SpliceDescriptor(fromDescriptor, toDescriptor, fromOffset, toOffset, bytesToCopy, flags);
     }
 
     public interface SpliceDescriptorBuilder {
-        Stage1 from(final FileDescriptor from);
+        Stage1 fromDescriptor(final FileDescriptor fromDescriptor);
 
         interface Stage1 {
-            Stage2 to(final FileDescriptor to);
+            Stage2 toDescriptor(final FileDescriptor toDescriptor);
         }
 
         interface Stage2 {
@@ -110,15 +114,11 @@ public class SpliceDescriptor {
         }
 
         interface Stage4 {
-            Stage5 toCopy(final SizeT toCopy);
+            Stage5 bytesToCopy(final SizeT bytesToCopy);
         }
 
         interface Stage5 {
-            Stage6 flags(final EnumSet<SpliceFlags> flags);
-        }
-
-        interface Stage6 {
-            SpliceDescriptor build();
+            SpliceDescriptor flags(final EnumSet<SpliceFlags> flags);
         }
     }
 }

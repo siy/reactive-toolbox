@@ -15,6 +15,6 @@ public class UserTopicHandler_Test {
 
     public Promise<Collection<Article>> userTopicHandler(final User.Id userId) {
         return topicService.topicsByUser(userId, Order.ANY)
-                           .andThen(topicsList -> articleService.articlesByUserTopics(userId, topicsList.map(Topic::id)));
+                           .syncFlatMap(topicsList -> articleService.articlesByUserTopics(userId, topicsList.map(Topic::id)));
     }
 }

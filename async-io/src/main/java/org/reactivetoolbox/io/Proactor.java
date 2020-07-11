@@ -78,10 +78,10 @@ public class Proactor implements Submitter, AutoCloseable {
         return proactor(queueSize, UringSetupFlags.defaultFlags());
     }
 
-    public static Proactor proactor(final int queueSize, final EnumSet<UringSetupFlags> openFlags) {
+    static Proactor proactor(final int queueSize, final EnumSet<UringSetupFlags> openFlags) {
         return new Proactor(UringHolder.create(queueSize, openFlags)
                                        .fold(f -> {
-                                                 throw new IllegalStateException("Unable to instialize IO_URING interface");
+                                                 throw new IllegalStateException("Unable to initialize IO_URING interface");
                                              },
                                              h -> h));
     }
@@ -100,12 +100,15 @@ public class Proactor implements Submitter, AutoCloseable {
      * This method should be periodically called to perform submissions and handle completions to/from IO_URING.
      */
     public Proactor processIO() {
-        uringHolder.processCompletions(this::handleCompletions);
+        if (!queue.isEmpty()) {
+            //TODO: how to conveniently handle submissions with timeouts (i.e. linked pairs of submissions)?
+            //      and should we? (it is possible that kernel will handle subsequent timeout even if it delivered later).
+            processSubmissions();
+        }
 
-        //TODO: how to conveniently handle submissions with timeouts (i.e. linked pairs of submissions)?
-        //      and should we? (it is possible that kernel will handle subsequent timeout even if it delivered later).
-        processSubmissions();
-
+        if (pendingCompletions.count() > 0) {
+            uringHolder.processCompletions(this::handleCompletions);
+        }
         return this;
     }
 
@@ -138,20 +141,20 @@ public class Proactor implements Submitter, AutoCloseable {
     @Override
     public Promise<Duration> delay(final Timeout timeout) {
         return Promise.promise(promise -> {
-            final OffHeapTimeSpec timeSpec = OffHeapTimeSpec.forTimeout(timeout);
-
-            final long startNanos = System.nanoTime();
-
-            final int key = pendingCompletions.allocKey(entry -> {
+            final var timeSpec = OffHeapTimeSpec.forTimeout(timeout);
+            final var startNanos = System.nanoTime();
+            final var key = pendingCompletions.allocKey(entry -> {
                 timeSpec.dispose();
 
-                final long endNanos = System.nanoTime();
-                final long totalNanos = endNanos - startNanos;
+                final var totalNanos = System.nanoTime() - startNanos;
 
                 if (Math.abs(entry.res()) != NativeError.ETIME.typeCode()) {
-                    promise.fail(NativeError.fromCode(entry.res()).asFailure());
+                    promise.fail(NativeError.fromCode(entry.res())
+                                            .asFailure());
                 } else {
-                    promise.ok(Timeout.timeout(totalNanos).nanos().asDuration());
+                    promise.ok(Timeout.timeout(totalNanos)
+                                      .nanos()
+                                      .asDuration());
                 }
             });
 
@@ -167,7 +170,7 @@ public class Proactor implements Submitter, AutoCloseable {
     @Override
     public Promise<Unit> closeFileDescriptor(final FileDescriptor fd, final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(v -> Unit.UNIT)));
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(v -> Unit.UNIT)));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -184,12 +187,10 @@ public class Proactor implements Submitter, AutoCloseable {
                                                        final OffsetT offset,
                                                        final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result(bytesRead -> {
-                    buffer.used(bytesRead);
-                    return tuple(fd, sizeT(bytesRead));
-                }));
-            });
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesRead -> {
+                buffer.used(bytesRead);
+                return tuple(fd, sizeT(bytesRead));
+            })));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -209,7 +210,7 @@ public class Proactor implements Submitter, AutoCloseable {
                                                         final OffsetT offset,
                                                         final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesWritten -> tuple(fd, sizeT(bytesWritten)))));
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesWritten -> tuple(fd, sizeT(bytesWritten)))));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -226,15 +227,15 @@ public class Proactor implements Submitter, AutoCloseable {
     @Override
     public Promise<SizeT> splice(final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(SizeT::sizeT)));
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(SizeT::sizeT)));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                                 .opcode(AsyncOperation.IORING_OP_SPLICE.opcode())
-                                .fd(descriptor.to().descriptor())
-                                .len((int) descriptor.toCopy().value())
+                                .fd(descriptor.toDescriptor().descriptor())
+                                .len((int) descriptor.bytesToCopy().value())
                                 .off(descriptor.toOffset().value())
-                                .spliceFdIn(descriptor.from().descriptor())
+                                .spliceFdIn(descriptor.fromDescriptor().descriptor())
                                 .spliceOffIn(descriptor.fromOffset().value())
                                 .spliceFlags(Bitmask.combine(descriptor.flags())));
 
@@ -248,9 +249,8 @@ public class Proactor implements Submitter, AutoCloseable {
                                         final EnumSet<FilePermission> mode,
                                         final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final OffHeapCString rawPath = OffHeapCString.cstring(path.toString());
-
-            final int key = pendingCompletions.allocKey(entry -> {
+            final var rawPath = OffHeapCString.cstring(path.toString());
+            final var key = pendingCompletions.allocKey(entry -> {
                 promise.resolve(entry.result(FileDescriptor::file));
                 rawPath.dispose();
             });
@@ -272,7 +272,7 @@ public class Proactor implements Submitter, AutoCloseable {
                                           final SocketType socketType,
                                           final EnumSet<SocketFlag> openFlags,
                                           final EnumSet<SocketOption> options) {
-        return nop().flatMap($ -> UringHolder.socket(addressFamily, socketType, openFlags, options));
+        return nop().mapResult($ -> UringHolder.socket(addressFamily, socketType, openFlags, options));
     }
 
     @Override
@@ -281,7 +281,7 @@ public class Proactor implements Submitter, AutoCloseable {
                                               final EnumSet<SocketFlag> openFlags,
                                               final SizeT queueDepth,
                                               final EnumSet<SocketOption> options) {
-        return nop().flatMap($ -> UringHolder.server(socketAddress, socketType, openFlags, options, queueDepth));
+        return nop().mapResult($ -> UringHolder.server(socketAddress, socketType, openFlags, options, queueDepth));
     }
 
     @Override
@@ -289,13 +289,10 @@ public class Proactor implements Submitter, AutoCloseable {
         return Promise.promise(promise -> {
             //TODO: add support for v6
             final var clientAddress = OffHeapSocketAddress.addressIn();
-
-            final int key = pendingCompletions.allocKey((entry -> {
-                promise.resolve(entry.result(FileDescriptor::socket)
-                                     .flatMap(fd -> Result.flatten(Result.ok(fd), clientAddress.extract())
-                                                          .map(tuple -> tuple.map(ClientConnection::connectionIn))));
-                clientAddress.dispose();
-            }));
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(FileDescriptor::socket)
+                                                                                      .flatMap(fd -> Result.flatten(Result.ok(fd), clientAddress.extract())
+                                                                                                           .map(tuple -> tuple.map(ClientConnection::connectionIn))))
+                                                                        .onResult($ -> clientAddress.dispose()));
 
             queue.add(sqe -> sqe.userData(key)
                                 .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
@@ -316,7 +313,7 @@ public class Proactor implements Submitter, AutoCloseable {
                 return;
             }
 
-            final int key = pendingCompletions.allocKey((entry -> {
+            final var key = pendingCompletions.allocKey((entry -> {
                 promise.resolve(entry.result(v -> socket));
                 clientAddress.dispose();
             }));
@@ -335,18 +332,16 @@ public class Proactor implements Submitter, AutoCloseable {
     @Override
     public Promise<FileStat> stat(final Path path, final EnumSet<StatFlag> flags, final EnumSet<StatMask> mask) {
         return Promise.promise(promise -> {
-            //Reset EMPTY_PATH and enforce use of path instead.
-            final int statFlags = Bitmask.combine(flags) & ~StatFlag.EMPTY_PATH.mask();
-            final int statMask = Bitmask.combine(mask);
+            //Reset EMPTY_PATH and force use the path.
+            final var statFlags = Bitmask.combine(flags) & ~StatFlag.EMPTY_PATH.mask();
+            final var statMask = Bitmask.combine(mask);
+            final var fileStat = OffHeapFileStat.fileStat();
+            final var rawPath = OffHeapCString.cstring(path.toString());
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result($ -> fileStat.extract()))
+                                                                        .onResult($ -> fileStat.dispose())
+                                                                        .onResult($ -> rawPath.dispose()));
 
-            final OffHeapFileStat fileStat = OffHeapFileStat.fileStat();
-            final OffHeapCString rawPath = OffHeapCString.cstring(path.toString());
-
-            queue.add(sqe -> sqe.userData(pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result($ -> fileStat.extract()));
-                fileStat.dispose();
-                rawPath.dispose();
-            }))
+            queue.add(sqe -> sqe.userData(key)
                                 .fd(AT_FDCWD)
                                 .addr(rawPath.address())
                                 .len(statMask)
@@ -359,18 +354,16 @@ public class Proactor implements Submitter, AutoCloseable {
     @Override
     public Promise<FileStat> stat(final FileDescriptor fd, final EnumSet<StatFlag> flags, final EnumSet<StatMask> mask) {
         return Promise.promise(promise -> {
-            //Set EMPTY_PATH and enforce use of file descriptor instead.
-            final int statFlags = Bitmask.combine(flags) | StatFlag.EMPTY_PATH.mask();
-            final int statMask = Bitmask.combine(mask);
+            //Set EMPTY_PATH and force use of file descriptor.
+            final var statFlags = Bitmask.combine(flags) | StatFlag.EMPTY_PATH.mask();
+            final var statMask = Bitmask.combine(mask);
+            final var fileStat = OffHeapFileStat.fileStat();
+            final var rawPath = OffHeapCString.cstring("");
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result($ -> fileStat.extract()))
+                                                                        .onResult($ -> fileStat.dispose())
+                                                                        .onResult($ -> rawPath.dispose()));
 
-            final OffHeapFileStat fileStat = OffHeapFileStat.fileStat();
-            final OffHeapCString rawPath = OffHeapCString.cstring("");
-
-            queue.add(sqe -> sqe.userData(pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result($ -> fileStat.extract()));
-                fileStat.dispose();
-                rawPath.dispose();
-            }))
+            queue.add(sqe -> sqe.userData(key)
                                 .fd(fd.descriptor())
                                 .addr(rawPath.address())
                                 .len(statMask)
@@ -386,11 +379,9 @@ public class Proactor implements Submitter, AutoCloseable {
                                                              final Option<Timeout> timeout,
                                                              final OffHeapBuffer... buffers) {
         return Promise.promise(promise -> {
-            final OffHeapIoVector ioVector = OffHeapIoVector.withBuffers(buffers);
-            final int key = pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result(bytesRead -> tuple(fileDescriptor, sizeT(bytesRead))));
-                ioVector.dispose();
-            });
+            final var ioVector = OffHeapIoVector.withBuffers(buffers);
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesRead -> tuple(fileDescriptor, sizeT(bytesRead))))
+                                                                        .onResult($ -> ioVector.dispose()));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -410,11 +401,9 @@ public class Proactor implements Submitter, AutoCloseable {
                                                               final Option<Timeout> timeout,
                                                               final OffHeapBuffer... buffers) {
         return Promise.promise(promise -> {
-            final OffHeapIoVector ioVector = OffHeapIoVector.withBuffers(buffers);
-            final int key = pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result(bytesWritten -> tuple(fileDescriptor, sizeT(bytesWritten))));
-                ioVector.dispose();
-            });
+            final var ioVector = OffHeapIoVector.withBuffers(buffers);
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesWritten -> tuple(fileDescriptor, sizeT(bytesWritten))))
+                                                                        .onResult($ -> ioVector.dispose()));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -429,9 +418,10 @@ public class Proactor implements Submitter, AutoCloseable {
     }
 
     private void appendTimeout(Timeout t) {
-        final OffHeapTimeSpec timeSpec = OffHeapTimeSpec.forTimeout(t);
+        final var timeSpec = OffHeapTimeSpec.forTimeout(t);
+        final var key = pendingCompletions.allocKey(entry -> timeSpec.dispose());
 
-        queue.add(sqe -> sqe.userData(pendingCompletions.allocKey(entry -> timeSpec.dispose()))
+        queue.add(sqe -> sqe.userData(key)
                             .fd(-1)
                             .addr(timeSpec.address())
                             .len(1)

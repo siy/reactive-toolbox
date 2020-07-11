@@ -18,7 +18,7 @@ package org.reactivetoolbox.io.scheduler;
 
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.io.async.Submitter;
-import org.reactivetoolbox.io.scheduler.impl.DoubleQueueTaskScheduler;
+import org.reactivetoolbox.io.scheduler.impl.PipelinedTaskScheduler;
 
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
@@ -40,7 +40,13 @@ public interface TaskScheduler extends Executor {
      *
      * @return this instance for fluent call chaining.
      */
-    TaskScheduler submit(final Action action);
+    default TaskScheduler submit(final Action action) {
+        return submit(() -> {
+            if (!action.perform(System.nanoTime(), localSubmitter())) {
+                TaskScheduler.this.submit(action);
+            }
+        });
+    }
 
     /**
      * Submit an I/O task.
@@ -51,15 +57,8 @@ public interface TaskScheduler extends Executor {
      * @return this instance for fluent call chaining.
      */
     default TaskScheduler submit(final Consumer<Submitter> ioAction) {
-        return submit(($, submitter) -> { ioAction.accept(submitter); return true;} );
+        return submit(() -> ioAction.accept(localSubmitter()));
     }
-
-    /**
-     * Get internal logger instance.
-     *
-     * @return logger instance used to log {@link TaskScheduler} internal events
-     */
-    CoreLogger logger();
 
     /**
      * Submit task which will be executed exactly once and as soon as possible.
@@ -69,10 +68,27 @@ public interface TaskScheduler extends Executor {
      *
      * @return this instance for fluent call chaining.
      */
-    default TaskScheduler submit(final Runnable runnable) {
-        return submit((nanoTime, $) -> {
-            runnable.run();
-            return true;
+    TaskScheduler submit(final Runnable runnable);
+
+    /**
+     * Submit task which will be executed once specified timeout is expired.
+     *
+     * @param timeout
+     *         Timeout after which task will be executed
+     * @param runnable
+     *         Code to execute
+     *
+     * @return this instance fo fluent call chaining.
+     */
+    default TaskScheduler submit(final Timeout timeout, final Runnable runnable) {
+        final long threshOld = System.nanoTime() + timeout.asNanos();
+
+        return submit((nanoTime, $$) -> {
+            if (nanoTime >= threshOld) {
+                runnable.run();
+                return true;
+            }
+            return false;
         });
     }
 
@@ -94,32 +110,22 @@ public interface TaskScheduler extends Executor {
     }
 
     /**
-     * Submit task which will be executed once specified timeout is expired.
+     * Get internal logger instance.
      *
-     * @param timeout
-     *         Timeout after which task will be executed
-     * @param runnable
-     *         Code to execute
-     *
-     * @return this instance fo fluent call chaining.
+     * @return logger instance used to log {@link TaskScheduler} internal events
      */
-    default TaskScheduler submit(final Timeout timeout, final Runnable runnable) {
-        final long threshOld = System.nanoTime() + timeout.nanos();
+    CoreLogger logger();
 
-        return submit((nanoTime, $) -> {
-            if (nanoTime >= threshOld) {
-                runnable.run();
-                return true;
-            }
-            return false;
-        });
-        /*
-         * Note: this implementation uses pure user level approach. Attempts to use
-         * kernel-driven timeout processing (see code commented below) demonstrated much worse performance.
-         */
-//        return submit(submitter -> submitter.delay(timeout)
-//                                            .onResult(v -> runnable.run()));
-    }
+    /**
+     * Return {@link Submitter} instance local for current thread.
+     * <p>
+     * Note that {@link Submitter} instances are present only for threads which belong to this instance of {@link TaskScheduler}.
+     * Calling this method from other threads will return {@code null}. The returned instance is not thread safe and should not
+     * be passed to other threads.
+     *
+     * @return instance of {@link Submitter} suitable for use in current thread.
+     */
+    Submitter localSubmitter();
 
     /**
      * Shutdown scheduler. Once scheduler is shut down, remaining tasks will be processed, but no new tasks
@@ -136,6 +142,6 @@ public interface TaskScheduler extends Executor {
      * @return created scheduler
      */
     static TaskScheduler with(final int size) {
-        return DoubleQueueTaskScheduler.with(size);
+        return PipelinedTaskScheduler.with(size);
     }
 }

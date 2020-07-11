@@ -37,20 +37,24 @@ public final class Timeout {
         return new TimeoutBuilder(value);
     }
 
-    public long millis() {
+    public long asMillis() {
         return TimeUnit.NANOSECONDS.toMillis(timeout);
     }
 
-    public long nanos() {
+    public long asNanos() {
         return timeout;
     }
 
-    public Tuple2<Long, Integer> secondsWithAdjustment() {
+    public long asMicros() {
+        return TimeUnit.NANOSECONDS.toMicros(timeout);
+    }
+
+    public Tuple2<Long, Integer> asSecondsAndNanos() {
         return Tuple.tuple(timeout/NANOS_IN_SECOND, (int) (timeout % NANOS_IN_SECOND));
     }
 
     public Duration asDuration() {
-        return secondsWithAdjustment().map(Duration::ofSeconds);
+        return asSecondsAndNanos().map(Duration::ofSeconds);
     }
 
     @Override

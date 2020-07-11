@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io.async;
 
+import org.junit.BeforeClass;
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.lang.Tuple;
 import org.reactivetoolbox.core.lang.functional.Result;
@@ -13,6 +14,10 @@ import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 
 class PromiseAllTest {
+    @BeforeClass
+    public static void setupExceptionConsumer() {
+        Promise.exceptionConsumer(throwable -> System.out.println("Exception inside Promise: " + throwable));
+    }
 
     @Test
     void allResolvesWhenAllPromisesAreResolvedFor1Promise() {
@@ -23,7 +28,7 @@ class PromiseAllTest {
                 .onSuccess(v -> assertEquals(Tuple.tuple(1), v))
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(ok(1));
+        promise1.syncResolve(ok(1));
     }
 
     @Test
@@ -36,8 +41,8 @@ class PromiseAllTest {
                 .onSuccess(v -> assertEquals(Tuple.tuple(1, 2), v))
                 .when(timeout(100).millis(), TIMEOUT::asResult);
 
-        promise1.resolve(ok(1));
-        promise2.resolve(ok(2));
+        promise1.syncResolve(ok(1));
+        promise2.syncResolve(ok(2));
     }
 
     @Test
@@ -51,9 +56,9 @@ class PromiseAllTest {
                 .onSuccess(v -> assertEquals(Tuple.tuple(1, 2, 3), v))
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(ok(1));
-        promise2.resolve(ok(2));
-        promise3.resolve(ok(3));
+        promise1.syncResolve(ok(1));
+        promise2.syncResolve(ok(2));
+        promise3.syncResolve(ok(3));
     }
 
     @Test
@@ -68,10 +73,10 @@ class PromiseAllTest {
                 .onSuccess(v -> assertEquals(Tuple.tuple(1, 2, 3, 4), v))
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(ok(1));
-        promise2.resolve(ok(2));
-        promise3.resolve(ok(3));
-        promise4.resolve(ok(4));
+        promise1.syncResolve(ok(1));
+        promise2.syncResolve(ok(2));
+        promise3.syncResolve(ok(3));
+        promise4.syncResolve(ok(4));
     }
 
     @Test
@@ -87,11 +92,11 @@ class PromiseAllTest {
                 .onSuccess(v -> assertEquals(Tuple.tuple(1, 2, 3, 4, 5), v))
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(ok(1));
-        promise2.resolve(ok(2));
-        promise3.resolve(ok(3));
-        promise4.resolve(ok(4));
-        promise5.resolve(ok(5));
+        promise1.syncResolve(ok(1));
+        promise2.syncResolve(ok(2));
+        promise3.syncResolve(ok(3));
+        promise4.syncResolve(ok(4));
+        promise5.syncResolve(ok(5));
     }
 
     @Test
@@ -108,12 +113,12 @@ class PromiseAllTest {
                 .onSuccess(v -> assertEquals(Tuple.tuple(1, 2, 3, 4, 5, 6), v))
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(ok(1));
-        promise2.resolve(ok(2));
-        promise3.resolve(ok(3));
-        promise4.resolve(ok(4));
-        promise5.resolve(ok(5));
-        promise6.resolve(ok(6));
+        promise1.syncResolve(ok(1));
+        promise2.syncResolve(ok(2));
+        promise3.syncResolve(ok(3));
+        promise4.syncResolve(ok(4));
+        promise5.syncResolve(ok(5));
+        promise6.syncResolve(ok(6));
     }
 
     @Test
@@ -131,13 +136,13 @@ class PromiseAllTest {
                 .onSuccess(v -> assertEquals(Tuple.tuple(1, 2, 3, 4, 5, 6, 7), v))
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(ok(1));
-        promise2.resolve(ok(2));
-        promise3.resolve(ok(3));
-        promise4.resolve(ok(4));
-        promise5.resolve(ok(5));
-        promise6.resolve(ok(6));
-        promise7.resolve(ok(7));
+        promise1.syncResolve(ok(1));
+        promise2.syncResolve(ok(2));
+        promise3.syncResolve(ok(3));
+        promise4.syncResolve(ok(4));
+        promise5.syncResolve(ok(5));
+        promise6.syncResolve(ok(6));
+        promise7.syncResolve(ok(7));
     }
 
     @Test
@@ -156,14 +161,14 @@ class PromiseAllTest {
                 .onSuccess(v -> assertEquals(Tuple.tuple(1, 2, 3, 4, 5, 6, 7, 8), v))
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(ok(1));
-        promise2.resolve(ok(2));
-        promise3.resolve(ok(3));
-        promise4.resolve(ok(4));
-        promise5.resolve(ok(5));
-        promise6.resolve(ok(6));
-        promise7.resolve(ok(7));
-        promise8.resolve(ok(8));
+        promise1.syncResolve(ok(1));
+        promise2.syncResolve(ok(2));
+        promise3.syncResolve(ok(3));
+        promise4.syncResolve(ok(4));
+        promise5.syncResolve(ok(5));
+        promise6.syncResolve(ok(6));
+        promise7.syncResolve(ok(7));
+        promise8.syncResolve(ok(8));
     }
 
     @Test
@@ -183,15 +188,15 @@ class PromiseAllTest {
                 .onSuccess(v -> assertEquals(Tuple.tuple(1, 2, 3, 4, 5, 6, 7, 8, 9), v))
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(ok(1));
-        promise2.resolve(ok(2));
-        promise3.resolve(ok(3));
-        promise4.resolve(ok(4));
-        promise5.resolve(ok(5));
-        promise6.resolve(ok(6));
-        promise7.resolve(ok(7));
-        promise8.resolve(ok(8));
-        promise9.resolve(ok(9));
+        promise1.syncResolve(ok(1));
+        promise2.syncResolve(ok(2));
+        promise3.syncResolve(ok(3));
+        promise4.syncResolve(ok(4));
+        promise5.syncResolve(ok(5));
+        promise6.syncResolve(ok(6));
+        promise7.syncResolve(ok(7));
+        promise8.syncResolve(ok(8));
+        promise9.syncResolve(ok(9));
     }
 
     @Test
@@ -203,7 +208,7 @@ class PromiseAllTest {
                 .onSuccess(v -> fail())
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(Result.fail(CANCELLED));
+        promise1.syncResolve(Result.fail(CANCELLED));
     }
 
     @Test
@@ -216,7 +221,7 @@ class PromiseAllTest {
                 .onSuccess(v -> fail())
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(Result.fail(CANCELLED));
+        promise1.syncResolve(Result.fail(CANCELLED));
     }
 
     @Test
@@ -230,7 +235,7 @@ class PromiseAllTest {
                 .onSuccess(v -> fail())
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(Result.fail(CANCELLED));
+        promise1.syncResolve(Result.fail(CANCELLED));
     }
 
     @Test
@@ -245,7 +250,7 @@ class PromiseAllTest {
                 .onSuccess(v -> fail())
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(Result.fail(CANCELLED));
+        promise1.syncResolve(Result.fail(CANCELLED));
     }
 
     @Test
@@ -261,7 +266,7 @@ class PromiseAllTest {
                 .onSuccess(v -> fail())
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(Result.fail(CANCELLED));
+        promise1.syncResolve(Result.fail(CANCELLED));
     }
 
     @Test
@@ -278,7 +283,7 @@ class PromiseAllTest {
                 .onSuccess(v -> fail())
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(Result.fail(CANCELLED));
+        promise1.syncResolve(Result.fail(CANCELLED));
     }
 
     @Test
@@ -296,7 +301,7 @@ class PromiseAllTest {
                 .onSuccess(v -> fail())
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(Result.fail(CANCELLED));
+        promise1.syncResolve(Result.fail(CANCELLED));
     }
 
     @Test
@@ -315,7 +320,7 @@ class PromiseAllTest {
                 .onSuccess(v -> fail())
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(Result.fail(CANCELLED));
+        promise1.syncResolve(Result.fail(CANCELLED));
     }
 
     @Test
@@ -335,6 +340,6 @@ class PromiseAllTest {
                 .onSuccess(v -> fail())
                 .when(timeout(100).millis(), Result.fail(TIMEOUT));
 
-        promise1.resolve(Result.fail(CANCELLED));
+        promise1.syncResolve(Result.fail(CANCELLED));
     }
 }
