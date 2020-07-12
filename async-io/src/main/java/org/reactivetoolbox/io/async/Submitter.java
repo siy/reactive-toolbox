@@ -33,6 +33,11 @@ import static org.reactivetoolbox.core.lang.functional.Option.empty;
  */
 public interface Submitter {
     /**
+     * Close current instance.
+     */
+    void close();
+
+    /**
      * Submit NOP operation.
      * <p>
      * This operation actually does nothing except performing round trip to OS kernel and back.

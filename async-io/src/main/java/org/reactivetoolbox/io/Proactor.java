@@ -36,6 +36,7 @@ import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
+import java.io.Closeable;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Deque;
@@ -57,7 +58,7 @@ import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQ
  * WARNING: this class is part of low level internal classes. It's written with specific assumptions in mind and most likely will be hard or inconvenient to use in other
  * environment. In particular class is designed to be used by single thread at a time and does not perform synchronization at all.
  */
-public class Proactor implements Submitter, AutoCloseable {
+public class Proactor implements Submitter {
     private static final Result<Unit> UNIT = ok(Unit.UNIT);
     private static final int AT_FDCWD = -100; // Special value used to indicate the openat/statx functions should use the current working directory.
 
