@@ -63,15 +63,7 @@ public final class KSUID implements Comparable<KSUID> {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o instanceof KSUID) {
-            return representation.equals(((KSUID) o).representation);
-        }
-
-        return false;
+        return o instanceof KSUID other && representation.equals(other.representation);
     }
 
     @Override

@@ -10,11 +10,16 @@ import org.reactivetoolbox.io.examples.async.services.TopicService;
 import org.reactivetoolbox.core.lang.collection.Collection;
 
 public class UserTopicHandler_Test {
-    private ArticleService articleService;
-    private TopicService topicService;
+    private final ArticleService articleService;
+    private final TopicService topicService;
+
+    public UserTopicHandler_Test(final ArticleService articleService, final TopicService topicService) {
+        this.articleService = articleService;
+        this.topicService = topicService;
+    }
 
     public Promise<Collection<Article>> userTopicHandler(final User.Id userId) {
         return topicService.topicsByUser(userId, Order.ANY)
-                           .syncFlatMap(topicsList -> articleService.articlesByUserTopics(userId, topicsList.map(Topic::id)));
+                           .flatMap(topicsList -> articleService.articlesByUserTopics(userId, topicsList.map(Topic::id)));
     }
 }

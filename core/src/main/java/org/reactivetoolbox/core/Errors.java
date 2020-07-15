@@ -33,7 +33,7 @@ public interface Errors {
         return Failure.failure(WebFailureTypes.INTERNAL_SERVER_ERROR, "Unable to recognize type {0}", type);
     }
 
-    //Various validations - KSUID and others
+    //Various validations - KSUID/ULID, etc.
     static Failure NOT_VALID(final String message) {
         return Failure.failure(WebFailureTypes.UNPROCESSABLE_ENTITY, message);
     }

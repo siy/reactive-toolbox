@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 
-@Disabled
+//@Disabled
 public class PromisePerfTest {
     void testRunner(final String name,
                     final FN1<Long, Integer> promiseBenchmark,

@@ -22,18 +22,50 @@ public class StackingCollector<T> {
         } while (!head.compareAndSet(oldHead, newHead));
     }
 
-    public boolean swapAndApply(final Consumer<T> consumer) {
-        Node<T> savedHead;
+    public boolean swapAndApplyLIFO(final Consumer<T> consumer) {
+        //Note: this is very performance critical method, so internals are inlined
+        //Warning: do not change unless you clearly understand what are you doing!
+        Node<T> head;
 
         do {
-            savedHead = head.get();
-        } while (!head.compareAndSet(savedHead, null));
+            head = this.head.get();
+        } while (!this.head.compareAndSet(head, null));
 
-        final var hasElements = savedHead != null;
+        final var hasElements = head != null;
 
-        while (savedHead != null) {
-            consumer.accept(savedHead.element);
-            savedHead = savedHead.nextNode;
+        while (head != null) {
+            consumer.accept(head.element);
+            head = head.nextNode;
+        }
+
+        return hasElements;
+    }
+
+    public boolean swapAndApplyFIFO(final Consumer<T> consumer) {
+        //Note: this is very performance critical method, so internals are inlined
+        //Warning: do not change unless you clearly understand what are you doing!
+        Node<T> head;
+
+        do {
+            head = this.head.get();
+        } while (!this.head.compareAndSet(head, null));
+
+        Node<T> current = head;
+        Node<T> prev = null;
+        Node<T> next = null;
+
+        while(current != null) {
+            next = current.nextNode;
+            current.nextNode = prev;
+            prev = current;
+            current = next;
+        }
+
+        final var hasElements = prev != null;
+
+        while (prev != null) {
+            consumer.accept(prev.element);
+            prev = prev.nextNode;
         }
 
         return hasElements;

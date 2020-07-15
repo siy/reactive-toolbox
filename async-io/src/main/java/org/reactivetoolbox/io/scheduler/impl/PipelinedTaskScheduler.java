@@ -85,7 +85,7 @@ public class PipelinedTaskScheduler implements TaskScheduler {
             int idleRunCount = 0;
 
             while (!executor.isShutdown()) {
-                if (!pipeline.swapAndApply(Runnable::run)) {
+                if (!pipeline.swapAndApplyFIFO(Runnable::run)) {
                     idleRunCount++;
 
                     if (idleRunCount == 2048) {

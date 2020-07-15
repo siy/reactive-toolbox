@@ -2,17 +2,27 @@ package org.reactivetoolbox.core.examples.lang;
 
 import org.reactivetoolbox.core.lang.functional.Failure;
 
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 import static org.reactivetoolbox.core.lang.functional.Option.option;
 
 public class OptionExample {
     private static final Failure USER_NOT_FOUND = null;
 
     private final UserService userService;
+    private final OptionalUserService optionalUserService;
     private final UserProfileService userProfileService;
+    private final OptionalUserProfileService optionalUserProfileService;
 
-    public OptionExample(final UserService userService, final UserProfileService userProfileService) {
+    public OptionExample(final UserService userService,
+                         final OptionalUserService optionalUserService,
+                         final UserProfileService userProfileService,
+                         final OptionalUserProfileService optionalUserProfileService) {
         this.userService = userService;
+        this.optionalUserService = optionalUserService;
         this.userProfileService = userProfileService;
+        this.optionalUserProfileService = optionalUserProfileService;
     }
 
     public UserProfileResponse getUserProfileHandler(final User.Id userId) {
@@ -94,5 +104,19 @@ public class OptionExample {
                                                     option(userProfileService.findById(userId))
                                                             .otherwiseGet(UserProfileDetails::defaultDetails)))
                 .otherwiseGet(() -> UserProfileResponse.error(USER_NOT_FOUND));
+    }
+
+    public UserProfileResponse getUserProfileHandler3(final User.Id userId) {
+        return ofNullable(userService.findById(userId))
+                .map(user -> UserProfileResponse.of(user,
+                                                    ofNullable(userProfileService.findById(userId))
+                                                            .orElseGet(UserProfileDetails::defaultDetails)))
+                .orElseGet(() -> UserProfileResponse.error(USER_NOT_FOUND));
+    }
+
+    public Optional<UserProfileResponse> getUserProfileHandler4(final User.Id userId) {
+        return optionalUserService.findById(userId)
+                                  .flatMap(user -> optionalUserProfileService.findById(userId)
+                                                                             .map(profile -> UserProfileResponse.of(user, profile)));
     }
 }

@@ -111,7 +111,7 @@ public class PromiseImpl<T> implements Promise<T> {
         final var result = this.value.get();
 
         while (true) {
-            if (!actions.swapAndApply(action -> action.accept(result))) {
+            if (!actions.swapAndApplyFIFO(action -> action.accept(result))) {
                 break;
             }
         }
