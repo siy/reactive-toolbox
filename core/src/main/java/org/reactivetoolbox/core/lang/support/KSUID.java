@@ -1,3 +1,27 @@
+/*
+Based on https://github.com/segmentio/ksuid
+Based on https://github.com/akhawaja/ksuid
+
+MIT License
+
+Copyright (c) 2020 Sergiy Yevtushenko
+Copyright (c) 2017 Segment.io
+Copyright (c) 2017 Amir Khawaja khawaja.amir@gmail.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 package org.reactivetoolbox.core.lang.support;
 
 import org.reactivetoolbox.core.Errors;
@@ -15,6 +39,11 @@ import java.util.regex.Pattern;
 
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 
+/**
+ * Java implementation of K-Sortable Globally Unique IDs
+ * <p>
+ * Heavily reworked version of KSUID implementation from https://github.com/akhawaja/ksuid
+ */
 public final class KSUID implements Comparable<KSUID> {
     private static final ZoneId UTC = ZoneId.of("UTC");
     private static final long EPOCH = 1_400_000_000L;

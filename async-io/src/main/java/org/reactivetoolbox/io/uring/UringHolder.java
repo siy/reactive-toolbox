@@ -7,7 +7,7 @@ import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.AddressFamily;
-import org.reactivetoolbox.io.async.net.ServerConnector;
+import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.async.net.SocketAddressIn6;
@@ -134,14 +134,14 @@ public class UringHolder implements AutoCloseable {
                                                              : FileDescriptor::socket);
     }
 
-    public static Result<ServerConnector<?>> server(final SocketAddress<?> socketAddress,
-                                                    final SocketType socketType,
-                                                    final EnumSet<SocketFlag> openFlags,
-                                                    final EnumSet<SocketOption> options,
-                                                    final SizeT queueDepth) {
+    public static Result<ServerContext<?>> server(final SocketAddress<?> socketAddress,
+                                                  final SocketType socketType,
+                                                  final EnumSet<SocketFlag> openFlags,
+                                                  final EnumSet<SocketOption> options,
+                                                  final SizeT queueDepth) {
         return socket(socketAddress.family(), socketType, openFlags, options)
                 .flatMap(fileDescriptor -> configureForListen(fileDescriptor, socketAddress, (int) queueDepth.value()))
-                .map(tuple -> tuple.map(ServerConnector::connector));
+                .map(tuple -> tuple.map(ServerContext::connector));
     }
 
     private static Result<Tuple3<FileDescriptor, SocketAddress<?>, Integer>> configureForListen(final FileDescriptor fileDescriptor,
@@ -152,7 +152,7 @@ public class UringHolder implements AutoCloseable {
             return fail(ENOTSOCK.asFailure());
         }
 
-        int rc = switch (socketAddress.family()) {
+        final var rc = switch (socketAddress.family()) {
             case INET -> configureForInet(fileDescriptor, socketAddress, queueDepth);
             case INET6 -> configureForInet6(fileDescriptor, socketAddress, queueDepth);
             default -> EPFNOSUPPORT.typeCode();

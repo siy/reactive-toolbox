@@ -17,7 +17,7 @@ import org.reactivetoolbox.io.async.file.stat.StatFlag;
 import org.reactivetoolbox.io.async.file.stat.StatMask;
 import org.reactivetoolbox.io.async.net.AddressFamily;
 import org.reactivetoolbox.io.async.net.ClientConnection;
-import org.reactivetoolbox.io.async.net.ServerConnector;
+import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketFlag;
 import org.reactivetoolbox.io.async.net.SocketOption;
@@ -36,7 +36,6 @@ import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
-import java.io.Closeable;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Deque;
@@ -277,11 +276,11 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public Promise<ServerConnector<?>> server(final SocketAddress<?> socketAddress,
-                                              final SocketType socketType,
-                                              final EnumSet<SocketFlag> openFlags,
-                                              final SizeT queueDepth,
-                                              final EnumSet<SocketOption> options) {
+    public Promise<ServerContext<?>> server(final SocketAddress<?> socketAddress,
+                                            final SocketType socketType,
+                                            final EnumSet<SocketFlag> openFlags,
+                                            final SizeT queueDepth,
+                                            final EnumSet<SocketOption> options) {
         return nop().mapResult($ -> UringHolder.server(socketAddress, socketType, openFlags, options, queueDepth));
     }
 
