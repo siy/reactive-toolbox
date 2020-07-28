@@ -56,6 +56,19 @@ public interface Promise<T> {
      */
     Promise<T> onResult(final Consumer<Result<T>> action);
 
+    default Promise<T> thenDo(final Runnable action) {
+        return onResult(ignored -> action.run());
+    }
+
+    default <R> Promise<R> chainTo(final Promise<R> promise, final FN1<R, T> mapper) {
+        onResult(result -> promise.resolve(result.map(mapper)));
+        return promise;
+    }
+
+    default Promise<T> chainTo(final Promise<T> promise) {
+        return chainTo(promise, FN1.id());
+    }
+
     /**
      * Run specified task asynchronously. Current instance of {@link Promise} is passed to the task as a parameter.
      *
@@ -257,7 +270,7 @@ public interface Promise<T> {
      */
     default <R> Promise<R> syncMap(final FN1<R, T> mapper) {
         final var result = Promise.<R>promise();
-        this.onResult(value -> result.syncResolve(value.map(mapper)));
+        onResult(value -> result.syncResolve(value.map(mapper)));
         return result;
     }
 
@@ -487,7 +500,7 @@ public interface Promise<T> {
      */
     static <T1> Promise<Tuple1<T1>> all(final Promise<T1> promise1) {
         return promise(promise -> threshold(Tuple1.size(),
-                                            at -> promise1.onResult($ -> at.registerEvent()),
+                                            at -> promise1.thenDo(at::registerEvent),
                                             () -> promise1.onResult(
                                                     v1 -> promise.syncResolve(tuple(v1).map(Result::flatten)))));
     }
@@ -507,8 +520,8 @@ public interface Promise<T> {
                                                 final Promise<T2> promise2) {
         return promise(promise -> threshold(Tuple2.size(),
                                             at -> {
-                                                promise1.onResult($ -> at.registerEvent());
-                                                promise2.onResult($ -> at.registerEvent());
+                                                promise1.thenDo(at::registerEvent);
+                                                promise2.thenDo(at::registerEvent);
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
@@ -534,9 +547,9 @@ public interface Promise<T> {
                                                         final Promise<T3> promise3) {
         return promise(promise -> threshold(Tuple3.size(),
                                             at -> {
-                                                promise1.onResult($ -> at.registerEvent());
-                                                promise2.onResult($ -> at.registerEvent());
-                                                promise3.onResult($ -> at.registerEvent());
+                                                promise1.thenDo(at::registerEvent);
+                                                promise2.thenDo(at::registerEvent);
+                                                promise3.thenDo(at::registerEvent);
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
@@ -566,10 +579,10 @@ public interface Promise<T> {
                                                                 final Promise<T4> promise4) {
         return promise(promise -> threshold(Tuple4.size(),
                                             at -> {
-                                                promise1.onResult($ -> at.registerEvent());
-                                                promise2.onResult($ -> at.registerEvent());
-                                                promise3.onResult($ -> at.registerEvent());
-                                                promise4.onResult($ -> at.registerEvent());
+                                                promise1.thenDo(at::registerEvent);
+                                                promise2.thenDo(at::registerEvent);
+                                                promise3.thenDo(at::registerEvent);
+                                                promise4.thenDo(at::registerEvent);
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
@@ -603,11 +616,11 @@ public interface Promise<T> {
                                                                         final Promise<T5> promise5) {
         return promise(promise -> threshold(Tuple5.size(),
                                             at -> {
-                                                promise1.onResult($ -> at.registerEvent());
-                                                promise2.onResult($ -> at.registerEvent());
-                                                promise3.onResult($ -> at.registerEvent());
-                                                promise4.onResult($ -> at.registerEvent());
-                                                promise5.onResult($ -> at.registerEvent());
+                                                promise1.thenDo(at::registerEvent);
+                                                promise2.thenDo(at::registerEvent);
+                                                promise3.thenDo(at::registerEvent);
+                                                promise4.thenDo(at::registerEvent);
+                                                promise5.thenDo(at::registerEvent);
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
@@ -646,12 +659,12 @@ public interface Promise<T> {
                                                                                 final Promise<T6> promise6) {
         return promise(promise -> threshold(Tuple6.size(),
                                             at -> {
-                                                promise1.onResult($ -> at.registerEvent());
-                                                promise2.onResult($ -> at.registerEvent());
-                                                promise3.onResult($ -> at.registerEvent());
-                                                promise4.onResult($ -> at.registerEvent());
-                                                promise5.onResult($ -> at.registerEvent());
-                                                promise6.onResult($ -> at.registerEvent());
+                                                promise1.thenDo(at::registerEvent);
+                                                promise2.thenDo(at::registerEvent);
+                                                promise3.thenDo(at::registerEvent);
+                                                promise4.thenDo(at::registerEvent);
+                                                promise5.thenDo(at::registerEvent);
+                                                promise6.thenDo(at::registerEvent);
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
@@ -694,13 +707,13 @@ public interface Promise<T> {
                                                                                         final Promise<T7> promise7) {
         return promise(promise -> threshold(Tuple7.size(),
                                             at -> {
-                                                promise1.onResult($ -> at.registerEvent());
-                                                promise2.onResult($ -> at.registerEvent());
-                                                promise3.onResult($ -> at.registerEvent());
-                                                promise4.onResult($ -> at.registerEvent());
-                                                promise5.onResult($ -> at.registerEvent());
-                                                promise6.onResult($ -> at.registerEvent());
-                                                promise7.onResult($ -> at.registerEvent());
+                                                promise1.thenDo(at::registerEvent);
+                                                promise2.thenDo(at::registerEvent);
+                                                promise3.thenDo(at::registerEvent);
+                                                promise4.thenDo(at::registerEvent);
+                                                promise5.thenDo(at::registerEvent);
+                                                promise6.thenDo(at::registerEvent);
+                                                promise7.thenDo(at::registerEvent);
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
@@ -747,14 +760,14 @@ public interface Promise<T> {
                                                                                                 final Promise<T8> promise8) {
         return promise(promise -> threshold(Tuple8.size(),
                                             at -> {
-                                                promise1.onResult($ -> at.registerEvent());
-                                                promise2.onResult($ -> at.registerEvent());
-                                                promise3.onResult($ -> at.registerEvent());
-                                                promise4.onResult($ -> at.registerEvent());
-                                                promise5.onResult($ -> at.registerEvent());
-                                                promise6.onResult($ -> at.registerEvent());
-                                                promise7.onResult($ -> at.registerEvent());
-                                                promise8.onResult($ -> at.registerEvent());
+                                                promise1.thenDo(at::registerEvent);
+                                                promise2.thenDo(at::registerEvent);
+                                                promise3.thenDo(at::registerEvent);
+                                                promise4.thenDo(at::registerEvent);
+                                                promise5.thenDo(at::registerEvent);
+                                                promise6.thenDo(at::registerEvent);
+                                                promise7.thenDo(at::registerEvent);
+                                                promise8.thenDo(at::registerEvent);
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
@@ -805,15 +818,15 @@ public interface Promise<T> {
                                                                                                         final Promise<T9> promise9) {
         return promise(promise -> threshold(Tuple9.size(),
                                             at -> {
-                                                promise1.onResult($ -> at.registerEvent());
-                                                promise2.onResult($ -> at.registerEvent());
-                                                promise3.onResult($ -> at.registerEvent());
-                                                promise4.onResult($ -> at.registerEvent());
-                                                promise5.onResult($ -> at.registerEvent());
-                                                promise6.onResult($ -> at.registerEvent());
-                                                promise7.onResult($ -> at.registerEvent());
-                                                promise8.onResult($ -> at.registerEvent());
-                                                promise9.onResult($ -> at.registerEvent());
+                                                promise1.thenDo(at::registerEvent);
+                                                promise2.thenDo(at::registerEvent);
+                                                promise3.thenDo(at::registerEvent);
+                                                promise4.thenDo(at::registerEvent);
+                                                promise5.thenDo(at::registerEvent);
+                                                promise6.thenDo(at::registerEvent);
+                                                promise7.thenDo(at::registerEvent);
+                                                promise8.thenDo(at::registerEvent);
+                                                promise9.thenDo(at::registerEvent);
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(

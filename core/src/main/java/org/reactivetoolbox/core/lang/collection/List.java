@@ -78,6 +78,10 @@ public interface List<E> extends Collection<E> {
      */
     List<E> append(List<E> other);
 
+    default List<E> append(final E value) {
+        return append(list(value));
+    }
+
     /**
      * Return list which contains elements from list provided as parameter followed by elements of current list.
      *
@@ -106,6 +110,30 @@ public interface List<E> extends Collection<E> {
      * @return New list with transformed elements
      */
     <R> List<R> mapN(FN2<R, Integer, E> mapper);
+
+    /**
+     * Perform 'folding' or 'reduction' of list elements starting from the rightmost (last) element.
+     *
+     * @param seed
+     *        Initial value
+     * @param function
+     *        Function which will be applied to every element
+     *
+     * @return result of application of provided function to all list elements.
+     */
+    <V> V foldRight(final V seed, FN1<FN1<V, V>, E> function);
+
+    /**
+     * Perform 'folding' or 'reduction' of list elements starting from the leftmost (first) element.
+     *
+     * @param seed
+     *        Initial value
+     * @param function
+     *        Function which will be applied to every element
+     *
+     * @return result of application of provided function to all list elements.
+     */
+    <V> V foldLeft(final V seed, final FN1<FN1<V, V>, E> function);
 
     @Override
     default List<E> apply(final Consumer<E> consumer) {
@@ -162,19 +190,19 @@ public interface List<E> extends Collection<E> {
         final var listFalse = ListBuilder.<E>builder(size());
         final var listTrue = ListBuilder.<E>builder(size());
 
-        mapN((n, e) -> (predicate.test(e) ? listTrue.append(e) : listFalse.append(e)));
+        mapN((n, e) -> (predicate.test(e)
+                        ? listTrue.append(e)
+                        : listFalse.append(e)));
 
         return Pair.pair(listFalse.build(), listTrue.build());
     }
 
     boolean elementEquals(E[] elements);
 
-    @SuppressWarnings("unchecked")
     static <T> List<T> from(final java.util.Collection<T> source) {
         return (List<T>) list(source.toArray());
     }
 
-    @SuppressWarnings("unchecked")
     static <T> List<T> list() {
         return (List<T>) EMPTY_LIST;
     }
@@ -193,6 +221,30 @@ public interface List<E> extends Collection<E> {
                         builder.append(mapper.apply(i, elements[i]));
                     }
                 }).build();
+            }
+
+            @Override
+            public <V> V foldRight(final V seed, final FN1<FN1<V, V>, T> function) {
+                var result = seed;
+
+                for (int i = elements.length - 1; i >= 0; i--) {
+                    result = function.apply(elements[i])
+                                     .apply(result);
+                }
+
+                return result;
+            }
+
+            @Override
+            public <V> V foldLeft(final V seed, final FN1<FN1<V, V>, T> function) {
+                var result = seed;
+
+                for (int i = 0; i < elements.length; i++) {
+                    result = function.apply(elements[i])
+                                     .apply(result);
+                }
+
+                return result;
             }
 
             @Override
@@ -271,7 +323,6 @@ public interface List<E> extends Collection<E> {
                 return Arrays.hashCode(elements);
             }
 
-            @SuppressWarnings({"unchecked", "rawtypes"})
             @Override
             public boolean equals(final Object obj) {
                 if (obj == this) {
@@ -342,7 +393,6 @@ public interface List<E> extends Collection<E> {
         }
     }
 
-    @SuppressWarnings("rawtypes")
     Collection EMPTY_LIST = new List() {
         @Override
         public List mapN(final FN2 mapper) {
@@ -372,6 +422,16 @@ public interface List<E> extends Collection<E> {
         @Override
         public List append(final List other) {
             return other;
+        }
+
+        @Override
+        public Object foldLeft(final Object seed, final FN1 function) {
+            return seed;
+        }
+
+        @Override
+        public Object foldRight(final Object seed, final FN1 function) {
+            return seed;
         }
 
         @Override

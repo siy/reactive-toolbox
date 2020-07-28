@@ -342,7 +342,7 @@ class PromiseTest {
     void ioTaskCanBeSubmitted() {
         final var promise = Promise.<String>promise()
                                    .async((p, io) -> io.nop()
-                                                       .onResult($ -> p.syncOk("success")));
+                                                       .thenDo(() -> p.syncOk("success")));
 
         promise.syncWait(timeout(1).seconds())
                .onSuccess(success -> assertEquals("success", success))

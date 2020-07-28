@@ -1,11 +1,17 @@
 package org.reactivetoolbox.core.lang.functional;
 
-import java.util.StringJoiner;
-
 public final class Unit {
     private Unit() {}
 
-    public static final Unit UNIT = new Unit();
+    private static final Unit UNIT = new Unit();
+
+    public static Unit unit() {
+        return UNIT;
+    }
+
+    public static <T> Unit unit(final T ignored) {
+        return UNIT;
+    }
 
     @Override
     public String toString() {

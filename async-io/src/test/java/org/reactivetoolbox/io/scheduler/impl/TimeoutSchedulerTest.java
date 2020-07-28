@@ -30,7 +30,7 @@ class TimeoutSchedulerTest {
         final var executor = new ThreadPoolExecutor(N_PROCESSING_THREADS, N_PROCESSING_THREADS,
                                                     0L, TimeUnit.MILLISECONDS,
                                                     new LinkedTransferQueue<>(),
-                                                    DaemonThreadFactory.of("Test Task Thread #%d"));
+                                                    DaemonThreadFactory.threadFactory("Test Task Thread #%d"));
 
         final var counters = new AtomicLong[N_TASKS];
 

@@ -31,7 +31,7 @@ public class DaemonThreadFactory implements ThreadFactory {
         this.pattern = pattern;
     }
 
-    public static DaemonThreadFactory of(final String pattern) {
+    public static DaemonThreadFactory threadFactory(final String pattern) {
         return new DaemonThreadFactory(pattern);
     }
 

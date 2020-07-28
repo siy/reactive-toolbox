@@ -39,7 +39,7 @@ public class PipelinedTaskScheduler implements TaskScheduler {
     private int counter = 0;
 
     private PipelinedTaskScheduler(final int size) {
-        executor = Executors.newFixedThreadPool(size, DaemonThreadFactory.of("Task Scheduler Thread #%d"));
+        executor = Executors.newFixedThreadPool(size, DaemonThreadFactory.threadFactory("Task Scheduler Thread #%d"));
 
         range(0, size).forEach(n -> {
             final var pipeline = StackingCollector.<Runnable>stackingCollector();

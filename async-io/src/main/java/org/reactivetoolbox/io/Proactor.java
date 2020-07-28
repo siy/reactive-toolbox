@@ -17,11 +17,11 @@ import org.reactivetoolbox.io.async.file.stat.StatFlag;
 import org.reactivetoolbox.io.async.file.stat.StatMask;
 import org.reactivetoolbox.io.async.net.AddressFamily;
 import org.reactivetoolbox.io.async.net.ClientConnection;
-import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketFlag;
 import org.reactivetoolbox.io.async.net.SocketOption;
 import org.reactivetoolbox.io.async.net.SocketType;
+import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.AsyncOperation;
@@ -45,6 +45,7 @@ import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
+import static org.reactivetoolbox.core.lang.functional.Unit.unit;
 import static org.reactivetoolbox.io.async.common.SizeT.sizeT;
 import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
 import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
@@ -58,7 +59,7 @@ import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQ
  * environment. In particular class is designed to be used by single thread at a time and does not perform synchronization at all.
  */
 public class Proactor implements Submitter {
-    private static final Result<Unit> UNIT = ok(Unit.UNIT);
+    private static final Result<Unit> UNIT_RESULT = ok(unit());
     private static final int AT_FDCWD = -100; // Special value used to indicate the openat/statx functions should use the current working directory.
 
     private final UringHolder uringHolder;
@@ -131,7 +132,7 @@ public class Proactor implements Submitter {
     @Override
     public Promise<Unit> nop() {
         return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey((entry -> promise.resolve(UNIT)));
+            final int key = pendingCompletions.allocKey((entry -> promise.resolve(UNIT_RESULT)));
 
             queue.add(sqe -> sqe.userData(key)
                                 .opcode(AsyncOperation.IORING_OP_NOP.opcode()));
@@ -170,7 +171,7 @@ public class Proactor implements Submitter {
     @Override
     public Promise<Unit> closeFileDescriptor(final FileDescriptor fd, final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(v -> Unit.UNIT)));
+            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(v -> unit())));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -292,7 +293,7 @@ public class Proactor implements Submitter {
             final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(FileDescriptor::socket)
                                                                                       .flatMap(fd -> Result.flatten(Result.ok(fd), clientAddress.extract())
                                                                                                            .map(tuple -> tuple.map(ClientConnection::connectionIn))))
-                                                                        .onResult($ -> clientAddress.dispose()));
+                                                                        .thenDo(clientAddress::dispose));
 
             queue.add(sqe -> sqe.userData(key)
                                 .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
@@ -338,8 +339,8 @@ public class Proactor implements Submitter {
             final var fileStat = OffHeapFileStat.fileStat();
             final var rawPath = OffHeapCString.cstring(path.toString());
             final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result($ -> fileStat.extract()))
-                                                                        .onResult($ -> fileStat.dispose())
-                                                                        .onResult($ -> rawPath.dispose()));
+                                                                        .thenDo(fileStat::dispose)
+                                                                        .thenDo(rawPath::dispose));
 
             queue.add(sqe -> sqe.userData(key)
                                 .fd(AT_FDCWD)
@@ -360,8 +361,8 @@ public class Proactor implements Submitter {
             final var fileStat = OffHeapFileStat.fileStat();
             final var rawPath = OffHeapCString.cstring("");
             final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result($ -> fileStat.extract()))
-                                                                        .onResult($ -> fileStat.dispose())
-                                                                        .onResult($ -> rawPath.dispose()));
+                                                                        .thenDo(fileStat::dispose)
+                                                                        .thenDo(rawPath::dispose));
 
             queue.add(sqe -> sqe.userData(key)
                                 .fd(fd.descriptor())
@@ -381,7 +382,7 @@ public class Proactor implements Submitter {
         return Promise.promise(promise -> {
             final var ioVector = OffHeapIoVector.withBuffers(buffers);
             final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesRead -> tuple(fileDescriptor, sizeT(bytesRead))))
-                                                                        .onResult($ -> ioVector.dispose()));
+                                                                        .thenDo(ioVector::dispose));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -403,7 +404,7 @@ public class Proactor implements Submitter {
         return Promise.promise(promise -> {
             final var ioVector = OffHeapIoVector.withBuffers(buffers);
             final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesWritten -> tuple(fileDescriptor, sizeT(bytesWritten))))
-                                                                        .onResult($ -> ioVector.dispose()));
+                                                                        .thenDo(ioVector::dispose));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -417,7 +418,7 @@ public class Proactor implements Submitter {
         });
     }
 
-    private void appendTimeout(Timeout t) {
+    private void appendTimeout(final Timeout t) {
         final var timeSpec = OffHeapTimeSpec.forTimeout(t);
         final var key = pendingCompletions.allocKey(entry -> timeSpec.dispose());
 

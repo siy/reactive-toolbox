@@ -1,0 +1,72 @@
+package org.reactivetoolbox.io.async.net.context;
+
+import org.reactivetoolbox.core.lang.functional.Unit;
+import org.reactivetoolbox.core.lang.support.ULID;
+import org.reactivetoolbox.io.async.Promise;
+import org.reactivetoolbox.io.async.file.FileDescriptor;
+import org.reactivetoolbox.io.async.net.ClientConnection;
+import org.reactivetoolbox.io.async.net.lifecycle.LifeCycle;
+import org.reactivetoolbox.io.async.net.server.TcpServerConfiguration;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import static org.reactivetoolbox.io.async.net.context.ConnectionContext.connectionContext;
+
+public class ActiveServerContext {
+    private final ServerContext<?> serverContext;
+    private final TcpServerConfiguration configuration;
+    private final ConcurrentMap<ULID, ConnectionContext> connections = new ConcurrentHashMap<>();
+    private final Promise<Unit> shutdownPromise = Promise.promise();
+
+    private ActiveServerContext(final ServerContext<?> serverContext, final TcpServerConfiguration configuration) {
+        this.serverContext = serverContext;
+        this.configuration = configuration;
+    }
+
+    public static ActiveServerContext activeContext(final ServerContext<?> serverContext,
+                                                    final TcpServerConfiguration configuration) {
+        return new ActiveServerContext(serverContext, configuration);
+    }
+
+    public static Promise<Unit> defaultConnectionHandler(final ConnectionContext connectionContext) {
+        final var registry = connectionContext.serverContext().registry().add(connectionContext);
+
+        return Promise.asyncPromise(connectionContext::processConnection)
+                      .thenDo(() -> registry.remove(connectionContext));
+    }
+
+    public LifeCycle lifeCycle() {
+        return configuration.lifeCycle();
+    }
+
+    private ConnectionRegistry registry() {
+        return ConnectionRegistry.withMap(connections);
+    }
+
+    public boolean shutdownInProgress() {
+        return serverContext.shutdownInProgress();
+    }
+
+    public FileDescriptor socket() {
+        return serverContext.socket();
+    }
+
+    public Promise<Unit> handleConnection(final ClientConnection<?> clientConnection) {
+        return configuration.connectionHandler()
+                            .apply(connectionContext(this, clientConnection));
+    }
+
+    public static Promise<Unit> echo(final ReadConnectionContext context) {
+        return Promise.asyncPromise((promise, submitter) -> submitter.write(context.socket(), context.buffer())
+                                                                     .chainTo(promise, Unit::unit));
+    }
+
+    public void shutdown() {
+        serverContext.shutdown(shutdownPromise);
+    }
+
+    public Promise<Unit> shutdownPromise() {
+        return shutdownPromise;
+    }
+}
