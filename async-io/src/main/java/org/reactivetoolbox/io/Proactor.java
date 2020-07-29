@@ -44,9 +44,11 @@ import java.util.LinkedList;
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
+import static org.reactivetoolbox.core.lang.functional.Result.flatten;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.core.lang.functional.Unit.unit;
 import static org.reactivetoolbox.io.async.common.SizeT.sizeT;
+import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
 import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
 
@@ -116,6 +118,16 @@ public class Proactor implements Submitter {
     private void processSubmissions() {
         int count = uringHolder.availableSQSpace();
 
+//        while (count > 0 /* && !queue.isEmpty() */) {
+//            final var element = queue.pollFirst();
+//
+//            if (element != null) {
+//                uringHolder.submit(element);
+//            } else {
+//                break;
+//            }
+//            count--;
+//        }
         while (count > 0 && !queue.isEmpty()) {
             uringHolder.submit(queue.removeFirst());
             count--;
@@ -132,7 +144,7 @@ public class Proactor implements Submitter {
     @Override
     public Promise<Unit> nop() {
         return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey((entry -> promise.resolve(UNIT_RESULT)));
+            final int key = pendingCompletions.allocKey((entry -> promise.syncResolve(UNIT_RESULT)));
 
             queue.add(sqe -> sqe.userData(key)
                                 .opcode(AsyncOperation.IORING_OP_NOP.opcode()));
@@ -150,12 +162,12 @@ public class Proactor implements Submitter {
                 final var totalNanos = System.nanoTime() - startNanos;
 
                 if (Math.abs(entry.res()) != NativeError.ETIME.typeCode()) {
-                    promise.fail(NativeError.fromCode(entry.res())
-                                            .asFailure());
+                    promise.syncFail(NativeError.fromCode(entry.res())
+                                                .asFailure());
                 } else {
-                    promise.ok(Timeout.timeout(totalNanos)
-                                      .nanos()
-                                      .asDuration());
+                    promise.syncOk(timeout(totalNanos)
+                                           .nanos()
+                                           .asDuration());
                 }
             });
 
@@ -171,7 +183,7 @@ public class Proactor implements Submitter {
     @Override
     public Promise<Unit> closeFileDescriptor(final FileDescriptor fd, final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(v -> unit())));
+            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(v -> unit())));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -188,7 +200,7 @@ public class Proactor implements Submitter {
                                                        final OffsetT offset,
                                                        final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesRead -> {
+            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(bytesRead -> {
                 buffer.used(bytesRead);
                 return tuple(fd, sizeT(bytesRead));
             })));
@@ -211,7 +223,7 @@ public class Proactor implements Submitter {
                                                         final OffsetT offset,
                                                         final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesWritten -> tuple(fd, sizeT(bytesWritten)))));
+            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(bytesWritten -> tuple(fd, sizeT(bytesWritten)))));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -228,7 +240,7 @@ public class Proactor implements Submitter {
     @Override
     public Promise<SizeT> splice(final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
         return Promise.promise(promise -> {
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(SizeT::sizeT)));
+            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(SizeT::sizeT)));
 
             queue.add(sqe -> sqe.userData(key)
                                 .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -252,7 +264,7 @@ public class Proactor implements Submitter {
         return Promise.promise(promise -> {
             final var rawPath = OffHeapCString.cstring(path.toString());
             final var key = pendingCompletions.allocKey(entry -> {
-                promise.resolve(entry.result(FileDescriptor::file));
+                promise.syncResolve(entry.result(FileDescriptor::file));
                 rawPath.dispose();
             });
 
@@ -290,9 +302,9 @@ public class Proactor implements Submitter {
         return Promise.promise(promise -> {
             //TODO: add support for v6
             final var clientAddress = OffHeapSocketAddress.addressIn();
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(FileDescriptor::socket)
-                                                                                      .flatMap(fd -> Result.flatten(Result.ok(fd), clientAddress.extract())
-                                                                                                           .map(tuple -> tuple.map(ClientConnection::connectionIn))))
+            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(FileDescriptor::socket)
+                                                                                          .flatMap(fd -> flatten(ok(fd), clientAddress.extract())
+                                                                                                  .map(tuple -> tuple.map(ClientConnection::connectionIn))))
                                                                         .thenDo(clientAddress::dispose));
 
             queue.add(sqe -> sqe.userData(key)
@@ -310,12 +322,12 @@ public class Proactor implements Submitter {
             final var clientAddress = OffHeapSocketAddress.unsafeSocketAddress(address);
 
             if (clientAddress == null) {
-                promise.fail(NativeError.EPFNOSUPPORT.asFailure());
+                promise.syncFail(NativeError.EPFNOSUPPORT.asFailure());
                 return;
             }
 
             final var key = pendingCompletions.allocKey((entry -> {
-                promise.resolve(entry.result(v -> socket));
+                promise.syncResolve(entry.result(v -> socket));
                 clientAddress.dispose();
             }));
 
@@ -338,7 +350,7 @@ public class Proactor implements Submitter {
             final var statMask = Bitmask.combine(mask);
             final var fileStat = OffHeapFileStat.fileStat();
             final var rawPath = OffHeapCString.cstring(path.toString());
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result($ -> fileStat.extract()))
+            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result($ -> fileStat.extract()))
                                                                         .thenDo(fileStat::dispose)
                                                                         .thenDo(rawPath::dispose));
 
@@ -360,7 +372,7 @@ public class Proactor implements Submitter {
             final var statMask = Bitmask.combine(mask);
             final var fileStat = OffHeapFileStat.fileStat();
             final var rawPath = OffHeapCString.cstring("");
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result($ -> fileStat.extract()))
+            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result($ -> fileStat.extract()))
                                                                         .thenDo(fileStat::dispose)
                                                                         .thenDo(rawPath::dispose));
 
@@ -381,7 +393,7 @@ public class Proactor implements Submitter {
                                                              final OffHeapBuffer... buffers) {
         return Promise.promise(promise -> {
             final var ioVector = OffHeapIoVector.withBuffers(buffers);
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesRead -> tuple(fileDescriptor, sizeT(bytesRead))))
+            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(bytesRead -> tuple(fileDescriptor, sizeT(bytesRead))))
                                                                         .thenDo(ioVector::dispose));
 
             queue.add(sqe -> sqe.userData(key)
@@ -403,7 +415,7 @@ public class Proactor implements Submitter {
                                                               final OffHeapBuffer... buffers) {
         return Promise.promise(promise -> {
             final var ioVector = OffHeapIoVector.withBuffers(buffers);
-            final var key = pendingCompletions.allocKey(entry -> promise.resolve(entry.result(bytesWritten -> tuple(fileDescriptor, sizeT(bytesWritten))))
+            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(bytesWritten -> tuple(fileDescriptor, sizeT(bytesWritten))))
                                                                         .thenDo(ioVector::dispose));
 
             queue.add(sqe -> sqe.userData(key)

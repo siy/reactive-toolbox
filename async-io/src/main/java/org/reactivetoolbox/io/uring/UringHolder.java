@@ -7,13 +7,13 @@ import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.AddressFamily;
-import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.async.net.SocketAddressIn6;
 import org.reactivetoolbox.io.async.net.SocketFlag;
 import org.reactivetoolbox.io.async.net.SocketOption;
 import org.reactivetoolbox.io.async.net.SocketType;
+import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.raw.RawMemory;
 import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
@@ -167,11 +167,11 @@ public class UringHolder implements AutoCloseable {
         }
 
         if (socketAddress instanceof SocketAddressIn6 socketAddressIn6) {
-            var addressIn6 = addressIn6(socketAddressIn6);
+            final var addressIn6 = addressIn6(socketAddressIn6);
 
             return Uring.prepareForListen(fileDescriptor.descriptor(),
-                                          addressIn6.address(),
-                                          addressIn6.size(),
+                                          addressIn6.sockAddrPtr(),
+                                          addressIn6.sockAddrSize(),
                                           queueDepth);
         }
 
@@ -184,11 +184,11 @@ public class UringHolder implements AutoCloseable {
         }
 
         if (socketAddress instanceof SocketAddressIn socketAddressIn) {
-            var addressIn = addressIn(socketAddressIn);
+            final var addressIn = addressIn(socketAddressIn);
 
             return Uring.prepareForListen(fileDescriptor.descriptor(),
-                                          addressIn.address(),
-                                          addressIn.size(),
+                                          addressIn.sockAddrPtr(),
+                                          addressIn.sockAddrSize(),
                                           queueDepth);
 
         }

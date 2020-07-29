@@ -1,9 +1,12 @@
 package org.reactivetoolbox.io.async.net.lifecycle;
 
+import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Unit;
 import org.reactivetoolbox.io.async.Promise;
+import org.reactivetoolbox.io.async.common.SizeT;
+import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.context.ConnectionContext;
 import org.reactivetoolbox.io.async.net.context.ReadConnectionContext;
 import org.reactivetoolbox.io.async.util.OffHeapBuffer;
@@ -55,9 +58,14 @@ public class ReadWriteLifeCycle implements LifeCycle {
     }
 
     private void rwCycle(final ReadConnectionContext connectionContext, final Promise<Unit> onClose) {
-        Promise.asyncPromise((promise, submitter) -> submitter.read(connectionContext.socket(), connectionContext.buffer(), timeout)
-                                                              .flatMap(tuple -> handler.apply(connectionContext)))
-               .onSuccess($ -> rwCycle(connectionContext, onClose))
-               .onFailure(onClose::fail);
+//        onClose.async((promise, submitter) -> submitter.read(connectionContext.socket(), connectionContext.buffer(), timeout)
+//                                                       .syncFlatMap(tuple -> handler.apply(connectionContext))
+//                                                       .onSuccess($ -> rwCycle(connectionContext, onClose))
+//                                                       .onFailure(onClose::fail));
+        Promise.<Tuple2<FileDescriptor, SizeT>>asyncPromise((promise, submitter) -> submitter.read(connectionContext.socket(), connectionContext.buffer(), timeout)
+                                                                                             .chainTo(promise))
+                .flatMap($ -> handler.apply(connectionContext))
+                .onSuccess($ -> rwCycle(connectionContext, onClose))
+                .onFailure(onClose::fail);
     }
 }

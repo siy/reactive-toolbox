@@ -19,7 +19,8 @@ public class EchoServerTest {
                     System.out.println("Listening for incoming connections");
 
                     Runtime.getRuntime()
-                           .addShutdownHook(threadFactory("Shutdown hook").newThread(activeServerContext::shutdown));
+                           .addShutdownHook(threadFactory("Shutdown hook")
+                                                    .newThread(activeServerContext::shutdown));
                 })
                 .onFailure(failure -> System.out.println("Server failed to start: " + failure))
                 .flatMap(ActiveServerContext::shutdownPromise)

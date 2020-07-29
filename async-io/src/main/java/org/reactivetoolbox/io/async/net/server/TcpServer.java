@@ -31,7 +31,7 @@ public class TcpServer {
     private Promise<ActiveServerContext> setupAcceptors(final ServerContext<?> context) {
         final ActiveServerContext activeServerContext = activeContext(context, configuration);
 
-        return asyncPromise((promise, submitter) -> {
+        return Promise.asyncPromise((promise, submitter) -> {
             range(0, context.queueDepth()).forEach($ -> doAccept(submitter, activeServerContext));
             promise.ok(activeServerContext);
         });
@@ -43,7 +43,7 @@ public class TcpServer {
                                 configuration.listenerFlags(),
                                 configuration.backlogSize(),
                                 configuration.listenerOptions())
-                        .onResult(promise::resolve);
+                        .chainTo(promise);
     }
 
     private static Promise<Unit> doAccept(final Submitter submitter, final ActiveServerContext context) {
