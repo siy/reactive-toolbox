@@ -66,7 +66,7 @@ public final class RawMemory {
         putByteArray(address, input, input.length);
     }
 
-    public static void putByteArray(final long address, final byte[] input, int maxLen) {
+    public static void putByteArray(final long address, final byte[] input, final int maxLen) {
         final var len = Math.min(maxLen, input.length);
         instance.copyMemory(input, Unsafe.ARRAY_BYTE_BASE_OFFSET, null, address, len);
     }

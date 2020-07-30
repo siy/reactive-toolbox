@@ -25,6 +25,7 @@ import org.reactivetoolbox.core.lang.Tuple.Tuple9;
 import org.reactivetoolbox.core.lang.collection.List;
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
+import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.io.async.impl.PromiseImpl;
@@ -191,6 +192,10 @@ public interface Promise<T> {
      */
     default Promise<T> when(final Timeout timeout, final Result<T> timeoutResult) {
         return when(timeout, () -> timeoutResult);
+    }
+
+    default Promise<T> when(final Option<Timeout> timeout, final Result<T> timeoutResult) {
+        return timeout.fold($ -> this, timeoutValue -> when(timeoutValue, () -> timeoutResult));
     }
 
     /**

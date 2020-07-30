@@ -4,16 +4,21 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.io.async.net.context.ActiveServerContext;
 
+import java.time.Instant;
+
+import static org.reactivetoolbox.core.lang.functional.Option.option;
 import static org.reactivetoolbox.io.async.net.lifecycle.ReadWriteLifeCycle.readWrite;
 import static org.reactivetoolbox.io.async.net.server.TcpServer.tcpServer;
 import static org.reactivetoolbox.io.async.net.server.TcpServerConfiguration.configuration;
+import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 import static org.reactivetoolbox.io.scheduler.impl.DaemonThreadFactory.threadFactory;
 
 @Disabled
 public class EchoServerTest {
     @Test
     void runEchoServer() {
-        tcpServer(configuration(8081, readWrite(ActiveServerContext::echo)))
+        System.out.println(Instant.now());
+        tcpServer(configuration(8081, readWrite(ActiveServerContext::echo, option(timeout(10).seconds()))))
                 .start()
                 .onSuccess(activeServerContext -> {
                     System.out.println("Listening for incoming connections");
@@ -25,5 +30,7 @@ public class EchoServerTest {
                 .onFailure(failure -> System.out.println("Server failed to start: " + failure))
                 .flatMap(ActiveServerContext::shutdownPromise)
                 .syncWait();
+
+        System.out.println(Instant.now());
     }
 }
