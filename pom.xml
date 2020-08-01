@@ -115,7 +115,9 @@
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang.support=ALL-UNNAMED
 
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.examples.async=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.examples.async.server=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.async=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.async.server=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.scheduler=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.scheduler.impl=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io=ALL-UNNAMED
