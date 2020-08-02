@@ -341,7 +341,7 @@ class PromiseTest {
     @Test
     void ioTaskCanBeSubmitted() {
         final var promise = Promise.<String>promise()
-                                   .async((p, io) -> io.nop()
+                                   .async((p, io) -> io.nop(Promise.promise())
                                                        .thenDo(() -> p.syncOk("success")));
 
         promise.syncWait(timeout(1).seconds())

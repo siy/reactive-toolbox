@@ -1,6 +1,5 @@
 package org.reactivetoolbox.io;
 
-import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.lang.functional.Unit;
@@ -43,7 +42,6 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.function.Consumer;
 
-import static org.reactivetoolbox.core.lang.Tuple.tuple;
 import static org.reactivetoolbox.core.lang.functional.Result.flatten;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.core.lang.functional.Unit.unit;
@@ -118,16 +116,6 @@ public class Proactor implements Submitter {
     private void processSubmissions() {
         int count = uringHolder.availableSQSpace();
 
-//        while (count > 0 /* && !queue.isEmpty() */) {
-//            final var element = queue.pollFirst();
-//
-//            if (element != null) {
-//                uringHolder.submit(element);
-//            } else {
-//                break;
-//            }
-//            count--;
-//        }
         while (count > 0 && !queue.isEmpty()) {
             uringHolder.submit(queue.removeFirst());
             count--;
@@ -142,292 +130,308 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public Promise<Unit> nop() {
-        return Promise.promise(promise -> {
-            final int key = pendingCompletions.allocKey((entry -> promise.syncResolve(UNIT_RESULT)));
+    public Promise<Unit> nop(final Promise<Unit> completion) {
 
-            queue.add(sqe -> sqe.userData(key)
-                                .opcode(AsyncOperation.IORING_OP_NOP.opcode()));
-        });
+        final int key = pendingCompletions.allocKey((entry -> completion.syncResolve(UNIT_RESULT)));
+
+        queue.add(sqe -> sqe.userData(key)
+                            .opcode(AsyncOperation.IORING_OP_NOP.opcode()));
+        return completion;
     }
 
     @Override
-    public Promise<Duration> delay(final Timeout timeout) {
-        return Promise.promise(promise -> {
-            final var timeSpec = OffHeapTimeSpec.forTimeout(timeout);
-            final var startNanos = System.nanoTime();
-            final var key = pendingCompletions.allocKey(entry -> {
-                timeSpec.dispose();
+    public Promise<Duration> delay(final Promise<Duration> completion, final Timeout timeout) {
+        final var timeSpec = OffHeapTimeSpec.forTimeout(timeout);
+        final var startNanos = System.nanoTime();
+        final var key = pendingCompletions.allocKey(entry -> {
+            timeSpec.dispose();
 
-                final var totalNanos = System.nanoTime() - startNanos;
+            final var totalNanos = System.nanoTime() - startNanos;
 
-                if (Math.abs(entry.res()) != NativeError.ETIME.typeCode()) {
-                    promise.syncFail(NativeError.fromCode(entry.res())
-                                                .asFailure());
-                } else {
-                    promise.syncOk(timeout(totalNanos)
-                                           .nanos()
-                                           .asDuration());
-                }
-            });
-
-            queue.add(sqe -> sqe.userData(key)
-                                .opcode(AsyncOperation.IORING_OP_TIMEOUT.opcode())
-                                .addr(timeSpec.address())
-                                .fd(-1)
-                                .len(1)
-                                .off(1));
+            if (Math.abs(entry.res()) != NativeError.ETIME.typeCode()) {
+                completion.syncFail(NativeError.fromCode(entry.res())
+                                               .asFailure());
+            } else {
+                completion.syncOk(timeout(totalNanos)
+                                          .nanos()
+                                          .asDuration());
+            }
         });
+
+        queue.add(sqe -> sqe.userData(key)
+                            .opcode(AsyncOperation.IORING_OP_TIMEOUT.opcode())
+                            .addr(timeSpec.address())
+                            .fd(-1)
+                            .len(1)
+                            .off(1));
+        return completion;
     }
 
     @Override
-    public Promise<Unit> closeFileDescriptor(final FileDescriptor fd, final Option<Timeout> timeout) {
-        return Promise.promise(promise -> {
-            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(v -> unit())));
+    public Promise<Unit> closeFileDescriptor(final Promise<Unit> completion, final FileDescriptor fd, final Option<Timeout> timeout) {
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(v -> unit())));
 
-            queue.add(sqe -> sqe.userData(key)
-                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
-                                .opcode(AsyncOperation.IORING_OP_CLOSE.opcode())
-                                .fd(fd.descriptor()));
+        queue.add(sqe -> sqe.userData(key)
+                            .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                            .opcode(AsyncOperation.IORING_OP_CLOSE.opcode())
+                            .fd(fd.descriptor()));
 
-            timeout.whenPresent(this::appendTimeout);
-        });
+        timeout.whenPresent(this::appendTimeout);
+
+        return completion;
     }
 
     @Override
-    public Promise<Tuple2<FileDescriptor, SizeT>> read(final FileDescriptor fd,
-                                                       final OffHeapBuffer buffer,
-                                                       final OffsetT offset,
-                                                       final Option<Timeout> timeout) {
-        return Promise.promise(promise -> {
-            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(bytesRead -> {
-                buffer.used(bytesRead);
-                return tuple(fd, sizeT(bytesRead));
-            })));
+    public Promise<SizeT> read(final Promise<SizeT> completion,
+                               final FileDescriptor fd,
+                               final OffHeapBuffer buffer,
+                               final OffsetT offset,
+                               final Option<Timeout> timeout) {
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(bytesRead -> sizeT(buffer.used(bytesRead).used()))));
 
-            queue.add(sqe -> sqe.userData(key)
-                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
-                                .opcode(AsyncOperation.IORING_OP_READ.opcode())
-                                .fd(fd.descriptor())
-                                .addr(buffer.address())
-                                .len(buffer.size())
-                                .off(offset.value()));
+        queue.add(sqe -> sqe.userData(key)
+                            .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                            .opcode(AsyncOperation.IORING_OP_READ.opcode())
+                            .fd(fd.descriptor())
+                            .addr(buffer.address())
+                            .len(buffer.size())
+                            .off(offset.value()));
 
-            timeout.whenPresent(this::appendTimeout);
-        });
+        timeout.whenPresent(this::appendTimeout);
+        return completion;
     }
 
     @Override
-    public Promise<Tuple2<FileDescriptor, SizeT>> write(final FileDescriptor fd,
-                                                        final OffHeapBuffer buffer,
-                                                        final OffsetT offset,
-                                                        final Option<Timeout> timeout) {
-        return Promise.promise(promise -> {
-            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(bytesWritten -> tuple(fd, sizeT(bytesWritten)))));
+    public Promise<SizeT> write(final Promise<SizeT> completion,
+                                final FileDescriptor fd,
+                                final OffHeapBuffer buffer,
+                                final OffsetT offset,
+                                final Option<Timeout> timeout) {
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(SizeT::sizeT)));
 
-            queue.add(sqe -> sqe.userData(key)
-                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
-                                .opcode(AsyncOperation.IORING_OP_WRITE.opcode())
-                                .fd(fd.descriptor())
-                                .addr(buffer.address())
-                                .len(buffer.used())
-                                .off(offset.value()));
+        queue.add(sqe -> sqe.userData(key)
+                            .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                            .opcode(AsyncOperation.IORING_OP_WRITE.opcode())
+                            .fd(fd.descriptor())
+                            .addr(buffer.address())
+                            .len(buffer.used())
+                            .off(offset.value()));
 
-            timeout.whenPresent(this::appendTimeout);
-        });
+        timeout.whenPresent(this::appendTimeout);
+        return completion;
     }
 
     @Override
-    public Promise<SizeT> splice(final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
-        return Promise.promise(promise -> {
-            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(SizeT::sizeT)));
+    public Promise<SizeT> splice(final Promise<SizeT> completion, final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
 
-            queue.add(sqe -> sqe.userData(key)
-                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
-                                .opcode(AsyncOperation.IORING_OP_SPLICE.opcode())
-                                .fd(descriptor.toDescriptor().descriptor())
-                                .len((int) descriptor.bytesToCopy().value())
-                                .off(descriptor.toOffset().value())
-                                .spliceFdIn(descriptor.fromDescriptor().descriptor())
-                                .spliceOffIn(descriptor.fromOffset().value())
-                                .spliceFlags(Bitmask.combine(descriptor.flags())));
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(SizeT::sizeT)));
 
-            timeout.whenPresent(this::appendTimeout);
-        });
+        queue.add(sqe -> sqe.userData(key)
+                            .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                            .opcode(AsyncOperation.IORING_OP_SPLICE.opcode())
+                            .fd(descriptor.toDescriptor().descriptor())
+                            .len((int) descriptor.bytesToCopy().value())
+                            .off(descriptor.toOffset().value())
+                            .spliceFdIn(descriptor.fromDescriptor().descriptor())
+                            .spliceOffIn(descriptor.fromOffset().value())
+                            .spliceFlags(Bitmask.combine(descriptor.flags())));
+
+        timeout.whenPresent(this::appendTimeout);
+        return completion;
     }
 
     @Override
-    public Promise<FileDescriptor> open(final Path path,
+    public Promise<FileDescriptor> open(final Promise<FileDescriptor> completion,
+                                        final Path path,
                                         final EnumSet<OpenFlags> flags,
                                         final EnumSet<FilePermission> mode,
                                         final Option<Timeout> timeout) {
-        return Promise.promise(promise -> {
-            final var rawPath = OffHeapCString.cstring(path.toString());
-            final var key = pendingCompletions.allocKey(entry -> {
-                promise.syncResolve(entry.result(FileDescriptor::file));
-                rawPath.dispose();
-            });
-
-            queue.add(sqe -> sqe.userData(key)
-                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
-                                .opcode(AsyncOperation.IORING_OP_OPENAT.opcode())
-                                .fd(AT_FDCWD)
-                                .addr(rawPath.address())
-                                .len(Bitmask.combine(mode))
-                                .openFlags(Bitmask.combine(flags)));
-
-            timeout.whenPresent(this::appendTimeout);
+        final var rawPath = OffHeapCString.cstring(path.toString());
+        final var key = pendingCompletions.allocKey(entry -> {
+            completion.syncResolve(entry.result(FileDescriptor::file));
+            rawPath.dispose();
         });
+
+        queue.add(sqe -> sqe.userData(key)
+                            .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                            .opcode(AsyncOperation.IORING_OP_OPENAT.opcode())
+                            .fd(AT_FDCWD)
+                            .addr(rawPath.address())
+                            .len(Bitmask.combine(mode))
+                            .openFlags(Bitmask.combine(flags)));
+
+        timeout.whenPresent(this::appendTimeout);
+        return completion;
     }
 
     @Override
-    public Promise<FileDescriptor> socket(final AddressFamily addressFamily,
+    public Promise<FileDescriptor> socket(final Promise<FileDescriptor> completion,
+                                          final AddressFamily addressFamily,
                                           final SocketType socketType,
                                           final EnumSet<SocketFlag> openFlags,
                                           final EnumSet<SocketOption> options) {
-        return nop().mapResult($ -> UringHolder.socket(addressFamily, socketType, openFlags, options));
+        nop(Promise.promise())
+                .thenDo(() -> completion.resolve(UringHolder.socket(addressFamily,
+                                                                    socketType,
+                                                                    openFlags,
+                                                                    options)));
+        return completion;
     }
 
     @Override
-    public Promise<ServerContext<?>> server(final SocketAddress<?> socketAddress,
+    public Promise<ServerContext<?>> server(final Promise<ServerContext<?>> completion,
+                                            final SocketAddress<?> socketAddress,
                                             final SocketType socketType,
                                             final EnumSet<SocketFlag> openFlags,
                                             final SizeT queueDepth,
                                             final EnumSet<SocketOption> options) {
-        return nop().mapResult($ -> UringHolder.server(socketAddress, socketType, openFlags, options, queueDepth));
+        nop(Promise.promise())
+                .thenDo(() -> completion.resolve(UringHolder.server(socketAddress,
+                                                                    socketType,
+                                                                    openFlags,
+                                                                    options,
+                                                                    queueDepth)));
+        return completion;
     }
 
     @Override
-    public Promise<ClientConnection<?>> accept(final FileDescriptor socket, final EnumSet<SocketFlag> flags) {
-        return Promise.promise(promise -> {
-            //TODO: add support for v6
-            final var clientAddress = OffHeapSocketAddress.addressIn();
-            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(FileDescriptor::socket)
-                                                                                          .flatMap(fd -> flatten(ok(fd), clientAddress.extract())
-                                                                                                  .map(tuple -> tuple.map(ClientConnection::connectionIn))))
-                                                                        .thenDo(clientAddress::dispose));
+    public Promise<ClientConnection<?>> accept(final Promise<ClientConnection<?>> completion,
+                                               final FileDescriptor socket,
+                                               final EnumSet<SocketFlag> flags) {
+        //TODO: add support for v6
+        final var clientAddress = OffHeapSocketAddress.addressIn();
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(FileDescriptor::socket)
+                                                                                         .flatMap(fd -> flatten(ok(fd), clientAddress.extract())
+                                                                                                 .map(tuple -> tuple.map(ClientConnection::connectionIn))))
+                                                                       .thenDo(clientAddress::dispose));
 
-            queue.add(sqe -> sqe.userData(key)
-                                .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
-                                .fd(socket.descriptor())
-                                .addr(clientAddress.sockAddrPtr())
-                                .off(clientAddress.sizePtr())
-                                .acceptFlags(Bitmask.combine(flags)));
-        });
+        queue.add(sqe -> sqe.userData(key)
+                            .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
+                            .fd(socket.descriptor())
+                            .addr(clientAddress.sockAddrPtr())
+                            .off(clientAddress.sizePtr())
+                            .acceptFlags(Bitmask.combine(flags)));
+        return completion;
     }
 
     @Override
-    public Promise<FileDescriptor> connect(final FileDescriptor socket, final SocketAddress<?> address, final Option<Timeout> timeout) {
-        return Promise.promise(promise -> {
-            final var clientAddress = OffHeapSocketAddress.unsafeSocketAddress(address);
+    public Promise<FileDescriptor> connect(final Promise<FileDescriptor> completion,
+                                           final FileDescriptor socket,
+                                           final SocketAddress<?> address,
+                                           final Option<Timeout> timeout) {
+        final var clientAddress = OffHeapSocketAddress.unsafeSocketAddress(address);
 
-            if (clientAddress == null) {
-                promise.syncFail(NativeError.EPFNOSUPPORT.asFailure());
-                return;
-            }
+        if (clientAddress == null) {
+            return completion.syncFail(NativeError.EPFNOSUPPORT.asFailure());
+        }
 
-            final var key = pendingCompletions.allocKey((entry -> {
-                promise.syncResolve(entry.result(v -> socket));
-                clientAddress.dispose();
-            }));
+        final var key = pendingCompletions.allocKey((entry -> {
+            completion.syncResolve(entry.result(v -> socket));
+            clientAddress.dispose();
+        }));
 
-            queue.add(sqe -> sqe.userData(key)
-                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
-                                .opcode(AsyncOperation.IORING_OP_CONNECT.opcode())
-                                .fd(socket.descriptor())
-                                .addr(clientAddress.sockAddrPtr())
-                                .off(clientAddress.sockAddrSize()));
+        queue.add(sqe -> sqe.userData(key)
+                            .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                            .opcode(AsyncOperation.IORING_OP_CONNECT.opcode())
+                            .fd(socket.descriptor())
+                            .addr(clientAddress.sockAddrPtr())
+                            .off(clientAddress.sockAddrSize()));
 
-            timeout.whenPresent(this::appendTimeout);
-        });
+        timeout.whenPresent(this::appendTimeout);
+        return completion;
     }
 
     @Override
-    public Promise<FileStat> stat(final Path path, final EnumSet<StatFlag> flags, final EnumSet<StatMask> mask) {
-        return Promise.promise(promise -> {
-            //Reset EMPTY_PATH and force use the path.
-            final var statFlags = Bitmask.combine(flags) & ~StatFlag.EMPTY_PATH.mask();
-            final var statMask = Bitmask.combine(mask);
-            final var fileStat = OffHeapFileStat.fileStat();
-            final var rawPath = OffHeapCString.cstring(path.toString());
-            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result($ -> fileStat.extract()))
-                                                                        .thenDo(fileStat::dispose)
-                                                                        .thenDo(rawPath::dispose));
+    public Promise<FileStat> stat(final Promise<FileStat> completion,
+                                  final Path path,
+                                  final EnumSet<StatFlag> flags,
+                                  final EnumSet<StatMask> mask) {
+        //Reset EMPTY_PATH and force use the path.
+        final var statFlags = Bitmask.combine(flags) & ~StatFlag.EMPTY_PATH.mask();
+        final var statMask = Bitmask.combine(mask);
+        final var fileStat = OffHeapFileStat.fileStat();
+        final var rawPath = OffHeapCString.cstring(path.toString());
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result($ -> fileStat.extract()))
+                                                                       .thenDo(fileStat::dispose)
+                                                                       .thenDo(rawPath::dispose));
 
-            queue.add(sqe -> sqe.userData(key)
-                                .fd(AT_FDCWD)
-                                .addr(rawPath.address())
-                                .len(statMask)
-                                .off(fileStat.address())
-                                .statxFlags(statFlags)
-                                .opcode(AsyncOperation.IORING_OP_STATX.opcode()));
-        });
+        queue.add(sqe -> sqe.userData(key)
+                            .fd(AT_FDCWD)
+                            .addr(rawPath.address())
+                            .len(statMask)
+                            .off(fileStat.address())
+                            .statxFlags(statFlags)
+                            .opcode(AsyncOperation.IORING_OP_STATX.opcode()));
+        return completion;
     }
 
     @Override
-    public Promise<FileStat> stat(final FileDescriptor fd, final EnumSet<StatFlag> flags, final EnumSet<StatMask> mask) {
-        return Promise.promise(promise -> {
-            //Set EMPTY_PATH and force use of file descriptor.
-            final var statFlags = Bitmask.combine(flags) | StatFlag.EMPTY_PATH.mask();
-            final var statMask = Bitmask.combine(mask);
-            final var fileStat = OffHeapFileStat.fileStat();
-            final var rawPath = OffHeapCString.cstring("");
-            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result($ -> fileStat.extract()))
-                                                                        .thenDo(fileStat::dispose)
-                                                                        .thenDo(rawPath::dispose));
+    public Promise<FileStat> stat(final Promise<FileStat> completion,
+                                  final FileDescriptor fd,
+                                  final EnumSet<StatFlag> flags,
+                                  final EnumSet<StatMask> mask) {
+        //Set EMPTY_PATH and force use of file descriptor.
+        final var statFlags = Bitmask.combine(flags) | StatFlag.EMPTY_PATH.mask();
+        final var statMask = Bitmask.combine(mask);
+        final var fileStat = OffHeapFileStat.fileStat();
+        final var rawPath = OffHeapCString.cstring("");
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result($ -> fileStat.extract()))
+                                                                       .thenDo(fileStat::dispose)
+                                                                       .thenDo(rawPath::dispose));
 
-            queue.add(sqe -> sqe.userData(key)
-                                .fd(fd.descriptor())
-                                .addr(rawPath.address())
-                                .len(statMask)
-                                .off(fileStat.address())
-                                .statxFlags(statFlags)
-                                .opcode(AsyncOperation.IORING_OP_STATX.opcode()));
-        });
+        queue.add(sqe -> sqe.userData(key)
+                            .fd(fd.descriptor())
+                            .addr(rawPath.address())
+                            .len(statMask)
+                            .off(fileStat.address())
+                            .statxFlags(statFlags)
+                            .opcode(AsyncOperation.IORING_OP_STATX.opcode()));
+        return completion;
     }
 
     @Override
-    public Promise<Tuple2<FileDescriptor, SizeT>> readVector(final FileDescriptor fileDescriptor,
-                                                             final OffsetT offset,
-                                                             final Option<Timeout> timeout,
-                                                             final OffHeapBuffer... buffers) {
-        return Promise.promise(promise -> {
-            final var ioVector = OffHeapIoVector.withBuffers(buffers);
-            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(bytesRead -> tuple(fileDescriptor, sizeT(bytesRead))))
-                                                                        .thenDo(ioVector::dispose));
+    public Promise<SizeT> readVector(final Promise<SizeT> completion,
+                                     final FileDescriptor fileDescriptor,
+                                     final OffsetT offset,
+                                     final Option<Timeout> timeout,
+                                     final OffHeapBuffer... buffers) {
+        final var ioVector = OffHeapIoVector.withBuffers(buffers);
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(SizeT::sizeT))
+                                                                       .thenDo(ioVector::dispose));
 
-            queue.add(sqe -> sqe.userData(key)
-                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
-                                .opcode(AsyncOperation.IORING_OP_READV.opcode())
-                                .fd(fileDescriptor.descriptor())
-                                .addr(ioVector.address())
-                                .len(ioVector.length())
-                                .off(offset.value()));
+        queue.add(sqe -> sqe.userData(key)
+                            .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                            .opcode(AsyncOperation.IORING_OP_READV.opcode())
+                            .fd(fileDescriptor.descriptor())
+                            .addr(ioVector.address())
+                            .len(ioVector.length())
+                            .off(offset.value()));
 
-            timeout.whenPresent(this::appendTimeout);
-        });
+        timeout.whenPresent(this::appendTimeout);
+        return completion;
     }
 
     @Override
-    public Promise<Tuple2<FileDescriptor, SizeT>> writeVector(final FileDescriptor fileDescriptor,
-                                                              final OffsetT offset,
-                                                              final Option<Timeout> timeout,
-                                                              final OffHeapBuffer... buffers) {
-        return Promise.promise(promise -> {
-            final var ioVector = OffHeapIoVector.withBuffers(buffers);
-            final var key = pendingCompletions.allocKey(entry -> promise.syncResolve(entry.result(bytesWritten -> tuple(fileDescriptor, sizeT(bytesWritten))))
-                                                                        .thenDo(ioVector::dispose));
+    public Promise<SizeT> writeVector(final Promise<SizeT> completion,
+                                      final FileDescriptor fileDescriptor,
+                                      final OffsetT offset,
+                                      final Option<Timeout> timeout,
+                                      final OffHeapBuffer... buffers) {
 
-            queue.add(sqe -> sqe.userData(key)
-                                .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
-                                .opcode(AsyncOperation.IORING_OP_WRITEV.opcode())
-                                .fd(fileDescriptor.descriptor())
-                                .addr(ioVector.address())
-                                .len(ioVector.length())
-                                .off(offset.value()));
+        final var ioVector = OffHeapIoVector.withBuffers(buffers);
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(SizeT::sizeT))
+                                                                       .thenDo(ioVector::dispose));
 
-            timeout.whenPresent(this::appendTimeout);
-        });
+        queue.add(sqe -> sqe.userData(key)
+                            .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
+                            .opcode(AsyncOperation.IORING_OP_WRITEV.opcode())
+                            .fd(fileDescriptor.descriptor())
+                            .addr(ioVector.address())
+                            .len(ioVector.length())
+                            .off(offset.value()));
+
+        timeout.whenPresent(this::appendTimeout);
+        return completion;
     }
 
     private void appendTimeout(final Timeout t) {

@@ -185,7 +185,7 @@ public final class ULID implements Comparable<ULID> {
         return new ULID(representation, timestamp, entropy);
     }
 
-    private static ULID generate(long timestamp, byte[] entropy) {
+    private static ULID generate(final long timestamp, final byte[] entropy) {
         final var chars = new char[ULID_LENGTH];
 
         // time
@@ -221,14 +221,14 @@ public final class ULID implements Comparable<ULID> {
         return new ULID(new String(chars), timestamp, entropy);
     }
 
-    public static Result<CharSequence> validate(CharSequence input) {
+    public static Result<CharSequence> validate(final CharSequence input) {
         if (input == null || input.length() != ULID_LENGTH) {
             return Result.fail(Errors.NOT_VALID("Input is too short or empty"));
         }
 
         for (int i = 0; i < ULID_LENGTH; i++) {
             /* We only care for chars between 0x00 and 0xFF. */
-            char c = input.charAt(i);
+            final char c = input.charAt(i);
             if (c < 0 || c > V.length || V[c] == (byte) 0xFF) {
                 return Result.fail(Errors.NOT_VALID("Invalid character {0} in ULID string", c));
             }
@@ -277,5 +277,10 @@ public final class ULID implements Comparable<ULID> {
     @Override
     public int hashCode() {
         return representation.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "ULID(" + representation + ")";
     }
 }

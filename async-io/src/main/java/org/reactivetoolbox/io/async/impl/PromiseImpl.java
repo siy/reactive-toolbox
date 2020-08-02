@@ -22,7 +22,6 @@ import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.core.meta.AppMetaRepository;
 import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.Submitter;
-import org.reactivetoolbox.io.async.util.StackingCollector;
 import org.reactivetoolbox.io.scheduler.TaskScheduler;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
@@ -38,11 +37,20 @@ import java.util.function.Consumer;
  */
 public class PromiseImpl<T> implements Promise<T> {
     private final AtomicReference<Result<T>> value = new AtomicReference<>(null);
-    private final StackingCollector<Consumer<Result<T>>> actions = StackingCollector.stackingCollector();
     private final CountDownLatch actionsHandled = new CountDownLatch(1);
+    private final AtomicReference<Node<T>> head = new AtomicReference<>();
 
     private static final AtomicReference<Consumer<Throwable>> exceptionConsumer =
             new AtomicReference<>(e -> SingletonHolder.logger().debug("Exception while applying handlers", e));
+
+    private static final class Node<T> {
+        public Consumer<Result<T>> element;
+        public Node<T> nextNode;
+
+        public Node(final Consumer<Result<T>> element) {
+            this.element = element;
+        }
+    }
 
     private PromiseImpl() {
     }
@@ -81,6 +89,9 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> onResult(final Consumer<Result<T>> action) {
+        //Note: this is very performance critical method, so internals are inlined
+        //Warning: do not change unless you clearly understand what are you doing!
+
         final Consumer<Result<T>> safeAction = result -> {
             try {
                 action.accept(result);
@@ -94,11 +105,18 @@ public class PromiseImpl<T> implements Promise<T> {
             return this;
         }
 
-        actions.push(safeAction);
+        final var newHead = new Node<>(safeAction);
+        Node<T> oldHead;
+
+        do {
+            oldHead = head.get();
+            newHead.nextNode = oldHead;
+        } while (!head.compareAndSet(oldHead, newHead));
 
         if (value.get() != null) {
             handleActions();
         }
+
         return this;
     }
 
@@ -108,13 +126,37 @@ public class PromiseImpl<T> implements Promise<T> {
     }
 
     private void handleActions() {
-        final var result = this.value.get();
+        //Note: this is very performance critical method, so internals are inlined
+        //Warning: do not change unless you clearly understand what are you doing!
+        final var result = value.get();
 
-        while (true) {
-            if (!actions.swapAndApplyFIFO(action -> action.accept(result))) {
-                break;
+        boolean hasElements;
+        do {
+            Node<T> head;
+            do {
+                head = this.head.get();
+            } while (!this.head.compareAndSet(head, null));
+
+            Node<T> current = head;
+            Node<T> prev = null;
+            Node<T> next = null;
+
+            while(current != null) {
+                next = current.nextNode;
+                current.nextNode = prev;
+                prev = current;
+                current = next;
             }
-        }
+
+            hasElements = prev != null;
+
+            while (prev != null) {
+                prev.element.accept(result);
+                prev = prev.nextNode;
+            }
+
+        } while (hasElements);
+
         actionsHandled.countDown();
     }
 

@@ -3,6 +3,7 @@ package org.reactivetoolbox.io.async.net.context;
 import org.reactivetoolbox.core.lang.functional.Unit;
 import org.reactivetoolbox.core.lang.support.ULID;
 import org.reactivetoolbox.io.async.Promise;
+import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.ClientConnection;
 import org.reactivetoolbox.io.async.net.lifecycle.LifeCycle;
@@ -57,9 +58,9 @@ public class ActiveServerContext {
                             .apply(connectionContext(this, clientConnection));
     }
 
-    public static Promise<Unit> echo(final ReadConnectionContext context) {
-        return Promise.asyncPromise((promise, submitter) -> submitter.write(context.socket(), context.buffer())
-                                                                     .chainTo(promise, Unit::unit));
+    public static Promise<SizeT> echo(final ReadConnectionContext context) {
+        return Promise.asyncPromise((promise, submitter) ->
+                                            submitter.write(promise, context.socket(), context.buffer()));
     }
 
     public void shutdown() {
