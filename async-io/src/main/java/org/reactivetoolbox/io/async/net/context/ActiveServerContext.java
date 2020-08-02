@@ -33,7 +33,7 @@ public class ActiveServerContext {
     public static Promise<Unit> defaultConnectionHandler(final ConnectionContext connectionContext) {
         final var registry = connectionContext.serverContext().registry().add(connectionContext);
 
-        return Promise.asyncPromise(connectionContext::processConnection)
+        return Promise.promise(connectionContext::processConnection)
                       .thenDo(() -> registry.remove(connectionContext));
     }
 
