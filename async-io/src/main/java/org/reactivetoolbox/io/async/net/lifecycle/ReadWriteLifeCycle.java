@@ -61,11 +61,11 @@ public class ReadWriteLifeCycle implements LifeCycle {
     }
 
     private void rwCycle(final ReadConnectionContext connectionContext, final Promise<Unit> onClose) {
-        Promise.<SizeT>asyncPromise((promise, submitter) -> submitter.read(promise, connectionContext.socket(), connectionContext.buffer(), timeout))
-                .flatMap(sizeRead -> sizeRead.value() > 0
-                                     ? handler.apply(connectionContext)
-                                     : Promise.readyFail(EOF))
-                .onSuccess($ -> rwCycle(connectionContext, onClose))
+        Promise.<SizeT>asyncPromise((promise, submitter) -> submitter.read(promise, connectionContext.socket(), connectionContext.buffer(), timeout)
+                                                                     .flatMap(sizeRead -> sizeRead.value() > 0
+                                                                                              ? handler.apply(connectionContext)
+                                                                                                       .onSuccess($ -> rwCycle(connectionContext, onClose))
+                                                                                              : Promise.readyFail(EOF)))
                 .onFailure(onClose::fail);
     }
 }

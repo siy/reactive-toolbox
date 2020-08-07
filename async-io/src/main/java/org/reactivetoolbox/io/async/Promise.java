@@ -246,9 +246,15 @@ public interface Promise<T> {
      *         (if current instance is resolved to success).
      */
     default <R> Promise<R> flatMap(final FN1<Promise<R>, T> mapper) {
-        return promise(promise -> onResult(result -> result.fold(error -> promise.resolve(Result.fail(error)),
-                                                                 success -> mapper.apply(success)
-                                                                                  .onResult(promise::resolve))));
+        final var resultPromise = new PromiseImpl<R>();
+
+        onResult(result -> resultPromise.async(mapResult -> result.fold(failure -> mapResult.syncResolve((Result<R>) result),
+                                                                        success -> mapper.apply(success).onResult(mapResult::syncResolve))));
+        return resultPromise;
+
+//        return promise(promise -> onResult(result -> result.fold(error -> promise.resolve(Result.fail(error)),
+//                                                                 success -> mapper.apply(success)
+//                                                                                  .onResult(promise::resolve))));
     }
 
     /**
@@ -260,9 +266,15 @@ public interface Promise<T> {
      *         (if current instance is resolved to success).
      */
     default <R> Promise<R> syncFlatMap(final FN1<Promise<R>, T> mapper) {
-        return promise(promise -> onResult(result -> result.fold(error -> promise.syncResolve(Result.fail(error)),
-                                                                 success -> mapper.apply(success)
-                                                                                  .onResult(promise::syncResolve))));
+        final var mapResult = new PromiseImpl<R>();
+
+        onResult(result -> result.fold(failure -> mapResult.syncResolve((Result<R>) result),
+                                       success -> mapper.apply(success).onResult(mapResult::syncResolve)));
+        return mapResult;
+//
+//        return promise(promise -> onResult(result -> result.fold(error -> promise.syncResolve(Result.fail(error)),
+//                                                                 success -> mapper.apply(success)
+//                                                                                  .onResult(promise::syncResolve))));
     }
 
     /**
@@ -274,25 +286,25 @@ public interface Promise<T> {
      * @return Created instance
      */
     default <R> Promise<R> syncMap(final FN1<R, T> mapper) {
-        final var result = Promise.<R>promise();
+        final var result = new PromiseImpl<R>();
         onResult(value -> result.syncResolve(value.map(mapper)));
         return result;
     }
 
     default <R> Promise<R> map(final FN1<R, T> mapper) {
-        final var result = Promise.<R>promise();
+        final var result = new PromiseImpl<R>();
         onResult(value -> result.resolve(value.map(mapper)));
         return result;
     }
 
     default <R> Promise<R> syncMapResult(final FN1<Result<R>, T> mapper) {
-        final var result = Promise.<R>promise();
+        final var result = new PromiseImpl<R>();
         onResult(value -> result.syncResolve(value.flatMap(mapper)));
         return result;
     }
 
     default <R> Promise<R> mapResult(final FN1<Result<R>, T> mapper) {
-        final var result = Promise.<R>promise();
+        final var result = new PromiseImpl<R>();
         onResult(value -> result.resolve(value.flatMap(mapper)));
         return result;
     }
@@ -321,7 +333,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> promise() {
-        return PromiseImpl.promise();
+        return new PromiseImpl<>();
     }
 
     /**
@@ -332,7 +344,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> promise(final Consumer<Promise<T>> setup) {
-        final var result = Promise.<T>promise();
+        final var result = new PromiseImpl<T>();
 
         setup.accept(result);
 
@@ -347,7 +359,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> asyncPromise(final Consumer<Promise<T>> task) {
-        return Promise.<T>promise().async(task);
+        return new PromiseImpl<T>().async(task);
     }
 
     /**
@@ -360,7 +372,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> asyncPromise(final BiConsumer<Promise<T>, Submitter> task) {
-        return Promise.<T>promise().async(task);
+        return new PromiseImpl<T>().async(task);
     }
 
     /**
@@ -369,7 +381,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> ready(final Result<T> result) {
-        return Promise.<T>promise().syncResolve(result);
+        return new PromiseImpl<T>().syncResolve(result);
     }
 
     /**

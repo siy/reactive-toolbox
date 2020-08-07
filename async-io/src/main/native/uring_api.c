@@ -37,7 +37,32 @@ JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_io_uring_Uring_spaceLeft(JNIEnv
 }
 
 JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_io_uring_Uring_nextSQEntry(JNIEnv *env, jclass clazz, jlong base_address) {
+    if (io_uring_sq_space_left(RING_PTR) < 1) {
+        io_uring_submit_and_wait(RING_PTR, 1);
+    }
+
     return (jlong) io_uring_get_sqe(RING_PTR);
+}
+
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_io_uring_Uring_peekSQEntries(JNIEnv *env, jclass clazz, jlong base_address, jlong submissions_address, jlong space) {
+    if (io_uring_sq_space_left(RING_PTR) < 1) {
+        io_uring_submit_and_wait(RING_PTR, 1);
+    }
+
+    int count = 0;
+    struct io_uring_sqe** buffer = (struct io_uring_sqe **) submissions_address;
+
+    for(count = 0; count < space; count++) {
+        struct io_uring_sqe* entry = io_uring_get_sqe(RING_PTR);
+
+        if (!entry) {
+            break;
+        }
+
+        buffer[count] = entry;
+    }
+
+    return (jint) count;
 }
 
 JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_io_uring_Uring_submitAndWait(JNIEnv *env, jclass clazz, jlong base_address, jint count) {

@@ -1,8 +1,6 @@
 package org.reactivetoolbox.io.uring.struct.raw;
 
-import org.reactivetoolbox.core.lang.functional.Functions.FN1;
-import org.reactivetoolbox.core.lang.functional.Result;
-import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.uring.DetachedCQEntry;
 import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets;
 
@@ -33,8 +31,8 @@ public class CompletionQueueEntry extends AbstractExternalRawStructure<Completio
         return getInt(flags);
     }
 
-    public <T> Result<T> result(final FN1<T, Integer> constructor) {
-        return NativeError.result(res(), constructor);
+    public DetachedCQEntry extract() {
+        return new DetachedCQEntry(res(), flags());
     }
 
     @Override

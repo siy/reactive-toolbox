@@ -37,7 +37,7 @@ import java.util.function.Consumer;
  */
 public class PromiseImpl<T> implements Promise<T> {
     private final AtomicReference<Result<T>> value = new AtomicReference<>(null);
-    private final CountDownLatch actionsHandled = new CountDownLatch(1);
+//    private final CountDownLatch actionsHandled = new CountDownLatch(1);
     private final AtomicReference<Node<T>> head = new AtomicReference<>();
 
     private static final AtomicReference<Consumer<Throwable>> exceptionConsumer =
@@ -52,15 +52,8 @@ public class PromiseImpl<T> implements Promise<T> {
         }
     }
 
-    private PromiseImpl() {
-    }
-
     public static void exceptionConsumer(final Consumer<Throwable> consumer) {
         exceptionConsumer.set(consumer);
-    }
-
-    public static <T> Promise<T> promise() {
-        return new PromiseImpl<>();
     }
 
     /**
@@ -157,7 +150,7 @@ public class PromiseImpl<T> implements Promise<T> {
 
         } while (hasElements);
 
-        actionsHandled.countDown();
+//        actionsHandled.countDown();
     }
 
     /**
@@ -165,6 +158,9 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncWait() {
+        final CountDownLatch actionsHandled = new CountDownLatch(1);
+        thenDo(actionsHandled::countDown);
+
         try {
             actionsHandled.await();
         } catch (final Exception e) {
@@ -178,6 +174,9 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncWait(final Timeout timeout) {
+        final CountDownLatch actionsHandled = new CountDownLatch(1);
+        thenDo(actionsHandled::countDown);
+
         try {
             if (!actionsHandled.await(timeout.asMillis(), TimeUnit.MILLISECONDS)) {
                 syncFail(Errors.TIMEOUT);
@@ -208,7 +207,7 @@ public class PromiseImpl<T> implements Promise<T> {
     @Override
     public Promise<T> async(final BiConsumer<Promise<T>, Submitter> task) {
         SingletonHolder.scheduler()
-                       .submit(submitter -> task.accept(this, submitter));
+                       .submit((Submitter submitter) -> task.accept(this, submitter));
         return this;
     }
 
@@ -224,7 +223,8 @@ public class PromiseImpl<T> implements Promise<T> {
         return SingletonHolder.logger();
     }
 
-    private static final class SingletonHolder {
+//    private static final class SingletonHolder {
+    public static final class SingletonHolder {
         private static final int WORKER_SCHEDULER_SIZE = Math.max(Runtime.getRuntime().availableProcessors() - 1, 2);
 
         private static final TaskScheduler SCHEDULER = AppMetaRepository.instance()

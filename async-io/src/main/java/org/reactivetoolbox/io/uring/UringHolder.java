@@ -6,6 +6,7 @@ import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
+import org.reactivetoolbox.io.async.impl.PromiseImpl;
 import org.reactivetoolbox.io.async.net.AddressFamily;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
@@ -17,7 +18,9 @@ import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.raw.RawMemory;
 import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
+import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
+import java.util.Deque;
 import java.util.EnumSet;
 import java.util.function.Consumer;
 
@@ -30,12 +33,20 @@ import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.a
 import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.addressIn6;
 
 public class UringHolder implements AutoCloseable {
-    public static final int DEFAULT_QUEUE_SIZE = 128; //128 looks like a "sweet spot" for my HW/kernel
+    //    public static final int DEFAULT_QUEUE_SIZE = 4; // 1 - ~39-40K, 10 - ~126-132K
+//    public static final int DEFAULT_QUEUE_SIZE = 8; // 1 - ~44-45K, 10 - ~137K
+//    public static final int DEFAULT_QUEUE_SIZE = 16; // 1 - ~39-40K, 10 - ~129-134K, 100 - ~250-253K
+//    public static final int DEFAULT_QUEUE_SIZE = 32; // 1 - ~37-39K, 10 - ~121-127K, 100 - ~231-236K
+//    public static final int DEFAULT_QUEUE_SIZE = 64; // 1 - ~37-40K, 10 - ~120-129K, 100 - ~237K
+//    public static final int DEFAULT_QUEUE_SIZE = 128; // 1 - ~37-38K, 10 - ~123-134K, 100 - ~233K
+//    public static final int DEFAULT_QUEUE_SIZE = 256; // 1 - ~37-38K, 10 - ~118-126K, 100 - ~231K
+    public static final int DEFAULT_QUEUE_SIZE = 1024; // 1 - , 10 - , 100 -
 
     private static final int ENTRY_SIZE = 8;    // each entry is a 64-bit pointer
 
     private final long ringBase;
-    private final int numEntries;
+    private final int submissionEntries;
+    private final long submissionBuffer;
 
     private final int completionEntries;
     private final long completionBuffer;
@@ -46,9 +57,10 @@ public class UringHolder implements AutoCloseable {
     private boolean closed = false;
 
     private UringHolder(final int numEntries, final long ringBase) {
-        this.numEntries = numEntries;
+        submissionEntries = numEntries;
         completionEntries = numEntries * 2;
         this.ringBase = ringBase;
+        submissionBuffer = RawMemory.allocate(submissionEntries * ENTRY_SIZE);
         completionBuffer = RawMemory.allocate(completionEntries * ENTRY_SIZE);
         cqEntry = CompletionQueueEntry.at(0);
         sqEntry = SubmitQueueEntry.at(0);
@@ -61,41 +73,41 @@ public class UringHolder implements AutoCloseable {
         }
 
         Uring.close(ringBase);
+        RawMemory.dispose(submissionBuffer);
         RawMemory.dispose(completionBuffer);
         RawMemory.dispose(ringBase);
         closed = true;
     }
 
-    public UringHolder processCompletions(final Consumer<CompletionQueueEntry> consumer) {
-        long ready = 0;
+    public void processCompletions(final ObjectHeap<Consumer<DetachedCQEntry>> pendingCompletions) {
+        final long ready = Uring.peekCQ(ringBase, completionBuffer, completionEntries);
 
-        try {
-            ready = Uring.peekCQ(ringBase, completionBuffer, completionEntries);
-            for (long i = 0, address = completionBuffer; i < ready; i++, address += ENTRY_SIZE) {
-                cqEntry.reposition(RawMemory.getLong(address));
-                consumer.accept(cqEntry);
-            }
-        } finally {
-            if (ready > 0) {
-                Uring.advanceCQ(ringBase, ready);
-            }
+        for (long i = 0, address = completionBuffer; i < ready; i++, address += ENTRY_SIZE) {
+            cqEntry.reposition(RawMemory.getLong(address));
+//            pendingCompletions.releaseUnsafe((int) cqEntry.userData())
+//                              .accept(cqEntry.extract());
+            final var entry = cqEntry.extract();
+            final var completion = pendingCompletions.releaseUnsafe((int) cqEntry.userData());
+            PromiseImpl.SingletonHolder.scheduler().submit(() -> completion.accept(entry));
         }
-        return this;
+
+        if (ready > 0) {
+            Uring.advanceCQ(ringBase, ready);
+        }
     }
 
-    public int availableSQSpace() {
-        return (int) Uring.spaceLeft(ringBase);
-    }
+    public void processSubmissions(final Deque<Consumer<SubmitQueueEntry>> queue) {
+        final int available = Uring.peekSQEntries(ringBase,
+                                                  submissionBuffer,
+                                                  Math.min(queue.size(), submissionEntries));
 
-    public UringHolder submit(final Consumer<SubmitQueueEntry> submitter) {
-        sqEntry.reposition(Uring.nextSQEntry(ringBase));
-        submitter.accept(sqEntry.clear());
-        return this;
-    }
+        for (long i = 0, address = submissionBuffer; i < available; i++, address += ENTRY_SIZE) {
+            final long sqAddress = RawMemory.getLong(address);
+            sqEntry.reposition(sqAddress);
+            queue.removeFirst().accept(sqEntry.clear());
+        }
 
-    public UringHolder notifySubmission() {
         Uring.submitAndWait(ringBase, 0);
-        return this;
     }
 
     public static Result<UringHolder> create(final int requestedEntries, final EnumSet<UringSetupFlags> openFlags) {
@@ -120,7 +132,7 @@ public class UringHolder implements AutoCloseable {
     }
 
     public int numEntries() {
-        return numEntries;
+        return submissionEntries;
     }
 
     public static Result<FileDescriptor> socket(final AddressFamily addressFamily,

@@ -42,8 +42,8 @@ public interface TaskScheduler extends Executor {
      */
     default TaskScheduler submit(final Action action) {
         return submit(() -> {
-            if (!action.perform(System.nanoTime(), localSubmitter())) {
-                TaskScheduler.this.submit(action);
+            if (!action.perform(System.nanoTime()/*, localSubmitter()*/)) {
+                submit(action);
             }
         });
     }
@@ -56,9 +56,10 @@ public interface TaskScheduler extends Executor {
      *
      * @return this instance for fluent call chaining.
      */
-    default TaskScheduler submit(final Consumer<Submitter> ioAction) {
-        return submit(() -> ioAction.accept(localSubmitter()));
-    }
+    TaskScheduler submit(final Consumer<Submitter> ioAction);
+//    default TaskScheduler submit(final Consumer<Submitter> ioAction) {
+//        return submit(() -> ioAction.accept(localSubmitter()));
+//    }
 
     /**
      * Submit task which will be executed exactly once and as soon as possible.
@@ -83,7 +84,7 @@ public interface TaskScheduler extends Executor {
     default TaskScheduler submit(final Timeout timeout, final Runnable runnable) {
         final long threshOld = System.nanoTime() + timeout.asNanos();
 
-        return submit((nanoTime, $$) -> {
+        return submit(nanoTime -> {
             if (nanoTime >= threshOld) {
                 runnable.run();
                 return true;
@@ -116,17 +117,17 @@ public interface TaskScheduler extends Executor {
      */
     CoreLogger logger();
 
-    /**
-     * Return {@link Submitter} instance local for current thread.
-     * <p>
-     * Note that {@link Submitter} instances are present only for threads which belong to this instance of {@link TaskScheduler}.
-     * Calling this method from other threads will return {@code null}. The returned instance is not thread safe and should not
-     * be passed to other threads.
-     *
-     * @return instance of {@link Submitter} suitable for use in current thread.
-     */
-    Submitter localSubmitter();
-
+//    /**
+//     * Return {@link Submitter} instance local for current thread.
+//     * <p>
+//     * Note that {@link Submitter} instances are present only for threads which belong to this instance of {@link TaskScheduler}.
+//     * Calling this method from other threads will return {@code null}. The returned instance is not thread safe and should not
+//     * be passed to other threads.
+//     *
+//     * @return instance of {@link Submitter} suitable for use in current thread.
+//     */
+//    Submitter localSubmitter();
+//
     /**
      * Shutdown scheduler. Once scheduler is shut down, remaining tasks will be processed, but no new tasks
      * will be accepted.

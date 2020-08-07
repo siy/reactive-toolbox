@@ -41,6 +41,7 @@ final class Uring {
     public static native long spaceLeft(long baseAddress);
 
     public static native long nextSQEntry(long baseAddress);
+    public static native int peekSQEntries(long baseAddress, long submissionsAddress, long count);
 
     public static native long submitAndWait(long baseAddress, int waitNr);
 

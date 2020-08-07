@@ -11,8 +11,14 @@ import static org.reactivetoolbox.io.async.net.server.TcpServer.tcpServer;
 import static org.reactivetoolbox.io.async.net.server.TcpServerConfiguration.configuration;
 import static org.reactivetoolbox.io.scheduler.impl.DaemonThreadFactory.threadFactory;
 
-@Disabled
+//@Disabled
 public class EchoServerTest {
+    @Disabled
+    @Test
+    void doNothing() {
+
+    }
+
     @Test
     void runEchoServer() {
         System.out.println(Instant.now());

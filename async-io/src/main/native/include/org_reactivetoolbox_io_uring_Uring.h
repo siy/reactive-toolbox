@@ -65,6 +65,15 @@ JNIEXPORT jlong JNICALL Java_org_reactivetoolbox_io_uring_Uring_nextSQEntry
 
 /*
  * Class:     org_reactivetoolbox_io_uring_Uring
+ * Method:    peekSQEntries
+ * Signature: (JJJ)I
+ */
+JNIEXPORT jint JNICALL Java_org_reactivetoolbox_io_uring_Uring_peekSQEntries
+  (JNIEnv *, jclass, jlong, jlong, jlong);
+
+
+/*
+ * Class:     org_reactivetoolbox_io_uring_Uring
  * Method:    submitAndWait
  * Signature: (JI)J
  */

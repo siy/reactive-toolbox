@@ -71,7 +71,29 @@ public class StackingCollector<T> {
         return hasElements;
     }
 
-    static final class Node<T> {
+    public Node<T> swapHead() {
+        Node<T> head;
+
+        do {
+            head = this.head.get();
+        } while (!this.head.compareAndSet(head, null));
+
+        Node<T> current = head;
+        Node<T> prev = null;
+        Node<T> next;
+
+        while(current != null) {
+            next = current.nextNode;
+            current.nextNode = prev;
+            prev = current;
+            current = next;
+        }
+
+        return prev;
+    }
+
+
+    public static final class Node<T> {
         public T element;
         public Node<T> nextNode;
 

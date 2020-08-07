@@ -24,6 +24,7 @@ import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.AsyncOperation;
+import org.reactivetoolbox.io.uring.DetachedCQEntry;
 import org.reactivetoolbox.io.uring.UringHolder;
 import org.reactivetoolbox.io.uring.UringSetupFlags;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
@@ -31,15 +32,14 @@ import org.reactivetoolbox.io.uring.struct.offheap.OffHeapFileStat;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapIoVector;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapTimeSpec;
-import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.functional.Result.flatten;
@@ -58,13 +58,14 @@ import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQ
  * WARNING: this class is part of low level internal classes. It's written with specific assumptions in mind and most likely will be hard or inconvenient to use in other
  * environment. In particular class is designed to be used by single thread at a time and does not perform synchronization at all.
  */
+//TODO: make API more consistent - add timeout to all calls, add version with Promise instantiation to Submitter
 public class Proactor implements Submitter {
     private static final Result<Unit> UNIT_RESULT = ok(unit());
     private static final int AT_FDCWD = -100; // Special value used to indicate the openat/statx functions should use the current working directory.
 
     private final UringHolder uringHolder;
-    private final ObjectHeap<CompletionHandler> pendingCompletions;
-    private final Deque<Consumer<SubmitQueueEntry>> queue = new LinkedList<>();
+    private final ObjectHeap<Consumer<DetachedCQEntry>> pendingCompletions;
+    private final Deque<Consumer<SubmitQueueEntry>> queue = new ArrayDeque<>();
 
     private Proactor(final UringHolder uringHolder) {
         this.uringHolder = uringHolder;
@@ -87,11 +88,6 @@ public class Proactor implements Submitter {
                                              h -> h));
     }
 
-    @FunctionalInterface
-    private interface CompletionHandler {
-        void handleCompletion(final CompletionQueueEntry entry);
-    }
-
     @Override
     public void close() {
         uringHolder.close();
@@ -102,36 +98,17 @@ public class Proactor implements Submitter {
      */
     public Proactor processIO() {
         if (!queue.isEmpty()) {
-            //TODO: how to conveniently handle submissions with timeouts (i.e. linked pairs of submissions)?
-            //      and should we? (it is possible that kernel will handle subsequent timeout even if it delivered later).
-            processSubmissions();
+            uringHolder.processSubmissions(queue);
         }
 
         if (pendingCompletions.count() > 0) {
-            uringHolder.processCompletions(this::handleCompletions);
+            uringHolder.processCompletions(pendingCompletions);
         }
         return this;
     }
 
-    private void processSubmissions() {
-        int count = uringHolder.availableSQSpace();
-
-        while (count > 0 && !queue.isEmpty()) {
-            uringHolder.submit(queue.removeFirst());
-            count--;
-        }
-
-        uringHolder.notifySubmission();
-    }
-
-    private void handleCompletions(final CompletionQueueEntry entry) {
-        pendingCompletions.release((int) entry.userData())
-                          .whenPresent(handler -> handler.handleCompletion(entry));
-    }
-
     @Override
     public Promise<Unit> nop(final Promise<Unit> completion) {
-
         final int key = pendingCompletions.allocKey((entry -> completion.syncResolve(UNIT_RESULT)));
 
         queue.add(sqe -> sqe.userData(key)
@@ -187,7 +164,10 @@ public class Proactor implements Submitter {
                                final OffHeapBuffer buffer,
                                final OffsetT offset,
                                final Option<Timeout> timeout) {
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(bytesRead -> sizeT(buffer.used(bytesRead).used()))));
+        final var key = pendingCompletions.allocKey(entry -> {
+            final Result<SizeT> result = entry.result(bytesRead -> sizeT(buffer.used(bytesRead).used()));
+            completion.syncResolve(result);
+        });
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -198,6 +178,7 @@ public class Proactor implements Submitter {
                             .off(offset.value()));
 
         timeout.whenPresent(this::appendTimeout);
+
         return completion;
     }
 
@@ -207,7 +188,10 @@ public class Proactor implements Submitter {
                                 final OffHeapBuffer buffer,
                                 final OffsetT offset,
                                 final Option<Timeout> timeout) {
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(SizeT::sizeT)));
+        final var key = pendingCompletions.allocKey(entry -> {
+            final Result<SizeT> result = entry.result(SizeT::sizeT);
+            completion.syncResolve(result);
+        });
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -218,12 +202,12 @@ public class Proactor implements Submitter {
                             .off(offset.value()));
 
         timeout.whenPresent(this::appendTimeout);
+
         return completion;
     }
 
     @Override
     public Promise<SizeT> splice(final Promise<SizeT> completion, final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
-
         final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(SizeT::sizeT)));
 
         queue.add(sqe -> sqe.userData(key)
@@ -237,6 +221,7 @@ public class Proactor implements Submitter {
                             .spliceFlags(Bitmask.combine(descriptor.flags())));
 
         timeout.whenPresent(this::appendTimeout);
+
         return completion;
     }
 
@@ -247,10 +232,8 @@ public class Proactor implements Submitter {
                                         final EnumSet<FilePermission> mode,
                                         final Option<Timeout> timeout) {
         final var rawPath = OffHeapCString.cstring(path.toString());
-        final var key = pendingCompletions.allocKey(entry -> {
-            completion.syncResolve(entry.result(FileDescriptor::file));
-            rawPath.dispose();
-        });
+        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(FileDescriptor::file))
+                                                                       .thenDo(rawPath::dispose));
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -261,6 +244,7 @@ public class Proactor implements Submitter {
                             .openFlags(Bitmask.combine(flags)));
 
         timeout.whenPresent(this::appendTimeout);
+
         return completion;
     }
 
@@ -304,6 +288,11 @@ public class Proactor implements Submitter {
                                                                                          .flatMap(fd -> flatten(ok(fd), clientAddress.extract())
                                                                                                  .map(tuple -> tuple.map(ClientConnection::connectionIn))))
                                                                        .thenDo(clientAddress::dispose));
+
+//        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(FileDescriptor::socket)
+//                                                                                         .flatMap(fd -> clientAddress.extract()
+//                                                                                                                     .map(address -> connectionIn(fd, address))))
+//                                                                       .thenDo(clientAddress::dispose));
 
         queue.add(sqe -> sqe.userData(key)
                             .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
@@ -408,6 +397,7 @@ public class Proactor implements Submitter {
                             .off(offset.value()));
 
         timeout.whenPresent(this::appendTimeout);
+
         return completion;
     }
 
@@ -431,6 +421,7 @@ public class Proactor implements Submitter {
                             .off(offset.value()));
 
         timeout.whenPresent(this::appendTimeout);
+
         return completion;
     }
 

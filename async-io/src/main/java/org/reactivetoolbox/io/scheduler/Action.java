@@ -32,5 +32,6 @@ public interface Action {
      *         The instance of {@link Submitter} for performing I/O
      * @return {@code true} if task is completed or {@code false} if task should be rescheduled again
      */
-    boolean perform(final long nanoTime, final Submitter submitter);
+//    boolean perform(final long nanoTime, final Submitter submitter);
+    boolean perform(final long nanoTime);
 }
