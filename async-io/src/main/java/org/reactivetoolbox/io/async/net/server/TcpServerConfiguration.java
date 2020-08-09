@@ -14,7 +14,7 @@ import org.reactivetoolbox.io.async.net.context.ConnectionContext;
 import org.reactivetoolbox.io.async.net.lifecycle.LifeCycle;
 import org.reactivetoolbox.io.async.net.lifecycle.ReadWriteLifeCycle;
 
-import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.io.async.net.InetPort.inetPort;
@@ -46,15 +46,15 @@ public class TcpServerConfiguration {
         return properties.backlogSize;
     }
 
-    public EnumSet<SocketFlag> listenerFlags() {
+    public Set<SocketFlag> listenerFlags() {
         return properties.listenerFlags;
     }
 
-    public EnumSet<SocketFlag> acceptorFlags() {
+    public Set<SocketFlag> acceptorFlags() {
         return properties.acceptorFlags;
     }
 
-    public EnumSet<SocketOption> listenerOptions() {
+    public Set<SocketOption> listenerOptions() {
         return properties.listenerOptions;
     }
 
@@ -69,12 +69,12 @@ public class TcpServerConfiguration {
     public static final class Properties {
         public Inet4Address address = Inet4Address.INADDR_ANY;
         public InetPort port = inetPort(8081);
-        public EnumSet<SocketFlag> listenerFlags = SocketFlag.closeOnExec();
-        public EnumSet<SocketFlag> acceptorFlags = SocketFlag.closeOnExec();
-        public EnumSet<SocketOption> listenerOptions = SocketOption.reuseAll();
+        public Set<SocketFlag> listenerFlags = SocketFlag.closeOnExec();
+        public Set<SocketFlag> acceptorFlags = SocketFlag.closeOnExec();
+        public Set<SocketOption> listenerOptions = SocketOption.reuseAll();
         //TODO: do we actually need it???
         public FN1<Promise<Unit>, ConnectionContext> connectionHandler = ActiveServerContext::defaultConnectionHandler;
-        public SizeT backlogSize = SizeT.sizeT(16);
+        public SizeT backlogSize = new SizeT(16);
         public LifeCycle lifeCycle = ReadWriteLifeCycle.readWrite(ActiveServerContext::echo);
 
         private Properties() {

@@ -16,7 +16,6 @@ package org.reactivetoolbox.core.lang.functional;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.core.lang.Tuple;
 import org.reactivetoolbox.core.lang.Tuple.Tuple1;
 import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.Tuple.Tuple3;
@@ -32,6 +31,8 @@ import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -57,7 +58,6 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return transformed value (in case of success) or current instance (in case of failure)
      */
-    @SuppressWarnings("unchecked")
     default <R> Result<R> map(final FN1<R, ? super T> mapper) {
         return fold(l -> (Result<R>) this, r -> ok(mapper.apply(r)));
     }
@@ -72,7 +72,6 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return transformed value (in case of success) or current instance (in case of failure)
      */
-    @SuppressWarnings("unchecked")
     default <R> Result<R> flatMap(final FN1<Result<R>, ? super T> mapper) {
         return fold(t -> (Result<R>) this, mapper);
     }
@@ -132,6 +131,10 @@ public interface Result<T> extends Either<Failure, T> {
         return fold(t1 -> this, t1 -> { consumer.accept(t1); return this; });
     }
 
+    default Result<T> onSuccessDo(final Runnable action) {
+        return fold(t1 -> this, t1 -> { action.run(); return this; });
+    }
+
     /**
      * Pass failure operation result value into provided consumer.
      *
@@ -142,6 +145,10 @@ public interface Result<T> extends Either<Failure, T> {
      */
     default Result<T> onFailure(final Consumer<? super Failure> consumer) {
         return fold(t1 -> { consumer.accept(t1); return this; }, t1 -> this);
+    }
+
+    default Result<T> onFailureDo(final Runnable action) {
+        return fold(t1 -> { action.run(); return this; }, t1 -> this);
     }
 
     /**
@@ -164,37 +171,10 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return created instance
      */
+    //ConcurrentMap<Object, Result> SUCCESSES = new ConcurrentHashMap<>();
+
     static <R> Result<R> ok(final R value) {
-        return new Result<>() {
-            @Override
-            public <T> T fold(final FN1<? extends T, ? super Failure> leftMapper,
-                              final FN1<? extends T, ? super R> rightMapper) {
-                return rightMapper.apply(value);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(value);
-            }
-
-            @Override
-            public boolean equals(final Object obj) {
-                if (this == obj) {
-                    return true;
-                }
-
-                return (obj instanceof Result<?> result)
-                       ? result.fold($ -> false, val -> Objects.equals(val, value))
-                       : false;
-            }
-
-            @Override
-            public String toString() {
-                return new StringJoiner(", ", "Result-success(", ")")
-                        .add(value.toString())
-                        .toString();
-            }
-        };
+        return new ResultOk<>(value);
     }
 
     /**
@@ -204,42 +184,16 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return created instance
      */
+    ConcurrentMap<Failure, Result> FAILURES = new ConcurrentHashMap<>();
+
     static <R> Result<R> fail(final Failure value) {
-        return new Result<>() {
-            @Override
-            public <T> T fold(final FN1<? extends T, ? super Failure> leftMapper,
-                              final FN1<? extends T, ? super R> rightMapper) {
-                return leftMapper.apply(value);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(value);
-            }
-
-            @Override
-            public boolean equals(final Object obj) {
-                if (this == obj) {
-                    return true;
-                }
-
-                return (obj instanceof Result<?> result)
-                       ? result.fold(val -> Objects.equals(val, value), $ -> false)
-                       : false;
-            }
-
-            @Override
-            public String toString() {
-                return new StringJoiner(", ", "Result-failure(", ")")
-                        .add(value.toString())
-                        .toString();
-            }
-        };
+        //return new ResultFail<R>(value);
+        return FAILURES.computeIfAbsent(value, ResultFail::new);
     }
 
-    static <T> Result<List<T>> flatten(List<Result<T>> resultList) {
-        Failure[] failure = new Failure[1];
-        var values = new ArrayList<T>();
+    static <T> Result<List<T>> flatten(final List<Result<T>> resultList) {
+        final Failure[] failure = new Failure[1];
+        final var values = new ArrayList<T>();
 
         resultList.apply(val -> val.fold(f -> failure[0] = f, values::add));
 
@@ -349,5 +303,79 @@ public interface Result<T> extends Either<Failure, T> {
                            value7.flatMap(vv7 ->
                              value8.flatMap(vv8 ->
                                value9.flatMap(vv9 -> ok(tuple(vv1, vv2, vv3, vv4, vv5, vv6, vv7, vv8, vv9)))))))))));
+    }
+
+    class ResultOk<R> implements Result<R> {
+        private final R value;
+
+        protected ResultOk(final R value) {
+            this.value = value;
+        }
+
+        @Override
+        public <T> T fold(final FN1<? extends T, ? super Failure> leftMapper,
+                          final FN1<? extends T, ? super R> rightMapper) {
+            return rightMapper.apply(value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value);
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            return (obj instanceof Result<?> result)
+                   ? result.fold($ -> false, val -> Objects.equals(val, value))
+                   : false;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", "Result-success(", ")")
+                    .add(value.toString())
+                    .toString();
+        }
+    }
+
+    class ResultFail<R> implements Result<R> {
+        private final Failure value;
+
+        protected ResultFail(final Failure value) {
+            this.value = value;
+        }
+
+        @Override
+        public <T> T fold(final FN1<? extends T, ? super Failure> leftMapper,
+                          final FN1<? extends T, ? super R> rightMapper) {
+            return leftMapper.apply(value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value);
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            return (obj instanceof Result<?> result)
+                   ? result.fold(val -> Objects.equals(val, value), $ -> false)
+                   : false;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", "Result-failure(", ")")
+                    .add(value.toString())
+                    .toString();
+        }
     }
 }

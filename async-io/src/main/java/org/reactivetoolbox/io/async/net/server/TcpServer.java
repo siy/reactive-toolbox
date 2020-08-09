@@ -2,7 +2,6 @@ package org.reactivetoolbox.io.async.net.server;
 
 import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.Submitter;
-import org.reactivetoolbox.io.async.net.ClientConnection;
 import org.reactivetoolbox.io.async.net.SocketFlag;
 import org.reactivetoolbox.io.async.net.SocketType;
 import org.reactivetoolbox.io.async.net.context.ActiveServerContext;
@@ -31,7 +30,8 @@ public class TcpServer {
     private Promise<ActiveServerContext> setupAcceptors(final ServerContext<?> context) {
         final ActiveServerContext activeServerContext = activeContext(context, configuration);
 
-        range(0, context.queueDepth())
+        //range(0, context.queueDepth())
+        range(0, 1)
                 .forEach($ -> doAccept(activeServerContext));
 
         return Promise.readyOk(activeServerContext);
@@ -48,9 +48,11 @@ public class TcpServer {
 
     private static void doAccept(final ActiveServerContext context) {
         if (!context.shutdownInProgress()) {
-            Promise.<ClientConnection<?>>asyncPromise((promise, submitter) -> submitter.accept(promise, context.socket(), SocketFlag.closeOnExec())
-                                                                                       .onSuccess($ -> doAccept(context))
-                                                                                       .flatMap(context::handleConnection));
+            Promise.asyncPromise((promise, submitter) ->
+                                         submitter.accept(clientConnection -> clientConnection.onSuccessDo(() -> doAccept(context))
+                                                                                              .onSuccess(context::handleConnection),
+                                                          context.socket(),
+                                                          SocketFlag.closeOnExec()));
         }
     }
 }

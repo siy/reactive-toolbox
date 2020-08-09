@@ -178,10 +178,14 @@ public enum NativeError implements FailureType {
         return Failure.failure(this, description);
     }
 
+    public <T> Result<T> asResult() {
+        return Result.fail(Failure.failure(this, description));
+    }
+
     public static <T> Result<T> result(final int code, final FN1<T, Integer> constructor) {
         return code >= 0
                ? Result.ok(constructor.apply(code))
-               : Result.fail(fromCode(code).asFailure());
+               : fromCode(code).asResult();
     }
 
     public static NativeError fromCode(final int code) {

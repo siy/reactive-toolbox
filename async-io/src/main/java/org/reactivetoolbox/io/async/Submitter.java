@@ -1,6 +1,7 @@
 package org.reactivetoolbox.io.async;
 
 import org.reactivetoolbox.core.lang.functional.Option;
+import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.lang.functional.Unit;
 import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
@@ -23,9 +24,8 @@ import org.reactivetoolbox.io.scheduler.Timeout;
 
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.EnumSet;
-
-import static org.reactivetoolbox.core.lang.functional.Option.empty;
+import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Low level externally accessible API for submission of I/O operations.
@@ -41,10 +41,13 @@ public interface Submitter {
      * Submit NOP operation.
      * <p>
      * This operation actually does nothing except performing round trip to OS kernel and back.
-     *
-     * @return
      */
-    Promise<Unit> nop(final Promise<Unit> completion);
+    void nop(final Consumer<Result<Unit>> completion);
+
+    default Promise<Unit> nop(final Promise<Unit> promise) {
+        nop(promise::syncResolve);
+        return promise;
+    }
 
     /**
      * Submit DELAY (TIMEOUT) operation.
@@ -53,9 +56,17 @@ public interface Submitter {
      *
      * @param timeout
      *         Requested timeout delay.
-     * @return
      */
-    Promise<Duration> delay(final Promise<Duration> completion, final Timeout timeout);
+    void delay(final Consumer<Result<Duration>> completion, final Timeout timeout);
+
+    default Promise<Duration> delay(final Promise<Duration> promise, final Timeout timeout) {
+        delay(promise::syncResolve, timeout);
+        return promise;
+    }
+
+    default Promise<Duration> delay(final Timeout timeout) {
+        return delay(Promise.promise(), timeout);
+    }
 
     /**
      * Submit SPLICE operation.
@@ -65,18 +76,23 @@ public interface Submitter {
      * @param descriptor
      *         Splice operation details container
      * @param timeout
-     * @return
+     *         Optional operation timeout.
      */
-    Promise<SizeT> splice(final Promise<SizeT> completion,
-                          final SpliceDescriptor descriptor,
-                          final Option<Timeout> timeout);
 
-    /**
-     * Same as {@link #splice(SpliceDescriptor, Option)} except no timeout is specified.
-     * @return
-     */
-    default Promise<SizeT> splice(final Promise<SizeT> completion, final SpliceDescriptor descriptor) {
-        return splice(completion, descriptor, empty());
+    void splice(final Consumer<Result<SizeT>> completion,
+                final SpliceDescriptor descriptor,
+                final Option<Timeout> timeout);
+
+    default Promise<SizeT> splice(final Promise<SizeT> promise,
+                                  final SpliceDescriptor descriptor,
+                                  final Option<Timeout> timeout) {
+        splice(promise::syncResolve, descriptor, timeout);
+        return promise;
+    }
+
+    default Promise<SizeT> splice(final SpliceDescriptor descriptor,
+                                  final Option<Timeout> timeout) {
+        return splice(Promise.promise(), descriptor, timeout);
     }
 
     /**
@@ -92,48 +108,28 @@ public interface Submitter {
      * @param offset
      *         Offset to read from if file descriptor points to file.
      * @param timeout
-     * @return
+     *         Optional operation timeout.
      */
-    Promise<SizeT> read(final Promise<SizeT> completion,
-                        final FileDescriptor fdIn,
-                        final OffHeapBuffer buffer,
-                        final OffsetT offset,
-                        final Option<Timeout> timeout);
+    void read(final Consumer<Result<SizeT>> completion,
+              final FileDescriptor fdIn,
+              final OffHeapBuffer buffer,
+              final OffsetT offset,
+              final Option<Timeout> timeout);
 
-    /**
-     * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no timeout is specified.
-     * @return
-     */
-    default Promise<SizeT> read(final Promise<SizeT> completion,
+    default Promise<SizeT> read(final Promise<SizeT> promise,
                                 final FileDescriptor fdIn,
                                 final OffHeapBuffer buffer,
-                                final OffsetT offset) {
-        return read(completion, fdIn, buffer, offset, empty());
-    }
-
-    /**
-     * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified.
-     * <p>
-     * Convenient for using with sockets or reading file at current position.
-     * @return
-     */
-    default Promise<SizeT> read(final Promise<SizeT> completion,
-                                final FileDescriptor fdIn,
-                                final OffHeapBuffer buffer,
+                                final OffsetT offset,
                                 final Option<Timeout> timeout) {
-        return read(completion, fdIn, buffer, OffsetT.ZERO, timeout);
+        read(promise::syncResolve, fdIn, buffer, offset, timeout);
+        return promise;
     }
 
-    /**
-     * Same as {@link #read(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset and no timeout is specified.
-     * <p>
-     * Convenient for using with sockets or reading file at current position.
-     * @return
-     */
-    default Promise<SizeT> read(final Promise<SizeT> completion,
-                                final FileDescriptor fdIn,
-                                final OffHeapBuffer buffer) {
-        return read(completion, fdIn, buffer, OffsetT.ZERO, empty());
+    default Promise<SizeT> read(final FileDescriptor fdIn,
+                                final OffHeapBuffer buffer,
+                                final OffsetT offset,
+                                final Option<Timeout> timeout) {
+        return read(Promise.promise(), fdIn, buffer, offset, timeout);
     }
 
     /**
@@ -151,43 +147,26 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    Promise<SizeT> write(final Promise<SizeT> completion,
-                         final FileDescriptor fdOut,
-                         final OffHeapBuffer buffer,
-                         final OffsetT offset,
-                         final Option<Timeout> timeout);
+    void write(final Consumer<Result<SizeT>> promise,
+               final FileDescriptor fdOut,
+               final OffHeapBuffer buffer,
+               final OffsetT offset,
+               final Option<Timeout> timeout);
 
-    /**
-     * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no timeout is specified.
-     */
-    default Promise<SizeT> write(final Promise<SizeT> completion,
+    default Promise<SizeT> write(final Promise<SizeT> promise,
                                  final FileDescriptor fdOut,
                                  final OffHeapBuffer buffer,
-                                 final OffsetT offset) {
-        return write(completion, fdOut, buffer, offset, empty());
-    }
-
-    /**
-     * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset is specified.
-     * <p>
-     * Convenient for using with sockets or writing file at current position.
-     */
-    default Promise<SizeT> write(final Promise<SizeT> completion,
-                                 final FileDescriptor fdOut,
-                                 final OffHeapBuffer buffer,
+                                 final OffsetT offset,
                                  final Option<Timeout> timeout) {
-        return write(completion, fdOut, buffer, OffsetT.ZERO, timeout);
+        write(promise::syncResolve, fdOut, buffer, offset, timeout);
+        return promise;
     }
 
-    /**
-     * Same as {@link #write(FileDescriptor, OffHeapBuffer, OffsetT, Option)} except no offset and no timeout is specified.
-     * <p>
-     * Convenient for using with sockets or writing file at current position.
-     */
-    default Promise<SizeT> write(final Promise<SizeT> completion,
-                                 final FileDescriptor fdOut,
-                                 final OffHeapBuffer buffer) {
-        return write(completion, fdOut, buffer, OffsetT.ZERO, empty());
+    default Promise<SizeT> write(final FileDescriptor fdOut,
+                                 final OffHeapBuffer buffer,
+                                 final OffsetT offset,
+                                 final Option<Timeout> timeout) {
+        return write(Promise.promise(), fdOut, buffer, offset, timeout);
     }
 
     /**
@@ -198,15 +177,22 @@ public interface Submitter {
      * @param fd
      *         File descriptor to close.
      * @param timeout
-     * @return
+     *         Optional operation timeout.
      */
-    Promise<Unit> closeFileDescriptor(final Promise<Unit> completion, final FileDescriptor fd, final Option<Timeout> timeout);
+    void closeFileDescriptor(final Consumer<Result<Unit>> completion,
+                             final FileDescriptor fd,
+                             final Option<Timeout> timeout);
 
-    /**
-     * Same as {@link #closeFileDescriptor(FileDescriptor, Option)} except no timeout is specified.
-     */
-    default Promise<Unit> closeFileDescriptor(final Promise<Unit> completion, final FileDescriptor fd) {
-        return closeFileDescriptor(completion, fd, empty());
+    default Promise<Unit> closeFileDescriptor(final Promise<Unit> promise,
+                                              final FileDescriptor fd,
+                                              final Option<Timeout> timeout) {
+        closeFileDescriptor(promise::syncResolve, fd, timeout);
+        return promise;
+    }
+
+    default Promise<Unit> closeFileDescriptor(final FileDescriptor fd,
+                                              final Option<Timeout> timeout) {
+        return closeFileDescriptor(Promise.promise(), fd, timeout);
     }
 
     /**
@@ -225,43 +211,26 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    Promise<FileDescriptor> open(final Promise<FileDescriptor> completion,
-                                 final Path path,
-                                 final EnumSet<OpenFlags> flags,
-                                 final EnumSet<FilePermission> mode,
-                                 final Option<Timeout> timeout);
+    void open(final Consumer<Result<FileDescriptor>> completion,
+              final Path path,
+              final Set<OpenFlags> flags,
+              final Set<FilePermission> mode,
+              final Option<Timeout> timeout);
 
-    /**
-     * Same as {@link #open(Path, EnumSet, EnumSet, Option)} except no timeout is specified.
-     */
-    default Promise<FileDescriptor> open(final Promise<FileDescriptor> completion,
+    default Promise<FileDescriptor> open(final Promise<FileDescriptor> promise,
                                          final Path path,
-                                         final EnumSet<OpenFlags> flags,
-                                         final EnumSet<FilePermission> mode) {
-        return open(completion, path, flags, mode, empty());
-    }
-
-    /**
-     * Same as {@link #open(Path, EnumSet, EnumSet, Option)} except no timeout and no file permissions are provided.
-     * <p>
-     * Note that this method should not be used if call assumes file cration semantics (flags contain {@link OpenFlags#CREATE} or {@link OpenFlags#TMPFILE}).
-     */
-    default Promise<FileDescriptor> open(final Promise<FileDescriptor> completion,
-                                         final Path path,
-                                         final EnumSet<OpenFlags> flags) {
-        return open(completion, path, flags, FilePermission.empty(), empty());
-    }
-
-    /**
-     * Same as {@link #open(Path, EnumSet, EnumSet, Option)} except no file permissions are provided.
-     * <p>
-     * Note that this method should not be used if call assumes file cration semantics (flags contain {@link OpenFlags#CREATE} or {@link OpenFlags#TMPFILE}).
-     */
-    default Promise<FileDescriptor> open(final Promise<FileDescriptor> completion,
-                                         final Path path,
-                                         final EnumSet<OpenFlags> flags,
+                                         final Set<OpenFlags> flags,
+                                         final Set<FilePermission> mode,
                                          final Option<Timeout> timeout) {
-        return open(completion, path, flags, FilePermission.empty(), timeout);
+        open(promise::syncResolve, path, flags, mode, timeout);
+        return promise;
+    }
+
+    default Promise<FileDescriptor> open(final Path path,
+                                         final Set<OpenFlags> flags,
+                                         final Set<FilePermission> mode,
+                                         final Option<Timeout> timeout) {
+        return open(Promise.promise(), path, flags, mode, timeout);
     }
 
     /**
@@ -276,34 +245,26 @@ public interface Submitter {
      * @param options
      *         Additional socket options. See {@link SocketOption} for more details.
      */
-    Promise<FileDescriptor> socket(final Promise<FileDescriptor> completion,
-                                   final AddressFamily addressFamily,
-                                   final SocketType socketType,
-                                   final EnumSet<SocketFlag> openFlags,
-                                   final EnumSet<SocketOption> options);
+    void socket(final Consumer<Result<FileDescriptor>> completion,
+                final AddressFamily addressFamily,
+                final SocketType socketType,
+                final Set<SocketFlag> openFlags,
+                final Set<SocketOption> options);
 
-    default Promise<FileDescriptor> socketTcpV4(final Promise<FileDescriptor> completion,
-                                                final EnumSet<SocketFlag> openFlags,
-                                                final EnumSet<SocketOption> options) {
-        return socket(completion, AddressFamily.INET, SocketType.STREAM, openFlags, options);
+    default Promise<FileDescriptor> socket(final Promise<FileDescriptor> promise,
+                                           final AddressFamily addressFamily,
+                                           final SocketType socketType,
+                                           final Set<SocketFlag> openFlags,
+                                           final Set<SocketOption> options) {
+        socket(promise::syncResolve, addressFamily, socketType, openFlags, options);
+        return promise;
     }
 
-    default Promise<FileDescriptor> socketUdpV4(final Promise<FileDescriptor> completion,
-                                                final EnumSet<SocketFlag> openFlags,
-                                                final EnumSet<SocketOption> options) {
-        return socket(completion, AddressFamily.INET, SocketType.DGRAM, openFlags, options);
-    }
-
-    default Promise<FileDescriptor> socketTcpV6(final Promise<FileDescriptor> completion,
-                                                final EnumSet<SocketFlag> openFlags,
-                                                final EnumSet<SocketOption> options) {
-        return socket(completion, AddressFamily.INET6, SocketType.STREAM, openFlags, options);
-    }
-
-    default Promise<FileDescriptor> socketUdpV6(final Promise<FileDescriptor> completion,
-                                                final EnumSet<SocketFlag> openFlags,
-                                                final EnumSet<SocketOption> options) {
-        return socket(completion, AddressFamily.INET6, SocketType.DGRAM, openFlags, options);
+    default Promise<FileDescriptor> socket(final AddressFamily addressFamily,
+                                           final SocketType socketType,
+                                           final Set<SocketFlag> openFlags,
+                                           final Set<SocketOption> options) {
+        return socket(Promise.promise(), addressFamily, socketType, openFlags, options);
     }
 
     /**
@@ -320,12 +281,30 @@ public interface Submitter {
      * @param options
      *         Socket options. See {@link SocketOption} for more details
      */
-    Promise<ServerContext<?>> server(final Promise<ServerContext<?>> completion,
-                                     final SocketAddress<?> socketAddress,
-                                     final SocketType socketType,
-                                     final EnumSet<SocketFlag> openFlags,
-                                     final SizeT queueDepth,
-                                     final EnumSet<SocketOption> options);
+    void server(final Consumer<Result<ServerContext<?>>> completion,
+                final SocketAddress<?> socketAddress,
+                final SocketType socketType,
+                final Set<SocketFlag> openFlags,
+                final SizeT queueDepth,
+                final Set<SocketOption> options);
+
+    default Promise<ServerContext<?>> server(final Promise<ServerContext<?>> promise,
+                                             final SocketAddress<?> socketAddress,
+                                             final SocketType socketType,
+                                             final Set<SocketFlag> openFlags,
+                                             final SizeT queueDepth,
+                                             final Set<SocketOption> options) {
+        server(promise::syncResolve, socketAddress, socketType, openFlags, queueDepth, options);
+        return promise;
+    }
+
+    default Promise<ServerContext<?>> server(final SocketAddress<?> socketAddress,
+                                             final SocketType socketType,
+                                             final Set<SocketFlag> openFlags,
+                                             final SizeT queueDepth,
+                                             final Set<SocketOption> options) {
+        return server(Promise.promise(), socketAddress, socketType, openFlags, queueDepth, options);
+    }
 
     /**
      * Submit ACCEPT operation.
@@ -339,9 +318,21 @@ public interface Submitter {
      * @param flags
      *         Accept flags (see {@link SocketFlag} for more details)
      */
-    Promise<ClientConnection<?>> accept(final Promise<ClientConnection<?>> completion,
-                                        final FileDescriptor socket,
-                                        final EnumSet<SocketFlag> flags);
+    void accept(final Consumer<Result<ClientConnection<?>>> completion,
+                final FileDescriptor socket,
+                final Set<SocketFlag> flags);
+
+    default Promise<ClientConnection<?>> accept(final Promise<ClientConnection<?>> promise,
+                                                final FileDescriptor socket,
+                                                final Set<SocketFlag> flags) {
+        accept(promise::syncResolve, socket, flags);
+        return promise;
+    }
+
+    default Promise<ClientConnection<?>> accept(final FileDescriptor socket,
+                                                final Set<SocketFlag> flags) {
+        return accept(Promise.promise(), socket, flags);
+    }
 
     /**
      * Submit CONNECT operation.
@@ -357,23 +348,23 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    Promise<FileDescriptor> connect(final Promise<FileDescriptor> completion,
-                                    final FileDescriptor socket,
-                                    final SocketAddress<?> address,
-                                    final Option<Timeout> timeout);
+    void connect(final Consumer<Result<FileDescriptor>> completion,
+                 final FileDescriptor socket,
+                 final SocketAddress<?> address,
+                 final Option<Timeout> timeout);
 
-    /**
-     * Same as {@link #connect(FileDescriptor, SocketAddress, Option)} except no timeout is specified.
-     *
-     * @param socket
-     *         Socket to use for connection.
-     * @param address
-     * @return
-     */
-    default Promise<FileDescriptor> connect(final Promise<FileDescriptor> completion,
+    default Promise<FileDescriptor> connect(final Promise<FileDescriptor> promise,
                                             final FileDescriptor socket,
-                                            final SocketAddress<?> address) {
-        return connect(completion, socket, address, empty());
+                                            final SocketAddress<?> address,
+                                            final Option<Timeout> timeout) {
+        connect(promise::syncResolve, socket, address, timeout);
+        return promise;
+    }
+
+    default Promise<FileDescriptor> connect(final FileDescriptor socket,
+                                            final SocketAddress<?> address,
+                                            final Option<Timeout> timeout) {
+        return connect(Promise.promise(), socket, address, timeout);
     }
 
     /**
@@ -386,7 +377,24 @@ public interface Submitter {
      * @param mask
      *         Specification of which information should be retrieved.
      */
-    Promise<FileStat> stat(final Promise<FileStat> completion, final Path path, final EnumSet<StatFlag> flags, EnumSet<StatMask> mask);
+    void stat(final Consumer<Result<FileStat>> completion,
+              final Path path,
+              final Set<StatFlag> flags,
+              final Set<StatMask> mask);
+
+    default Promise<FileStat> stat(final Promise<FileStat> promise,
+                                   final Path path,
+                                   final Set<StatFlag> flags,
+                                   final Set<StatMask> mask) {
+        stat(promise::syncResolve, path, flags, mask);
+        return promise;
+    }
+
+    default Promise<FileStat> stat(final Path path,
+                                   final Set<StatFlag> flags,
+                                   final Set<StatMask> mask) {
+        return stat(Promise.promise(), path, flags, mask);
+    }
 
     /**
      * Get file status information for file specified by file descriptor.
@@ -398,7 +406,24 @@ public interface Submitter {
      * @param mask
      *         Specification of which information should be retrieved.
      */
-    Promise<FileStat> stat(final Promise<FileStat> completion, final FileDescriptor fd, final EnumSet<StatFlag> flags, EnumSet<StatMask> mask);
+    void stat(final Consumer<Result<FileStat>> completion,
+              final FileDescriptor fd,
+              final Set<StatFlag> flags,
+              final Set<StatMask> mask);
+
+    default Promise<FileStat> stat(final Promise<FileStat> promise,
+                                   final FileDescriptor fd,
+                                   final Set<StatFlag> flags,
+                                   final Set<StatMask> mask) {
+        stat(promise::syncResolve, fd, flags, mask);
+        return promise;
+    }
+
+    default Promise<FileStat> stat(final FileDescriptor fd,
+                                   final Set<StatFlag> flags,
+                                   final Set<StatMask> mask) {
+        return stat(Promise.promise(), fd, flags, mask);
+    }
 
     /**
      * Read into buffers passed as a parameters.
@@ -418,29 +443,26 @@ public interface Submitter {
      *         Set of buffers where read information will be put. Each buffer should have it's {@link OffHeapBuffer#used()} property set to actual number of bytes which application
      *         expects to see in this buffer.
      */
-    Promise<SizeT> readVector(final Promise<SizeT> completion,
-                              final FileDescriptor fileDescriptor,
-                              final OffsetT offset,
-                              final Option<Timeout> timeout,
-                              final OffHeapBuffer... buffers);
+    void readVector(final Consumer<Result<SizeT>> completion,
+                    final FileDescriptor fileDescriptor,
+                    final OffsetT offset,
+                    final Option<Timeout> timeout,
+                    final OffHeapBuffer... buffers);
 
-    /**
-     * Same as {@link #readVector(FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except offset is set to zero.
-     */
-    default Promise<SizeT> readVector(final Promise<SizeT> completion,
+    default Promise<SizeT> readVector(final Promise<SizeT> promise,
                                       final FileDescriptor fileDescriptor,
+                                      final OffsetT offset,
                                       final Option<Timeout> timeout,
                                       final OffHeapBuffer... buffers) {
-        return readVector(completion, fileDescriptor, OffsetT.ZERO, timeout, buffers);
+        readVector(promise::syncResolve, fileDescriptor, offset, timeout, buffers);
+        return promise;
     }
 
-    /**
-     * Same as {@link #readVector(FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except offset is set to zero and timeout is omitted.
-     */
-    default Promise<SizeT> readVector(final Promise<SizeT> completion,
-                                      final FileDescriptor fileDescriptor,
+    default Promise<SizeT> readVector(final FileDescriptor fileDescriptor,
+                                      final OffsetT offset,
+                                      final Option<Timeout> timeout,
                                       final OffHeapBuffer... buffers) {
-        return readVector(completion, fileDescriptor, OffsetT.ZERO, empty(), buffers);
+        return readVector(Promise.promise(), fileDescriptor, offset, timeout, buffers);
     }
 
     /**
@@ -459,46 +481,31 @@ public interface Submitter {
      * @param buffers
      *         Set of buffers to write from
      */
-    Promise<SizeT> writeVector(final Promise<SizeT> completion,
-                               final FileDescriptor fileDescriptor,
-                               final OffsetT offset,
-                               final Option<Timeout> timeout,
-                               final OffHeapBuffer... buffers);
+    void writeVector(final Consumer<Result<SizeT>> completion,
+                     final FileDescriptor fileDescriptor,
+                     final OffsetT offset,
+                     final Option<Timeout> timeout,
+                     final OffHeapBuffer... buffers);
 
-    /**
-     * Same as {@link #writeVector(FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except offset is set to zero.
-     */
-    default Promise<SizeT> writeVector(final Promise<SizeT> completion,
+    default Promise<SizeT> writeVector(final Promise<SizeT> promise,
                                        final FileDescriptor fileDescriptor,
+                                       final OffsetT offset,
                                        final Option<Timeout> timeout,
                                        final OffHeapBuffer... buffers) {
-        return writeVector(completion, fileDescriptor, OffsetT.ZERO, timeout, buffers);
+        writeVector(promise::syncResolve, fileDescriptor, offset, timeout, buffers);
+        return promise;
     }
 
-    /**
-     * Same as {@link #writeVector(FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except offset is set to zero and timeout is omitted.
-     */
-    default Promise<SizeT> writeVector(final Promise<SizeT> completion,
-                                       final FileDescriptor fileDescriptor,
+    default Promise<SizeT> writeVector(final FileDescriptor fileDescriptor,
+                                       final OffsetT offset,
+                                       final Option<Timeout> timeout,
                                        final OffHeapBuffer... buffers) {
-        return writeVector(completion, fileDescriptor, OffsetT.ZERO, empty(), buffers);
+        return writeVector(Promise.promise(), fileDescriptor, offset, timeout, buffers);
     }
+
 
     //TODO: implement it. what should we return here?
     //Submitter batch(final Consumer<Submitter> submitterConsumer);
 
-    //TODO: recv, send - implement full support later, when special cases handling will be necessary
-    default Promise<SizeT> send(final Promise<SizeT> completion,
-                                final FileDescriptor socket,
-                                final OffHeapBuffer buffer,
-                                final Option<Timeout> timeout) {
-        return write(completion, socket, buffer, OffsetT.ZERO, timeout);
-    }
-
-    default Promise<SizeT> recv(final Promise<SizeT> completion,
-                                final FileDescriptor socket,
-                                final OffHeapBuffer buffer,
-                                final Option<Timeout> timeout) {
-        return read(completion, socket, buffer, OffsetT.ZERO, timeout);
-    }
+    //TODO: recv, send - implement later, when handling for specific cases will be necessary
 }

@@ -22,12 +22,13 @@ import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.core.meta.AppMetaRepository;
 import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.Submitter;
+import org.reactivetoolbox.io.async.util.BooleanLatch;
 import org.reactivetoolbox.io.scheduler.TaskScheduler;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.util.StringJoiner;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -36,9 +37,22 @@ import java.util.function.Consumer;
  * Implementation of {@link Promise}
  */
 public class PromiseImpl<T> implements Promise<T> {
-    private final AtomicReference<Result<T>> value = new AtomicReference<>(null);
-//    private final CountDownLatch actionsHandled = new CountDownLatch(1);
-    private final AtomicReference<Node<T>> head = new AtomicReference<>();
+    private volatile Result<T> value;
+    private volatile Node<T> head;
+    private final BooleanLatch actionsHandled = new BooleanLatch();
+
+    private static final VarHandle VALUE;
+    private static final VarHandle HEAD;
+
+    static {
+        try {
+            final MethodHandles.Lookup l = MethodHandles.lookup();
+            VALUE = l.findVarHandle(PromiseImpl.class, "value", Result.class);
+            HEAD = l.findVarHandle(PromiseImpl.class, "head", Node.class);
+        } catch (final ReflectiveOperationException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
 
     private static final AtomicReference<Consumer<Throwable>> exceptionConsumer =
             new AtomicReference<>(e -> SingletonHolder.logger().debug("Exception while applying handlers", e));
@@ -61,7 +75,7 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncResolve(final Result<T> result) {
-        if (value.compareAndSet(null, result)) {
+        if (VALUE.compareAndSet(this, null, result)) {
             handleActions();
         }
 
@@ -70,7 +84,7 @@ public class PromiseImpl<T> implements Promise<T> {
 
     @Override
     public Promise<T> resolve(final Result<T> result) {
-        if (value.compareAndSet(null, result)) {
+        if (VALUE.compareAndSet(this, null, result)) {
             handleActionsAsync();
         }
 
@@ -93,8 +107,8 @@ public class PromiseImpl<T> implements Promise<T> {
             }
         };
 
-        if (value.get() != null) {
-            safeAction.accept(value.get());
+        if (value != null) {
+            safeAction.accept(value);
             return this;
         }
 
@@ -102,11 +116,11 @@ public class PromiseImpl<T> implements Promise<T> {
         Node<T> oldHead;
 
         do {
-            oldHead = head.get();
+            oldHead = head;
             newHead.nextNode = oldHead;
-        } while (!head.compareAndSet(oldHead, newHead));
+        } while (!HEAD.compareAndSet(this, oldHead, newHead));
 
-        if (value.get() != null) {
+        if (value != null) {
             handleActions();
         }
 
@@ -121,20 +135,20 @@ public class PromiseImpl<T> implements Promise<T> {
     private void handleActions() {
         //Note: this is very performance critical method, so internals are inlined
         //Warning: do not change unless you clearly understand what are you doing!
-        final var result = value.get();
+        //final var result = value.get();
 
         boolean hasElements;
         do {
             Node<T> head;
             do {
-                head = this.head.get();
-            } while (!this.head.compareAndSet(head, null));
+                head = this.head;
+            } while (!HEAD.compareAndSet(this, head, null));
 
             Node<T> current = head;
             Node<T> prev = null;
-            Node<T> next = null;
+            Node<T> next;
 
-            while(current != null) {
+            while (current != null) {
                 next = current.nextNode;
                 current.nextNode = prev;
                 prev = current;
@@ -144,13 +158,13 @@ public class PromiseImpl<T> implements Promise<T> {
             hasElements = prev != null;
 
             while (prev != null) {
-                prev.element.accept(result);
+                prev.element.accept(value);
                 prev = prev.nextNode;
             }
 
         } while (hasElements);
 
-//        actionsHandled.countDown();
+        actionsHandled.signal();
     }
 
     /**
@@ -158,13 +172,8 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncWait() {
-        final CountDownLatch actionsHandled = new CountDownLatch(1);
-        thenDo(actionsHandled::countDown);
-
-        try {
-            actionsHandled.await();
-        } catch (final Exception e) {
-            logger().debug("Exception in syncWait()", e);
+        if(!actionsHandled.await()) {
+            logger().debug("syncWait() was interrupted");
         }
         return this;
     }
@@ -174,15 +183,9 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncWait(final Timeout timeout) {
-        final CountDownLatch actionsHandled = new CountDownLatch(1);
-        thenDo(actionsHandled::countDown);
-
-        try {
-            if (!actionsHandled.await(timeout.asMillis(), TimeUnit.MILLISECONDS)) {
-                syncFail(Errors.TIMEOUT);
-            }
-        } catch (final Exception e) {
-            logger().debug("Exception in syncWait(timeout)", e);
+        if (!actionsHandled.await(timeout)) {
+            syncFail(Errors.TIMEOUT);
+            logger().debug("syncWait(Timeout) expired or interrupted");
         }
         return this;
     }
@@ -214,7 +217,7 @@ public class PromiseImpl<T> implements Promise<T> {
     @Override
     public String toString() {
         return new StringJoiner(", ", "Promise(", ")")
-                .add(value.get() == null ? "<pending>" : value.get().toString())
+                .add(value == null ? "<pending>" : value.toString())
                 .toString();
     }
 
@@ -223,7 +226,7 @@ public class PromiseImpl<T> implements Promise<T> {
         return SingletonHolder.logger();
     }
 
-//    private static final class SingletonHolder {
+    //    private static final class SingletonHolder {
     public static final class SingletonHolder {
         private static final int WORKER_SCHEDULER_SIZE = Math.max(Runtime.getRuntime().availableProcessors() - 1, 2);
 

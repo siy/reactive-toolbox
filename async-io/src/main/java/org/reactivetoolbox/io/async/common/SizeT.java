@@ -6,7 +6,7 @@ package org.reactivetoolbox.io.async.common;
 public class SizeT {
     private final long value;
 
-    private SizeT(final long value) {
+    public SizeT(final long value) {
         this.value = value;
     }
 

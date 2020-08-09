@@ -6,7 +6,6 @@ import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
-import org.reactivetoolbox.io.async.impl.PromiseImpl;
 import org.reactivetoolbox.io.async.net.AddressFamily;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
@@ -21,11 +20,10 @@ import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
 import java.util.Deque;
-import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
-import static org.reactivetoolbox.core.lang.functional.Result.fail;
 import static org.reactivetoolbox.io.NativeError.ENOTSOCK;
 import static org.reactivetoolbox.io.NativeError.EPFNOSUPPORT;
 import static org.reactivetoolbox.io.NativeError.result;
@@ -33,14 +31,14 @@ import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.a
 import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.addressIn6;
 
 public class UringHolder implements AutoCloseable {
-    //    public static final int DEFAULT_QUEUE_SIZE = 4; // 1 - ~39-40K, 10 - ~126-132K
-//    public static final int DEFAULT_QUEUE_SIZE = 8; // 1 - ~44-45K, 10 - ~137K
-//    public static final int DEFAULT_QUEUE_SIZE = 16; // 1 - ~39-40K, 10 - ~129-134K, 100 - ~250-253K
-//    public static final int DEFAULT_QUEUE_SIZE = 32; // 1 - ~37-39K, 10 - ~121-127K, 100 - ~231-236K
-//    public static final int DEFAULT_QUEUE_SIZE = 64; // 1 - ~37-40K, 10 - ~120-129K, 100 - ~237K
-//    public static final int DEFAULT_QUEUE_SIZE = 128; // 1 - ~37-38K, 10 - ~123-134K, 100 - ~233K
-//    public static final int DEFAULT_QUEUE_SIZE = 256; // 1 - ~37-38K, 10 - ~118-126K, 100 - ~231K
-    public static final int DEFAULT_QUEUE_SIZE = 1024; // 1 - , 10 - , 100 -
+//    public static final int DEFAULT_QUEUE_SIZE = 4; // 1 - ~59-60K, 10 - ~261-264K, 100 - ~321-329K
+//    public static final int DEFAULT_QUEUE_SIZE = 8; // 1 - ~60-61K, 10 - ~264-269K, 100 - ~314K
+//    public static final int DEFAULT_QUEUE_SIZE = 16; // 1 - ~59-60K, 10 - ~260-270K, 100 - ~313-314K
+    public static final int DEFAULT_QUEUE_SIZE = 32; // 1 - ~59-60K, 10 - ~268-269K, 100 - ~332-333K
+//    public static final int DEFAULT_QUEUE_SIZE = 64; // 1 - ~56-59K, 10 - ~253-262K, 100 - ~315-329K
+//    public static final int DEFAULT_QUEUE_SIZE = 128; // 1 - ~54K, 10 - ~237-239K, 100 - ~314K
+//    public static final int DEFAULT_QUEUE_SIZE = 256; // 1 - ~, 10 - ~, 100 - ~
+//    public static final int DEFAULT_QUEUE_SIZE = 1024; // 1 - ~, 10 - ~, 100 - ~
 
     private static final int ENTRY_SIZE = 8;    // each entry is a 64-bit pointer
 
@@ -84,11 +82,8 @@ public class UringHolder implements AutoCloseable {
 
         for (long i = 0, address = completionBuffer; i < ready; i++, address += ENTRY_SIZE) {
             cqEntry.reposition(RawMemory.getLong(address));
-//            pendingCompletions.releaseUnsafe((int) cqEntry.userData())
-//                              .accept(cqEntry.extract());
             final var entry = cqEntry.extract();
-            final var completion = pendingCompletions.releaseUnsafe((int) cqEntry.userData());
-            PromiseImpl.SingletonHolder.scheduler().submit(() -> completion.accept(entry));
+            pendingCompletions.releaseUnsafe((int) cqEntry.userData()).accept(entry);
         }
 
         if (ready > 0) {
@@ -110,14 +105,14 @@ public class UringHolder implements AutoCloseable {
         Uring.submitAndWait(ringBase, 0);
     }
 
-    public static Result<UringHolder> create(final int requestedEntries, final EnumSet<UringSetupFlags> openFlags) {
+    public static Result<UringHolder> create(final int requestedEntries, final Set<UringSetupFlags> openFlags) {
         final long ringBase = RawMemory.allocate(Uring.SIZE);
         final int numEntries = calculateNumEntries(requestedEntries);
         final int rc = Uring.init(numEntries, ringBase, Bitmask.combine(openFlags));
 
         if (rc != 0) {
             RawMemory.dispose(ringBase);
-            return fail(NativeError.fromCode(rc).asFailure());
+            return NativeError.fromCode(rc).asResult();
         }
 
         return Result.ok(new UringHolder(numEntries, ringBase));
@@ -137,8 +132,8 @@ public class UringHolder implements AutoCloseable {
 
     public static Result<FileDescriptor> socket(final AddressFamily addressFamily,
                                                 final SocketType socketType,
-                                                final EnumSet<SocketFlag> openFlags,
-                                                final EnumSet<SocketOption> options) {
+                                                final Set<SocketFlag> openFlags,
+                                                final Set<SocketOption> options) {
         return result(Uring.socket(addressFamily.familyId(),
                                    socketType.code() | Bitmask.combine(openFlags),
                                    Bitmask.combine(options)),
@@ -148,8 +143,8 @@ public class UringHolder implements AutoCloseable {
 
     public static Result<ServerContext<?>> server(final SocketAddress<?> socketAddress,
                                                   final SocketType socketType,
-                                                  final EnumSet<SocketFlag> openFlags,
-                                                  final EnumSet<SocketOption> options,
+                                                  final Set<SocketFlag> openFlags,
+                                                  final Set<SocketOption> options,
                                                   final SizeT queueDepth) {
         return socket(socketAddress.family(), socketType, openFlags, options)
                 .flatMap(fileDescriptor -> configureForListen(fileDescriptor, socketAddress, (int) queueDepth.value()))
@@ -161,7 +156,7 @@ public class UringHolder implements AutoCloseable {
                                                                                                 final int queueDepth) {
 
         if (!fileDescriptor.isSocket()) {
-            return fail(ENOTSOCK.asFailure());
+            return ENOTSOCK.asResult();
         }
 
         final var rc = switch (socketAddress.family()) {

@@ -14,7 +14,7 @@ public class Inet6Address implements InetAddress {
 
     public static Result<Inet6Address> inet6Address(final byte[] address) {
         return address.length != SIZE
-               ? Result.fail(EFAULT.asFailure())
+               ? EFAULT.asResult()
                : Result.ok(new Inet6Address(address));
     }
 

@@ -3,6 +3,7 @@ package org.reactivetoolbox.io.async.net.context;
 import org.reactivetoolbox.core.lang.functional.Unit;
 import org.reactivetoolbox.core.lang.support.ULID;
 import org.reactivetoolbox.io.async.Promise;
+import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.ClientConnection;
@@ -12,6 +13,7 @@ import org.reactivetoolbox.io.async.net.server.TcpServerConfiguration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static org.reactivetoolbox.core.lang.functional.Option.empty;
 import static org.reactivetoolbox.io.async.net.context.ConnectionContext.connectionContext;
 
 public class ActiveServerContext {
@@ -60,7 +62,7 @@ public class ActiveServerContext {
 
     public static Promise<SizeT> echo(final ReadConnectionContext context) {
         return Promise.asyncPromise((promise, submitter) ->
-                                            submitter.write(promise, context.socket(), context.buffer()));
+                                            submitter.write(promise, context.socket(), context.buffer(), OffsetT.ZERO, empty()));
     }
 
     public void shutdown() {

@@ -1,9 +1,9 @@
 package org.reactivetoolbox.io;
 
+import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.lang.functional.Unit;
-import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
@@ -39,13 +39,12 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.functional.Result.flatten;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.core.lang.functional.Unit.unit;
-import static org.reactivetoolbox.io.async.common.SizeT.sizeT;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
 import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
@@ -62,6 +61,8 @@ import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQ
 public class Proactor implements Submitter {
     private static final Result<Unit> UNIT_RESULT = ok(unit());
     private static final int AT_FDCWD = -100; // Special value used to indicate the openat/statx functions should use the current working directory.
+    private static final Failure EOF = NativeError.ENODATA.asFailure();
+    private static final Result<SizeT> EOF_RESULT = Result.fail(EOF);
 
     private final UringHolder uringHolder;
     private final ObjectHeap<Consumer<DetachedCQEntry>> pendingCompletions;
@@ -80,7 +81,7 @@ public class Proactor implements Submitter {
         return proactor(queueSize, UringSetupFlags.defaultFlags());
     }
 
-    static Proactor proactor(final int queueSize, final EnumSet<UringSetupFlags> openFlags) {
+    static Proactor proactor(final int queueSize, final Set<UringSetupFlags> openFlags) {
         return new Proactor(UringHolder.create(queueSize, openFlags)
                                        .fold(f -> {
                                                  throw new IllegalStateException("Unable to initialize IO_URING interface");
@@ -108,31 +109,26 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public Promise<Unit> nop(final Promise<Unit> completion) {
-        final int key = pendingCompletions.allocKey((entry -> completion.syncResolve(UNIT_RESULT)));
+    public void nop(final Consumer<Result<Unit>> completion) {
+        final int key = pendingCompletions.allocKey((entry -> completion.accept(UNIT_RESULT)));
 
         queue.add(sqe -> sqe.userData(key)
                             .opcode(AsyncOperation.IORING_OP_NOP.opcode()));
-        return completion;
     }
 
     @Override
-    public Promise<Duration> delay(final Promise<Duration> completion, final Timeout timeout) {
+    public void delay(final Consumer<Result<Duration>> completion, final Timeout timeout) {
         final var timeSpec = OffHeapTimeSpec.forTimeout(timeout);
         final var startNanos = System.nanoTime();
         final var key = pendingCompletions.allocKey(entry -> {
             timeSpec.dispose();
-
             final var totalNanos = System.nanoTime() - startNanos;
 
-            if (Math.abs(entry.res()) != NativeError.ETIME.typeCode()) {
-                completion.syncFail(NativeError.fromCode(entry.res())
-                                               .asFailure());
-            } else {
-                completion.syncOk(timeout(totalNanos)
-                                          .nanos()
-                                          .asDuration());
-            }
+            final var result = Math.abs(entry.res()) != NativeError.ETIME.typeCode()
+                         ? NativeError.fromCode(entry.res()).<Duration>asResult()
+                         : Result.ok(timeout(totalNanos).nanos().asDuration());
+
+            completion.accept(result);
         });
 
         queue.add(sqe -> sqe.userData(key)
@@ -141,12 +137,13 @@ public class Proactor implements Submitter {
                             .fd(-1)
                             .len(1)
                             .off(1));
-        return completion;
     }
 
     @Override
-    public Promise<Unit> closeFileDescriptor(final Promise<Unit> completion, final FileDescriptor fd, final Option<Timeout> timeout) {
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(v -> unit())));
+    public void closeFileDescriptor(final Consumer<Result<Unit>> completion,
+                                    final FileDescriptor fd,
+                                    final Option<Timeout> timeout) {
+        final var key = pendingCompletions.allocKey(entry -> completion.accept(entry.result(v -> unit())));
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -154,19 +151,17 @@ public class Proactor implements Submitter {
                             .fd(fd.descriptor()));
 
         timeout.whenPresent(this::appendTimeout);
-
-        return completion;
     }
 
     @Override
-    public Promise<SizeT> read(final Promise<SizeT> completion,
-                               final FileDescriptor fd,
-                               final OffHeapBuffer buffer,
-                               final OffsetT offset,
-                               final Option<Timeout> timeout) {
+    public void read(final Consumer<Result<SizeT>> completion,
+                     final FileDescriptor fd,
+                     final OffHeapBuffer buffer,
+                     final OffsetT offset,
+                     final Option<Timeout> timeout) {
         final var key = pendingCompletions.allocKey(entry -> {
-            final Result<SizeT> result = entry.result(bytesRead -> sizeT(buffer.used(bytesRead).used()));
-            completion.syncResolve(result);
+            final var result = entry.result(bytesRead -> new SizeT(buffer.used(bytesRead).used()));
+            completion.accept(result.flatMap(value -> value.value() == 0 ? EOF_RESULT : result));
         });
 
         queue.add(sqe -> sqe.userData(key)
@@ -178,20 +173,15 @@ public class Proactor implements Submitter {
                             .off(offset.value()));
 
         timeout.whenPresent(this::appendTimeout);
-
-        return completion;
     }
 
     @Override
-    public Promise<SizeT> write(final Promise<SizeT> completion,
-                                final FileDescriptor fd,
-                                final OffHeapBuffer buffer,
-                                final OffsetT offset,
-                                final Option<Timeout> timeout) {
-        final var key = pendingCompletions.allocKey(entry -> {
-            final Result<SizeT> result = entry.result(SizeT::sizeT);
-            completion.syncResolve(result);
-        });
+    public void write(final Consumer<Result<SizeT>> completion,
+                      final FileDescriptor fd,
+                      final OffHeapBuffer buffer,
+                      final OffsetT offset,
+                      final Option<Timeout> timeout) {
+        final var key = pendingCompletions.allocKey(entry -> completion.accept(entry.result(SizeT::new)));
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -202,13 +192,13 @@ public class Proactor implements Submitter {
                             .off(offset.value()));
 
         timeout.whenPresent(this::appendTimeout);
-
-        return completion;
     }
 
     @Override
-    public Promise<SizeT> splice(final Promise<SizeT> completion, final SpliceDescriptor descriptor, final Option<Timeout> timeout) {
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(SizeT::sizeT)));
+    public void splice(final Consumer<Result<SizeT>> completion,
+                       final SpliceDescriptor descriptor,
+                       final Option<Timeout> timeout) {
+        final var key = pendingCompletions.allocKey(entry -> completion.accept(entry.result(SizeT::new)));
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -221,19 +211,19 @@ public class Proactor implements Submitter {
                             .spliceFlags(Bitmask.combine(descriptor.flags())));
 
         timeout.whenPresent(this::appendTimeout);
-
-        return completion;
     }
 
     @Override
-    public Promise<FileDescriptor> open(final Promise<FileDescriptor> completion,
-                                        final Path path,
-                                        final EnumSet<OpenFlags> flags,
-                                        final EnumSet<FilePermission> mode,
-                                        final Option<Timeout> timeout) {
+    public void open(final Consumer<Result<FileDescriptor>> completion,
+                     final Path path,
+                     final Set<OpenFlags> flags,
+                     final Set<FilePermission> mode,
+                     final Option<Timeout> timeout) {
         final var rawPath = OffHeapCString.cstring(path.toString());
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(FileDescriptor::file))
-                                                                       .thenDo(rawPath::dispose));
+        final var key = pendingCompletions.allocKey(entry -> {
+            rawPath.dispose();
+            completion.accept(entry.result(FileDescriptor::file));
+        });
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -244,55 +234,48 @@ public class Proactor implements Submitter {
                             .openFlags(Bitmask.combine(flags)));
 
         timeout.whenPresent(this::appendTimeout);
-
-        return completion;
     }
 
     @Override
-    public Promise<FileDescriptor> socket(final Promise<FileDescriptor> completion,
-                                          final AddressFamily addressFamily,
-                                          final SocketType socketType,
-                                          final EnumSet<SocketFlag> openFlags,
-                                          final EnumSet<SocketOption> options) {
-        nop(Promise.promise())
-                .thenDo(() -> completion.resolve(UringHolder.socket(addressFamily,
-                                                                    socketType,
-                                                                    openFlags,
-                                                                    options)));
-        return completion;
+    public void socket(final Consumer<Result<FileDescriptor>> completion,
+                       final AddressFamily addressFamily,
+                       final SocketType socketType,
+                       final Set<SocketFlag> openFlags,
+                       final Set<SocketOption> options) {
+
+        nop($ -> completion.accept(UringHolder.socket(addressFamily,
+                                                      socketType,
+                                                      openFlags,
+                                                      options)));
     }
 
     @Override
-    public Promise<ServerContext<?>> server(final Promise<ServerContext<?>> completion,
-                                            final SocketAddress<?> socketAddress,
-                                            final SocketType socketType,
-                                            final EnumSet<SocketFlag> openFlags,
-                                            final SizeT queueDepth,
-                                            final EnumSet<SocketOption> options) {
-        nop(Promise.promise())
-                .thenDo(() -> completion.resolve(UringHolder.server(socketAddress,
-                                                                    socketType,
-                                                                    openFlags,
-                                                                    options,
-                                                                    queueDepth)));
-        return completion;
+    public void server(final Consumer<Result<ServerContext<?>>> completion,
+                       final SocketAddress<?> socketAddress,
+                       final SocketType socketType,
+                       final Set<SocketFlag> openFlags,
+                       final SizeT queueDepth,
+                       final Set<SocketOption> options) {
+
+        nop($ -> completion.accept(UringHolder.server(socketAddress,
+                                                      socketType,
+                                                      openFlags,
+                                                      options,
+                                                      queueDepth)));
     }
 
     @Override
-    public Promise<ClientConnection<?>> accept(final Promise<ClientConnection<?>> completion,
-                                               final FileDescriptor socket,
-                                               final EnumSet<SocketFlag> flags) {
+    public void accept(final Consumer<Result<ClientConnection<?>>> completion,
+                       final FileDescriptor socket,
+                       final Set<SocketFlag> flags) {
         //TODO: add support for v6
         final var clientAddress = OffHeapSocketAddress.addressIn();
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(FileDescriptor::socket)
-                                                                                         .flatMap(fd -> flatten(ok(fd), clientAddress.extract())
-                                                                                                 .map(tuple -> tuple.map(ClientConnection::connectionIn))))
-                                                                       .thenDo(clientAddress::dispose));
-
-//        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(FileDescriptor::socket)
-//                                                                                         .flatMap(fd -> clientAddress.extract()
-//                                                                                                                     .map(address -> connectionIn(fd, address))))
-//                                                                       .thenDo(clientAddress::dispose));
+        final var key = pendingCompletions.allocKey(entry -> {
+            completion.accept(entry.result(FileDescriptor::socket)
+                                   .flatMap(fd -> flatten(ok(fd), clientAddress.extract())
+                                           .map(tuple -> tuple.map(ClientConnection::connectionIn))));
+            clientAddress.dispose();
+        });
 
         queue.add(sqe -> sqe.userData(key)
                             .opcode(AsyncOperation.IORING_OP_ACCEPT.opcode())
@@ -300,22 +283,22 @@ public class Proactor implements Submitter {
                             .addr(clientAddress.sockAddrPtr())
                             .off(clientAddress.sizePtr())
                             .acceptFlags(Bitmask.combine(flags)));
-        return completion;
     }
 
     @Override
-    public Promise<FileDescriptor> connect(final Promise<FileDescriptor> completion,
-                                           final FileDescriptor socket,
-                                           final SocketAddress<?> address,
-                                           final Option<Timeout> timeout) {
+    public void connect(final Consumer<Result<FileDescriptor>> completion,
+                        final FileDescriptor socket,
+                        final SocketAddress<?> address,
+                        final Option<Timeout> timeout) {
         final var clientAddress = OffHeapSocketAddress.unsafeSocketAddress(address);
 
         if (clientAddress == null) {
-            return completion.syncFail(NativeError.EPFNOSUPPORT.asFailure());
+            completion.accept(NativeError.EPFNOSUPPORT.asResult());
+            return;
         }
 
         final var key = pendingCompletions.allocKey((entry -> {
-            completion.syncResolve(entry.result(v -> socket));
+            completion.accept(entry.result(v -> socket));
             clientAddress.dispose();
         }));
 
@@ -327,22 +310,23 @@ public class Proactor implements Submitter {
                             .off(clientAddress.sockAddrSize()));
 
         timeout.whenPresent(this::appendTimeout);
-        return completion;
     }
 
     @Override
-    public Promise<FileStat> stat(final Promise<FileStat> completion,
-                                  final Path path,
-                                  final EnumSet<StatFlag> flags,
-                                  final EnumSet<StatMask> mask) {
+    public void stat(final Consumer<Result<FileStat>> completion,
+                     final Path path,
+                     final Set<StatFlag> flags,
+                     final Set<StatMask> mask) {
         //Reset EMPTY_PATH and force use the path.
         final var statFlags = Bitmask.combine(flags) & ~StatFlag.EMPTY_PATH.mask();
         final var statMask = Bitmask.combine(mask);
         final var fileStat = OffHeapFileStat.fileStat();
         final var rawPath = OffHeapCString.cstring(path.toString());
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result($ -> fileStat.extract()))
-                                                                       .thenDo(fileStat::dispose)
-                                                                       .thenDo(rawPath::dispose));
+        final var key = pendingCompletions.allocKey(entry -> {
+            completion.accept(entry.result($ -> fileStat.extract()));
+            fileStat.dispose();
+            rawPath.dispose();
+        });
 
         queue.add(sqe -> sqe.userData(key)
                             .fd(AT_FDCWD)
@@ -351,22 +335,23 @@ public class Proactor implements Submitter {
                             .off(fileStat.address())
                             .statxFlags(statFlags)
                             .opcode(AsyncOperation.IORING_OP_STATX.opcode()));
-        return completion;
     }
 
     @Override
-    public Promise<FileStat> stat(final Promise<FileStat> completion,
-                                  final FileDescriptor fd,
-                                  final EnumSet<StatFlag> flags,
-                                  final EnumSet<StatMask> mask) {
+    public void stat(final Consumer<Result<FileStat>> completion,
+                     final FileDescriptor fd,
+                     final Set<StatFlag> flags,
+                     final Set<StatMask> mask) {
         //Set EMPTY_PATH and force use of file descriptor.
         final var statFlags = Bitmask.combine(flags) | StatFlag.EMPTY_PATH.mask();
         final var statMask = Bitmask.combine(mask);
         final var fileStat = OffHeapFileStat.fileStat();
         final var rawPath = OffHeapCString.cstring("");
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result($ -> fileStat.extract()))
-                                                                       .thenDo(fileStat::dispose)
-                                                                       .thenDo(rawPath::dispose));
+        final var key = pendingCompletions.allocKey(entry -> {
+            completion.accept(entry.result($ -> fileStat.extract()));
+            fileStat.dispose();
+            rawPath.dispose();
+        });
 
         queue.add(sqe -> sqe.userData(key)
                             .fd(fd.descriptor())
@@ -375,18 +360,19 @@ public class Proactor implements Submitter {
                             .off(fileStat.address())
                             .statxFlags(statFlags)
                             .opcode(AsyncOperation.IORING_OP_STATX.opcode()));
-        return completion;
     }
 
     @Override
-    public Promise<SizeT> readVector(final Promise<SizeT> completion,
-                                     final FileDescriptor fileDescriptor,
-                                     final OffsetT offset,
-                                     final Option<Timeout> timeout,
-                                     final OffHeapBuffer... buffers) {
+    public void readVector(final Consumer<Result<SizeT>> completion,
+                           final FileDescriptor fileDescriptor,
+                           final OffsetT offset,
+                           final Option<Timeout> timeout,
+                           final OffHeapBuffer... buffers) {
         final var ioVector = OffHeapIoVector.withBuffers(buffers);
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(SizeT::sizeT))
-                                                                       .thenDo(ioVector::dispose));
+        final var key = pendingCompletions.allocKey(entry -> {
+            completion.accept(entry.result(SizeT::new));
+            ioVector.dispose();
+        });
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -397,20 +383,20 @@ public class Proactor implements Submitter {
                             .off(offset.value()));
 
         timeout.whenPresent(this::appendTimeout);
-
-        return completion;
     }
 
     @Override
-    public Promise<SizeT> writeVector(final Promise<SizeT> completion,
-                                      final FileDescriptor fileDescriptor,
-                                      final OffsetT offset,
-                                      final Option<Timeout> timeout,
-                                      final OffHeapBuffer... buffers) {
+    public void writeVector(final Consumer<Result<SizeT>> promise,
+                            final FileDescriptor fileDescriptor,
+                            final OffsetT offset,
+                            final Option<Timeout> timeout,
+                            final OffHeapBuffer... buffers) {
 
         final var ioVector = OffHeapIoVector.withBuffers(buffers);
-        final var key = pendingCompletions.allocKey(entry -> completion.syncResolve(entry.result(SizeT::sizeT))
-                                                                       .thenDo(ioVector::dispose));
+        final var key = pendingCompletions.allocKey(entry -> {
+            promise.accept(entry.result(SizeT::new));
+            ioVector.dispose();
+        });
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -421,8 +407,6 @@ public class Proactor implements Submitter {
                             .off(offset.value()));
 
         timeout.whenPresent(this::appendTimeout);
-
-        return completion;
     }
 
     private void appendTimeout(final Timeout t) {
