@@ -8,6 +8,7 @@ import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.ClientConnection;
+import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.async.net.lifecycle.LifeCycle;
 import org.reactivetoolbox.io.async.net.server.TcpServerConfiguration;
 
@@ -27,6 +28,10 @@ public class ActiveServerContext {
     private ActiveServerContext(final ServerContext<?> serverContext, final TcpServerConfiguration configuration) {
         this.serverContext = serverContext;
         this.configuration = configuration;
+    }
+
+    public SocketAddressIn serverAddress() {
+        return configuration.address();
     }
 
     public static ActiveServerContext activeContext(final ServerContext<?> serverContext,

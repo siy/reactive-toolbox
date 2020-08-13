@@ -19,7 +19,6 @@ import java.time.Clock;
 import static org.reactivetoolbox.core.lang.functional.Option.empty;
 import static org.reactivetoolbox.io.async.net.context.ReadConnectionContext.readConnectionContext;
 
-//TODO: add handling timeout?
 public class ReadWriteLifeCycle implements LifeCycle {
     private static final int DEFAULT_READ_BUFFER_SIZE = 16384;
     private static final Failure EOF = NativeError.ENODATA.asFailure();
@@ -58,15 +57,16 @@ public class ReadWriteLifeCycle implements LifeCycle {
     public void process(final ConnectionContext connectionContext, final Promise<Unit> onClose) {
         final OffHeapBuffer buffer = OffHeapBuffer.fixedSize(bufferSize);
 
-        onClose.async($ -> System.out.println("Connection " + connectionContext.id() +
-                           " opened at " + Clock.systemUTC().instant()));
+        onClose.async($ -> onClose.logger().debug("Connection {0} opened at {1}", connectionContext.id(), Clock.systemUTC().instant()));
 
         onClose.thenDo(buffer::dispose);
         onClose.thenDo(() -> Promise.<Unit>asyncPromise((promise, submitter) ->
                                                                 submitter.closeFileDescriptor(promise, connectionContext.socket(), empty())
                                                                          .onResult(unitResult ->
-                                                                                           System.out.println("Connection " + connectionContext.id() +
-                                                                                                              " closed (" + unitResult + "), at " + Clock.systemUTC().instant()))));
+                                                                                           onClose.logger().debug("Connection {0} closed {1} at {2}",
+                                                                                                                  connectionContext.id(),
+                                                                                                                  unitResult,
+                                                                                                                  Clock.systemUTC().instant()))));
         rwCycle(readConnectionContext(connectionContext, buffer, onClose));
     }
 
@@ -76,17 +76,10 @@ public class ReadWriteLifeCycle implements LifeCycle {
     }
 
     private void doRead(final ReadConnectionContext connectionContext, final Submitter submitter) {
-        //TODO: candidate for cleanup
-        submitter.read(readResult -> readResult.onFailure(failure -> System.err.println("Read error " + failure + " at " + Clock.systemUTC().instant()))
-                                               .onFailure(connectionContext.onClose()::fail)
-                                               //TODO: candidate for cleanup
+        submitter.read(readResult -> readResult.onFailure(connectionContext.onClose()::fail)
                                                .onSuccess(bytesRead -> handler.apply(connectionContext, bytesRead, submitter)
-                                                                              .onFailure(connectionContext.onClose()::fail))
-                                                                              //.onFailure(connectionContext.onClose()::fail).releaseWhenDone())
-
-                                               //TODO: candidate for cleanup
-                                               .onSuccess($ -> doRead(connectionContext, submitter)),
-                       //.onSuccess($ -> rwCycle(connectionContext))),
+                                                                              .onFailure(connectionContext.onClose()::fail)
+                                                                              .onSuccess($ -> doRead(connectionContext, submitter))),
                        connectionContext.socket(),
                        connectionContext.buffer(),
                        OffsetT.ZERO,
