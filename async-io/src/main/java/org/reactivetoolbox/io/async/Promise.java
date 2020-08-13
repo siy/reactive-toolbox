@@ -29,6 +29,7 @@ import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.io.async.impl.PromiseImpl;
+import org.reactivetoolbox.io.async.util.BooleanLatch;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
 import java.util.function.BiConsumer;
@@ -67,7 +68,18 @@ public interface Promise<T> {
     }
 
     default Promise<T> chainTo(final Promise<T> promise) {
-        return chainTo(promise, FN1.id());
+        onResult(promise::resolve);
+        return promise;
+    }
+
+    default <R> Promise<R> syncChainTo(final Promise<R> promise, final FN1<R, T> mapper) {
+        onResult(result -> promise.syncResolve(result.map(mapper)));
+        return promise;
+    }
+
+    default Promise<T> syncChainTo(final Promise<T> promise) {
+        onResult(promise::syncResolve);
+        return promise;
     }
 
     /**
@@ -211,15 +223,9 @@ public interface Promise<T> {
         return async(timeout, promise -> promise.syncResolve(timeoutResultSupplier.get()));
     }
 
-    default Promise<T> onSuccess(final Consumer<T> consumer) {
-        onResult(result -> result.onSuccess(consumer));
-        return this;
-    }
+    Promise<T> onSuccess(final Consumer<T> consumer);
 
-    default Promise<T> onFailure(final Consumer<? super Failure> consumer) {
-        onResult(result -> result.onFailure(consumer));
-        return this;
-    }
+    Promise<T> onFailure(final Consumer<? super Failure> consumer);
 
     /**
      * Resolve instance with {@link Errors#CANCELLED}. Often necessary if pending request need to be resolved prematurely, without waiting for response or timeout.
@@ -246,15 +252,11 @@ public interface Promise<T> {
      *         (if current instance is resolved to success).
      */
     default <R> Promise<R> flatMap(final FN1<Promise<R>, T> mapper) {
-        final var resultPromise = new PromiseImpl<R>();
+        final var resultPromise = PromiseImpl.<R>promise();
 
         onResult(result -> resultPromise.async(mapResult -> result.fold(failure -> mapResult.syncResolve((Result<R>) result),
                                                                         success -> mapper.apply(success).onResult(mapResult::syncResolve))));
         return resultPromise;
-
-//        return promise(promise -> onResult(result -> result.fold(error -> promise.resolve(Result.fail(error)),
-//                                                                 success -> mapper.apply(success)
-//                                                                                  .onResult(promise::resolve))));
     }
 
     /**
@@ -266,15 +268,11 @@ public interface Promise<T> {
      *         (if current instance is resolved to success).
      */
     default <R> Promise<R> syncFlatMap(final FN1<Promise<R>, T> mapper) {
-        final var mapResult = new PromiseImpl<R>();
+        final var mapResult = PromiseImpl.<R>promise();
 
         onResult(result -> result.fold(failure -> mapResult.syncResolve((Result<R>) result),
                                        success -> mapper.apply(success).onResult(mapResult::syncResolve)));
         return mapResult;
-//
-//        return promise(promise -> onResult(result -> result.fold(error -> promise.syncResolve(Result.fail(error)),
-//                                                                 success -> mapper.apply(success)
-//                                                                                  .onResult(promise::syncResolve))));
     }
 
     /**
@@ -286,25 +284,25 @@ public interface Promise<T> {
      * @return Created instance
      */
     default <R> Promise<R> syncMap(final FN1<R, T> mapper) {
-        final var result = new PromiseImpl<R>();
+        final var result = PromiseImpl.<R>promise();
         onResult(value -> result.syncResolve(value.map(mapper)));
         return result;
     }
 
     default <R> Promise<R> map(final FN1<R, T> mapper) {
-        final var result = new PromiseImpl<R>();
+        final var result = PromiseImpl.<R>promise();
         onResult(value -> result.resolve(value.map(mapper)));
         return result;
     }
 
     default <R> Promise<R> syncMapResult(final FN1<Result<R>, T> mapper) {
-        final var result = new PromiseImpl<R>();
+        final var result = PromiseImpl.<R>promise();
         onResult(value -> result.syncResolve(value.flatMap(mapper)));
         return result;
     }
 
     default <R> Promise<R> mapResult(final FN1<Result<R>, T> mapper) {
-        final var result = new PromiseImpl<R>();
+        final var result = PromiseImpl.<R>promise();
         onResult(value -> result.resolve(value.flatMap(mapper)));
         return result;
     }
@@ -327,13 +325,17 @@ public interface Promise<T> {
         PromiseImpl.exceptionConsumer(consumer);
     }
 
+    static int parallelism() {
+        return PromiseImpl.schedulerParallelism();
+    }
+
     /**
      * Create new unresolved instance.om
      *
      * @return Created instance
      */
     static <T> Promise<T> promise() {
-        return new PromiseImpl<>();
+        return PromiseImpl.promise();
     }
 
     /**
@@ -344,7 +346,19 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> promise(final Consumer<Promise<T>> setup) {
-        final var result = new PromiseImpl<T>();
+        final var result = PromiseImpl.<T>promise();
+
+        setup.accept(result);
+
+        return result;
+    }
+
+    static <T> Promise<T> waitablePromise() {
+        return new PromiseImpl<>(new BooleanLatch());
+    }
+
+    static <T> Promise<T> waitablePromise(final Consumer<Promise<T>> setup) {
+        final var result = new PromiseImpl<T>(new BooleanLatch());
 
         setup.accept(result);
 
@@ -359,7 +373,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> asyncPromise(final Consumer<Promise<T>> task) {
-        return new PromiseImpl<T>().async(task);
+        return PromiseImpl.<T>promise().async(task);
     }
 
     /**
@@ -372,7 +386,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> asyncPromise(final BiConsumer<Promise<T>, Submitter> task) {
-        return new PromiseImpl<T>().async(task);
+        return PromiseImpl.<T>promise().async(task);
     }
 
     /**
@@ -381,7 +395,7 @@ public interface Promise<T> {
      * @return Created instance
      */
     static <T> Promise<T> ready(final Result<T> result) {
-        return new PromiseImpl<T>().syncResolve(result);
+        return PromiseImpl.promise(result);
     }
 
     /**

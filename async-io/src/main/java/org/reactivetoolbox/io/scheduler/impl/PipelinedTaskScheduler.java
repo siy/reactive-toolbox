@@ -47,7 +47,7 @@ public class PipelinedTaskScheduler implements TaskScheduler {
             final var proactor = Proactor.proactor();
             pipelines.add(pipeline);
             proactors.add(proactor);
-            executor.execute(createWorker(pipeline, proactor));
+            startWorker(pipeline, proactor);
         });
     }
 
@@ -79,8 +79,13 @@ public class PipelinedTaskScheduler implements TaskScheduler {
         return SingletonHolder.logger();
     }
 
-    private Runnable createWorker(final StackingCollector<Runnable> pipeline, final Proactor proactor) {
-        return () -> {
+    @Override
+    public int parallelism() {
+        return pipelines.size();
+    }
+
+    private void startWorker(final StackingCollector<Runnable> pipeline, final Proactor proactor) {
+        executor.execute(() -> {
             int idleRunCount = 0;
 
             while (!executor.isShutdown()) {
@@ -103,7 +108,7 @@ public class PipelinedTaskScheduler implements TaskScheduler {
                 proactor.processIO();
             }
             proactor.close();
-        };
+        });
     }
 
     private static final class SingletonHolder {

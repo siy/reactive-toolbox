@@ -1,6 +1,5 @@
 package org.reactivetoolbox.io.async;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
@@ -14,9 +13,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
+import static org.reactivetoolbox.io.async.Promise.waitablePromise;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 
-@Disabled
+//@Disabled
 public class PromisePerfTest {
     void testRunner(final String name,
                     final FN1<Long, Integer> promiseBenchmark,
@@ -87,14 +87,15 @@ public class PromisePerfTest {
         final var latch = new CountDownLatch(count);
 
         for (int i = 0; i < count; i++) {
-            origin.map(v -> v).onResult(v -> latch.countDown());
+            origin.map(v -> v)
+                  .thenDo(latch::countDown);
         }
 
         final long start = System.nanoTime();
         origin.ok(1);
         try {
             latch.await(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             e.printStackTrace();
         }
         final long result = System.nanoTime() - start;
@@ -118,7 +119,7 @@ public class PromisePerfTest {
         origin.completeAsync(() -> Result.ok(1));
         try {
             latch.await(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             e.printStackTrace();
         }
         final long result = System.nanoTime() - start;
@@ -191,7 +192,7 @@ public class PromisePerfTest {
         return finish;
     }
 
-    static private Tuple2<Promise<Integer>, Promise<Integer>> configurePromises(int count) {
+    static private Tuple2<Promise<Integer>, Promise<Integer>> configurePromises(final int count) {
         final var origin = Promise.<Integer>promise();
         var last = origin;
 
@@ -199,10 +200,10 @@ public class PromisePerfTest {
             last = last.map(v -> v + 1);
         }
 
-        return tuple(origin, last);
+        return tuple(origin, waitablePromise(last::syncChainTo));
     }
 
-    static private Tuple2<CompletableFuture<Result<Integer>>, CompletableFuture<Result<Integer>>> configureCompletableFutures(int count) {
+    static private Tuple2<CompletableFuture<Result<Integer>>, CompletableFuture<Result<Integer>>> configureCompletableFutures(final int count) {
         final var origin = new CompletableFuture<Result<Integer>>();
         var last = origin;
 
@@ -215,7 +216,7 @@ public class PromisePerfTest {
         return tuple(origin, last);
     }
 
-    static private Tuple2<CompletableFuture<Result<Integer>>, CompletableFuture<Result<Integer>>> configureSynchronousCompletableFutures(int count) {
+    static private Tuple2<CompletableFuture<Result<Integer>>, CompletableFuture<Result<Integer>>> configureSynchronousCompletableFutures(final int count) {
         final var origin = new CompletableFuture<Result<Integer>>();
         var last = origin;
 
@@ -228,7 +229,7 @@ public class PromisePerfTest {
         return tuple(origin, last);
     }
 
-    static private Tuple2<Promise<Integer>, Promise<Integer>> configureSynchronousPromises(int count) {
+    static private Tuple2<Promise<Integer>, Promise<Integer>> configureSynchronousPromises(final int count) {
         final var origin = Promise.<Integer>promise();
         var last = origin;
 
@@ -236,6 +237,6 @@ public class PromisePerfTest {
             last = last.syncMap(v -> v + 1);
         }
 
-        return tuple(origin, last);
+        return tuple(origin, waitablePromise(last::syncChainTo));
     }
 }

@@ -1,7 +1,5 @@
 package org.reactivetoolbox.io.uring.utils;
 
-import org.reactivetoolbox.core.lang.functional.Option;
-
 import java.util.Arrays;
 
 /**
@@ -35,12 +33,10 @@ public class ObjectHeap<T> {
         return new ObjectHeap<>(initialCapacity);
     }
 
-    public Option<T> release(final int key) {
-        return Option.option(releaseUnsafe(key));
-    }
-
     public T releaseUnsafe(final int key) {
         if (key < 0 || key >= nextFree || elements[key] == null || key == firstFree) {
+            System.out.printf("key: %d, nextFree: %d, elements[key] is %s, firstFree: %d",
+                              key, nextFree, elements[key], firstFree);
             return null;
         }
 

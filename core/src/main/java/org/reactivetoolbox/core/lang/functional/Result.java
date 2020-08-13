@@ -127,13 +127,9 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return current instance for fluent call chaining
      */
-    default Result<T> onSuccess(final Consumer<T> consumer) {
-        return fold(t1 -> this, t1 -> { consumer.accept(t1); return this; });
-    }
+    Result<T> onSuccess(final Consumer<T> consumer);
 
-    default Result<T> onSuccessDo(final Runnable action) {
-        return fold(t1 -> this, t1 -> { action.run(); return this; });
-    }
+    Result<T> onSuccessDo(final Runnable action);
 
     /**
      * Pass failure operation result value into provided consumer.
@@ -143,13 +139,9 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return current instance for fluent call chaining
      */
-    default Result<T> onFailure(final Consumer<? super Failure> consumer) {
-        return fold(t1 -> { consumer.accept(t1); return this; }, t1 -> this);
-    }
+    Result<T> onFailure(final Consumer<? super Failure> consumer);
 
-    default Result<T> onFailureDo(final Runnable action) {
-        return fold(t1 -> { action.run(); return this; }, t1 -> this);
-    }
+    Result<T> onFailureDo(final Runnable action);
 
     /**
      * Convert instance into {@link Option} of the same type. Successful instance
@@ -171,8 +163,6 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return created instance
      */
-    //ConcurrentMap<Object, Result> SUCCESSES = new ConcurrentHashMap<>();
-
     static <R> Result<R> ok(final R value) {
         return new ResultOk<>(value);
     }
@@ -340,6 +330,28 @@ public interface Result<T> extends Either<Failure, T> {
                     .add(value.toString())
                     .toString();
         }
+
+        @Override
+        public Result<R> onSuccess(final Consumer<R> consumer) {
+            consumer.accept(value);
+            return this;
+        }
+
+        @Override
+        public Result<R> onSuccessDo(final Runnable action) {
+            action.run();
+            return this;
+        }
+
+        @Override
+        public Result<R> onFailure(final Consumer<? super Failure> consumer) {
+            return this;
+        }
+
+        @Override
+        public Result<R> onFailureDo(final Runnable action) {
+            return this;
+        }
     }
 
     class ResultFail<R> implements Result<R> {
@@ -376,6 +388,28 @@ public interface Result<T> extends Either<Failure, T> {
             return new StringJoiner(", ", "Result-failure(", ")")
                     .add(value.toString())
                     .toString();
+        }
+
+        @Override
+        public Result<R> onSuccess(final Consumer<R> consumer) {
+            return this;
+        }
+
+        @Override
+        public Result<R> onSuccessDo(final Runnable action) {
+            return this;
+        }
+
+        @Override
+        public Result<R> onFailure(final Consumer<? super Failure> consumer) {
+            consumer.accept(value);
+            return this;
+        }
+
+        @Override
+        public Result<R> onFailureDo(final Runnable action) {
+            action.run();
+            return this;
         }
     }
 }

@@ -158,6 +158,7 @@ public interface Submitter {
                                  final OffHeapBuffer buffer,
                                  final OffsetT offset,
                                  final Option<Timeout> timeout) {
+        //TODO: candidate for cleanup???
         write(promise::syncResolve, fdOut, buffer, offset, timeout);
         return promise;
     }

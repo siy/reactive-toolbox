@@ -1,6 +1,5 @@
 package org.reactivetoolbox.io.uring.struct.raw;
 
-import org.reactivetoolbox.io.uring.DetachedCQEntry;
 import org.reactivetoolbox.io.uring.struct.AbstractExternalRawStructure;
 import org.reactivetoolbox.io.uring.struct.shape.CompletionQueueEntryOffsets;
 
@@ -29,10 +28,6 @@ public class CompletionQueueEntry extends AbstractExternalRawStructure<Completio
 
     public int flags() {
         return getInt(flags);
-    }
-
-    public DetachedCQEntry extract() {
-        return new DetachedCQEntry(res(), flags());
     }
 
     @Override

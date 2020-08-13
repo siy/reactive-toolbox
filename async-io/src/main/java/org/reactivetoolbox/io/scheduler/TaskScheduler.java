@@ -120,6 +120,8 @@ public interface TaskScheduler extends Executor {
      */
     void shutdown();
 
+    int parallelism();
+
     /**
      * Create instance of scheduler with specified execution pool size.
      *

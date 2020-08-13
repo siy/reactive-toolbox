@@ -24,7 +24,6 @@ import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.AsyncOperation;
-import org.reactivetoolbox.io.uring.DetachedCQEntry;
 import org.reactivetoolbox.io.uring.UringHolder;
 import org.reactivetoolbox.io.uring.UringSetupFlags;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
@@ -42,9 +41,9 @@ import java.util.Deque;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import static org.reactivetoolbox.core.lang.functional.Result.flatten;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.core.lang.functional.Unit.unit;
+import static org.reactivetoolbox.io.async.net.ClientConnection.connectionIn;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
 import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
@@ -54,18 +53,33 @@ import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQ
  * <p>
  * This class provides implementation of {@link Submitter} interface using <a href="https://en.wikipedia.org/wiki/Proactor_pattern">Proactor</a> pattern.
  * <p>
- * WARNING: this class is part of low level internal classes. It's written with specific assumptions in mind and most likely will be hard or inconvenient to use in other
- * environment. In particular class is designed to be used by single thread at a time and does not perform synchronization at all.
+ * <pre>
+ * WARNING!
+ * This class is part of low level internal classes. It's written with specific assumptions in mind and most likely will be hard
+ * or inconvenient to use in other environment. In particular class is designed to be used by single thread at a time and does not perform
+ * synchronization at all.
+ * </pre>
  */
-//TODO: make API more consistent - add timeout to all calls, add version with Promise instantiation to Submitter
+//TODO: make API more consistent - add timeout to all calls
 public class Proactor implements Submitter {
     private static final Result<Unit> UNIT_RESULT = ok(unit());
     private static final int AT_FDCWD = -100; // Special value used to indicate the openat/statx functions should use the current working directory.
     private static final Failure EOF = NativeError.ENODATA.asFailure();
     private static final Result<SizeT> EOF_RESULT = Result.fail(EOF);
+    private static final int RESULT_SIZET_POOL_SIZE = 65536;
+    @SuppressWarnings("rawtypes")
+    private static final Result[] RESULT_SIZET_POOL;
+
+    static {
+        RESULT_SIZET_POOL = new Result[RESULT_SIZET_POOL_SIZE + 1];
+
+        for (int i = 0; i < RESULT_SIZET_POOL.length; i++) {
+            RESULT_SIZET_POOL[i] = Result.ok(new SizeT(i));
+        }
+    }
 
     private final UringHolder uringHolder;
-    private final ObjectHeap<Consumer<DetachedCQEntry>> pendingCompletions;
+    private final ObjectHeap<CompletionHandler> pendingCompletions;
     private final Deque<Consumer<SubmitQueueEntry>> queue = new ArrayDeque<>();
 
     private Proactor(final UringHolder uringHolder) {
@@ -110,7 +124,7 @@ public class Proactor implements Submitter {
 
     @Override
     public void nop(final Consumer<Result<Unit>> completion) {
-        final int key = pendingCompletions.allocKey((entry -> completion.accept(UNIT_RESULT)));
+        final int key = pendingCompletions.allocKey((res, flags) -> completion.accept(UNIT_RESULT));
 
         queue.add(sqe -> sqe.userData(key)
                             .opcode(AsyncOperation.IORING_OP_NOP.opcode()));
@@ -120,13 +134,13 @@ public class Proactor implements Submitter {
     public void delay(final Consumer<Result<Duration>> completion, final Timeout timeout) {
         final var timeSpec = OffHeapTimeSpec.forTimeout(timeout);
         final var startNanos = System.nanoTime();
-        final var key = pendingCompletions.allocKey(entry -> {
+        final var key = pendingCompletions.allocKey((res, flags) -> {
             timeSpec.dispose();
             final var totalNanos = System.nanoTime() - startNanos;
 
-            final var result = Math.abs(entry.res()) != NativeError.ETIME.typeCode()
-                         ? NativeError.fromCode(entry.res()).<Duration>asResult()
-                         : Result.ok(timeout(totalNanos).nanos().asDuration());
+            final var result = Math.abs(res) != NativeError.ETIME.typeCode()
+                               ? NativeError.<Duration>result(res)
+                               : Result.ok(timeout(totalNanos).nanos().asDuration());
 
             completion.accept(result);
         });
@@ -143,7 +157,9 @@ public class Proactor implements Submitter {
     public void closeFileDescriptor(final Consumer<Result<Unit>> completion,
                                     final FileDescriptor fd,
                                     final Option<Timeout> timeout) {
-        final var key = pendingCompletions.allocKey(entry -> completion.accept(entry.result(v -> unit())));
+        final var key = pendingCompletions.allocKey((res, flags) -> completion.accept(res == 0
+                                                                                      ? UNIT_RESULT
+                                                                                      : NativeError.result(res)));
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -159,11 +175,11 @@ public class Proactor implements Submitter {
                      final OffHeapBuffer buffer,
                      final OffsetT offset,
                      final Option<Timeout> timeout) {
-        final var key = pendingCompletions.allocKey(entry -> {
-            final var result = entry.result(bytesRead -> new SizeT(buffer.used(bytesRead).used()));
-            completion.accept(result.flatMap(value -> value.value() == 0 ? EOF_RESULT : result));
-        });
+        //TODO: candidate for cleanup
+        final var key = pendingCompletions.allocKey((res, flags) -> completion.accept(bytesReadToResult(res)
+                                                                                              .onSuccess(bytesRead -> buffer.used((int) bytesRead.value()))));
 
+        //TODO: candidate for cleanup
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                             .opcode(AsyncOperation.IORING_OP_READ.opcode())
@@ -181,8 +197,10 @@ public class Proactor implements Submitter {
                       final OffHeapBuffer buffer,
                       final OffsetT offset,
                       final Option<Timeout> timeout) {
-        final var key = pendingCompletions.allocKey(entry -> completion.accept(entry.result(SizeT::new)));
+        //TODO: candidate for cleanup
+        final var key = pendingCompletions.allocKey((res, flags) -> completion.accept(byteCountToResult(res)));
 
+        //TODO: candidate for cleanup
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
                             .opcode(AsyncOperation.IORING_OP_WRITE.opcode())
@@ -198,7 +216,7 @@ public class Proactor implements Submitter {
     public void splice(final Consumer<Result<SizeT>> completion,
                        final SpliceDescriptor descriptor,
                        final Option<Timeout> timeout) {
-        final var key = pendingCompletions.allocKey(entry -> completion.accept(entry.result(SizeT::new)));
+        final var key = pendingCompletions.allocKey((res, flags) -> completion.accept(byteCountToResult(res)));
 
         queue.add(sqe -> sqe.userData(key)
                             .flags(timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK)
@@ -220,9 +238,12 @@ public class Proactor implements Submitter {
                      final Set<FilePermission> mode,
                      final Option<Timeout> timeout) {
         final var rawPath = OffHeapCString.cstring(path.toString());
-        final var key = pendingCompletions.allocKey(entry -> {
+        final var key = pendingCompletions.allocKey((res, cqFlags) -> {
             rawPath.dispose();
-            completion.accept(entry.result(FileDescriptor::file));
+
+            final var result = res < 0 ? NativeError.<FileDescriptor>result(res)
+                                       : Result.ok(FileDescriptor.file(res));
+            completion.accept(result);
         });
 
         queue.add(sqe -> sqe.userData(key)
@@ -270,10 +291,13 @@ public class Proactor implements Submitter {
                        final Set<SocketFlag> flags) {
         //TODO: add support for v6
         final var clientAddress = OffHeapSocketAddress.addressIn();
-        final var key = pendingCompletions.allocKey(entry -> {
-            completion.accept(entry.result(FileDescriptor::socket)
-                                   .flatMap(fd -> flatten(ok(fd), clientAddress.extract())
-                                           .map(tuple -> tuple.map(ClientConnection::connectionIn))));
+        final var key = pendingCompletions.allocKey((res, cqFlags) -> {
+            if (res > 0) {
+                completion.accept(clientAddress.extract()
+                                               .map(addr -> connectionIn(FileDescriptor.socket(res), addr)));
+            } else {
+                completion.accept(NativeError.result(res));
+            }
             clientAddress.dispose();
         });
 
@@ -297,8 +321,11 @@ public class Proactor implements Submitter {
             return;
         }
 
-        final var key = pendingCompletions.allocKey((entry -> {
-            completion.accept(entry.result(v -> socket));
+        final var key = pendingCompletions.allocKey(((res, flags) -> {
+            final var result = res < 0
+                               ? NativeError.<FileDescriptor>result(res)
+                               : Result.ok(socket);
+            completion.accept(result);
             clientAddress.dispose();
         }));
 
@@ -322,8 +349,8 @@ public class Proactor implements Submitter {
         final var statMask = Bitmask.combine(mask);
         final var fileStat = OffHeapFileStat.fileStat();
         final var rawPath = OffHeapCString.cstring(path.toString());
-        final var key = pendingCompletions.allocKey(entry -> {
-            completion.accept(entry.result($ -> fileStat.extract()));
+        final var key = pendingCompletions.allocKey((res, cqFlags) -> {
+            completion.accept(fileStatToResult(res, fileStat));
             fileStat.dispose();
             rawPath.dispose();
         });
@@ -347,8 +374,8 @@ public class Proactor implements Submitter {
         final var statMask = Bitmask.combine(mask);
         final var fileStat = OffHeapFileStat.fileStat();
         final var rawPath = OffHeapCString.cstring("");
-        final var key = pendingCompletions.allocKey(entry -> {
-            completion.accept(entry.result($ -> fileStat.extract()));
+        final var key = pendingCompletions.allocKey((res, cqFlags) -> {
+            completion.accept(fileStatToResult(res, fileStat));
             fileStat.dispose();
             rawPath.dispose();
         });
@@ -369,8 +396,8 @@ public class Proactor implements Submitter {
                            final Option<Timeout> timeout,
                            final OffHeapBuffer... buffers) {
         final var ioVector = OffHeapIoVector.withBuffers(buffers);
-        final var key = pendingCompletions.allocKey(entry -> {
-            completion.accept(entry.result(SizeT::new));
+        final var key = pendingCompletions.allocKey((res, flags) -> {
+            completion.accept(byteCountToResult(res));
             ioVector.dispose();
         });
 
@@ -393,8 +420,8 @@ public class Proactor implements Submitter {
                             final OffHeapBuffer... buffers) {
 
         final var ioVector = OffHeapIoVector.withBuffers(buffers);
-        final var key = pendingCompletions.allocKey(entry -> {
-            promise.accept(entry.result(SizeT::new));
+        final var key = pendingCompletions.allocKey((res, flags) -> {
+            promise.accept(byteCountToResult(res));
             ioVector.dispose();
         });
 
@@ -411,12 +438,37 @@ public class Proactor implements Submitter {
 
     private void appendTimeout(final Timeout t) {
         final var timeSpec = OffHeapTimeSpec.forTimeout(t);
-        final var key = pendingCompletions.allocKey(entry -> timeSpec.dispose());
+        final var key = pendingCompletions.allocKey((res, flags) -> timeSpec.dispose());
 
         queue.add(sqe -> sqe.userData(key)
                             .fd(-1)
                             .addr(timeSpec.address())
                             .len(1)
                             .opcode(AsyncOperation.IORING_OP_LINK_TIMEOUT.opcode()));
+    }
+
+    private Result<SizeT> byteCountToResult(final int res) {
+        return res > 0
+               ? sizeResult(res)
+               : NativeError.result(res);
+    }
+
+    private Result<SizeT> bytesReadToResult(final int res) {
+        return res == 0 ? EOF_RESULT
+                        : res > 0 ? sizeResult(res)
+                                  : NativeError.result(res);
+    }
+
+    private Result<FileStat> fileStatToResult(final int res, final OffHeapFileStat fileStat) {
+        return res < 0
+               ? NativeError.result(res)
+               : Result.ok(fileStat.extract());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Result<SizeT> sizeResult(final int res) {
+        return res < RESULT_SIZET_POOL.length
+               ? RESULT_SIZET_POOL[res]
+               : Result.ok(new SizeT(res));
     }
 }

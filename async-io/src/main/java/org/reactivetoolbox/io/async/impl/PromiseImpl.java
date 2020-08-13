@@ -17,6 +17,7 @@ package org.reactivetoolbox.io.async.impl;
  */
 
 import org.reactivetoolbox.core.Errors;
+import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.core.meta.AppMetaRepository;
@@ -25,6 +26,8 @@ import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.util.BooleanLatch;
 import org.reactivetoolbox.io.scheduler.TaskScheduler;
 import org.reactivetoolbox.io.scheduler.Timeout;
+import org.reactivetoolbox.io.uring.utils.ConcurrentObjectPool;
+import org.reactivetoolbox.io.uring.utils.Poolable;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -39,8 +42,9 @@ import java.util.function.Consumer;
 public class PromiseImpl<T> implements Promise<T> {
     private volatile Result<T> value;
     private volatile Node<T> head;
-    private final BooleanLatch actionsHandled = new BooleanLatch();
+    private final BooleanLatch actionsHandled;
 
+    private static final ConcurrentObjectPool<Node> NODE_POOL = new ConcurrentObjectPool(Node::new);
     private static final VarHandle VALUE;
     private static final VarHandle HEAD;
 
@@ -57,12 +61,65 @@ public class PromiseImpl<T> implements Promise<T> {
     private static final AtomicReference<Consumer<Throwable>> exceptionConsumer =
             new AtomicReference<>(e -> SingletonHolder.logger().debug("Exception while applying handlers", e));
 
-    private static final class Node<T> {
-        public Consumer<Result<T>> element;
-        public Node<T> nextNode;
+    public PromiseImpl(final BooleanLatch latch) {
+        actionsHandled = latch;
+    }
 
-        public Node(final Consumer<Result<T>> element) {
-            this.element = element;
+    public PromiseImpl(final Result<T> value) {
+        actionsHandled = null;
+        this.value = value;
+    }
+
+    public static int schedulerParallelism() {
+        return SingletonHolder.scheduler().parallelism();
+    }
+
+    public static <T> Promise<T> promise() {
+        return new PromiseImpl<>((BooleanLatch) null);
+    }
+
+    public static <T> Promise<T> promise(final Result<T> result) {
+        return new PromiseImpl<T>(result);
+    }
+
+    private static final class Node<T> implements Poolable<Node<T>> {
+        private Consumer<Result<T>> resultConsumer;
+        private Node<T> next;
+        private Consumer<T> successConsumer;
+        private Consumer<? super Failure> failureConsumer;
+        private final Consumer<Result<T>> successResultConsumer = result -> result.onSuccess(successConsumer);
+        private final Consumer<Result<T>> failureResultConsumer = result -> result.onFailure(failureConsumer);
+
+        @Override
+        public Node<T> next() {
+            return next;
+        }
+
+        @Override
+        public Node<T> next(final Node<T> next) {
+            this.next = next;
+            return this;
+        }
+
+        public Consumer<Result<T>> resultConsumer() {
+            return resultConsumer;
+        }
+
+        public Node<T> resultConsumer(final Consumer<Result<T>> resultConsumer) {
+            this.resultConsumer = resultConsumer;
+            return this;
+        }
+
+        public Node<T> successConsumer(final Consumer<T> consumer) {
+            successConsumer = consumer;
+            resultConsumer = successResultConsumer;
+            return this;
+        }
+
+        public Node<T> failureConsumer(final Consumer<? super Failure> consumer) {
+            failureConsumer = consumer;
+            resultConsumer = failureResultConsumer;
+            return this;
         }
     }
 
@@ -96,28 +153,40 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> onResult(final Consumer<Result<T>> action) {
-        //Note: this is very performance critical method, so internals are inlined
-        //Warning: do not change unless you clearly understand what are you doing!
-
-        final Consumer<Result<T>> safeAction = result -> {
-            try {
-                action.accept(result);
-            } catch (final Throwable t) {
-                exceptionConsumer.get().accept(t);
-            }
-        };
-
         if (value != null) {
-            safeAction.accept(value);
+            action.accept(value);
             return this;
         }
 
-        final var newHead = new Node<>(safeAction);
+        return attachAction(NODE_POOL.alloc().resultConsumer(action));
+    }
+
+    @Override
+    public Promise<T> onSuccess(final Consumer<T> consumer) {
+        if (value != null) {
+            value.onSuccess(consumer);
+            return this;
+        }
+
+        return attachAction(NODE_POOL.alloc().successConsumer(consumer));
+    }
+
+    @Override
+    public Promise<T> onFailure(final Consumer<? super Failure> consumer) {
+        if (value != null) {
+            value.onFailure(consumer);
+            return this;
+        }
+
+        return attachAction(NODE_POOL.alloc().failureConsumer(consumer));
+    }
+
+    private Promise<T> attachAction(final Node<T> newHead) {
         Node<T> oldHead;
 
         do {
             oldHead = head;
-            newHead.nextNode = oldHead;
+            newHead.next(oldHead);
         } while (!HEAD.compareAndSet(this, oldHead, newHead));
 
         if (value != null) {
@@ -149,8 +218,8 @@ public class PromiseImpl<T> implements Promise<T> {
             Node<T> next;
 
             while (current != null) {
-                next = current.nextNode;
-                current.nextNode = prev;
+                next = current.next();
+                current.next(prev);
                 prev = current;
                 current = next;
             }
@@ -158,13 +227,22 @@ public class PromiseImpl<T> implements Promise<T> {
             hasElements = prev != null;
 
             while (prev != null) {
-                prev.element.accept(value);
-                prev = prev.nextNode;
+                try {
+                    prev.resultConsumer().accept(value);
+                } catch (final Exception t) {
+                    exceptionConsumer.get().accept(t);
+                }
+
+                final var tempNode = prev;
+                prev = prev.next();
+                NODE_POOL.release(tempNode);
             }
 
         } while (hasElements);
 
-        actionsHandled.signal();
+        if (actionsHandled != null) {
+            actionsHandled.signal();
+        }
     }
 
     /**
@@ -172,7 +250,11 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncWait() {
-        if(!actionsHandled.await()) {
+        if (actionsHandled == null) {
+            return this;
+        }
+
+        if (!actionsHandled.await()) {
             logger().debug("syncWait() was interrupted");
         }
         return this;
@@ -183,6 +265,10 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncWait(final Timeout timeout) {
+        if (actionsHandled == null) {
+            return this;
+        }
+
         if (!actionsHandled.await(timeout)) {
             syncFail(Errors.TIMEOUT);
             logger().debug("syncWait(Timeout) expired or interrupted");
@@ -226,8 +312,8 @@ public class PromiseImpl<T> implements Promise<T> {
         return SingletonHolder.logger();
     }
 
-    //    private static final class SingletonHolder {
-    public static final class SingletonHolder {
+    private static final class SingletonHolder {
+        //    public static final class SingletonHolder {
         private static final int WORKER_SCHEDULER_SIZE = Math.max(Runtime.getRuntime().availableProcessors() - 1, 2);
 
         private static final TaskScheduler SCHEDULER = AppMetaRepository.instance()

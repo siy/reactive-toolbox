@@ -3,6 +3,7 @@ package org.reactivetoolbox.io.uring;
 import org.reactivetoolbox.core.lang.Tuple.Tuple3;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.Bitmask;
+import org.reactivetoolbox.io.CompletionHandler;
 import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
@@ -31,14 +32,7 @@ import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.a
 import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.addressIn6;
 
 public class UringHolder implements AutoCloseable {
-//    public static final int DEFAULT_QUEUE_SIZE = 4; // 1 - ~59-60K, 10 - ~261-264K, 100 - ~321-329K
-//    public static final int DEFAULT_QUEUE_SIZE = 8; // 1 - ~60-61K, 10 - ~264-269K, 100 - ~314K
-//    public static final int DEFAULT_QUEUE_SIZE = 16; // 1 - ~59-60K, 10 - ~260-270K, 100 - ~313-314K
-    public static final int DEFAULT_QUEUE_SIZE = 32; // 1 - ~59-60K, 10 - ~268-269K, 100 - ~332-333K
-//    public static final int DEFAULT_QUEUE_SIZE = 64; // 1 - ~56-59K, 10 - ~253-262K, 100 - ~315-329K
-//    public static final int DEFAULT_QUEUE_SIZE = 128; // 1 - ~54K, 10 - ~237-239K, 100 - ~314K
-//    public static final int DEFAULT_QUEUE_SIZE = 256; // 1 - ~, 10 - ~, 100 - ~
-//    public static final int DEFAULT_QUEUE_SIZE = 1024; // 1 - ~, 10 - ~, 100 - ~
+    public static final int DEFAULT_QUEUE_SIZE = 32;
 
     private static final int ENTRY_SIZE = 8;    // each entry is a 64-bit pointer
 
@@ -77,13 +71,14 @@ public class UringHolder implements AutoCloseable {
         closed = true;
     }
 
-    public void processCompletions(final ObjectHeap<Consumer<DetachedCQEntry>> pendingCompletions) {
+    public void processCompletions(final ObjectHeap<CompletionHandler> pendingCompletions) {
         final long ready = Uring.peekCQ(ringBase, completionBuffer, completionEntries);
 
         for (long i = 0, address = completionBuffer; i < ready; i++, address += ENTRY_SIZE) {
             cqEntry.reposition(RawMemory.getLong(address));
-            final var entry = cqEntry.extract();
-            pendingCompletions.releaseUnsafe((int) cqEntry.userData()).accept(entry);
+
+            pendingCompletions.releaseUnsafe((int) cqEntry.userData())
+                              .accept(cqEntry.res(), cqEntry.flags());
         }
 
         if (ready > 0) {
