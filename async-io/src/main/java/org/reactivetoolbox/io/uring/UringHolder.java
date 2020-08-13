@@ -16,13 +16,13 @@ import org.reactivetoolbox.io.async.net.SocketOption;
 import org.reactivetoolbox.io.async.net.SocketType;
 import org.reactivetoolbox.io.async.net.context.ServerContext;
 import org.reactivetoolbox.io.raw.RawMemory;
+import org.reactivetoolbox.io.uring.exchange.ExchangeEntry;
 import org.reactivetoolbox.io.uring.struct.raw.CompletionQueueEntry;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 
 import java.util.Deque;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
 import static org.reactivetoolbox.io.NativeError.ENOTSOCK;
@@ -86,15 +86,14 @@ public class UringHolder implements AutoCloseable {
         }
     }
 
-    public void processSubmissions(final Deque<Consumer<SubmitQueueEntry>> queue) {
+    public void processSubmissions(final Deque<ExchangeEntry> queue) {
         final int available = Uring.peekSQEntries(ringBase,
                                                   submissionBuffer,
                                                   Math.min(queue.size(), submissionEntries));
 
         for (long i = 0, address = submissionBuffer; i < available; i++, address += ENTRY_SIZE) {
-            final long sqAddress = RawMemory.getLong(address);
-            sqEntry.reposition(sqAddress);
-            queue.removeFirst().accept(sqEntry.clear());
+            sqEntry.reposition(RawMemory.getLong(address));
+            queue.removeFirst().apply(sqEntry.clear());
         }
 
         Uring.submitAndWait(ringBase, 0);

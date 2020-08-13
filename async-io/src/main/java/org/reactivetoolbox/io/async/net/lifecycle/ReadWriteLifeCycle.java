@@ -77,7 +77,7 @@ public class ReadWriteLifeCycle implements LifeCycle {
 
     private void doRead(final ReadConnectionContext connectionContext, final Submitter submitter) {
         //TODO: candidate for cleanup
-        submitter.read(readResult -> readResult//.onFailure(failure -> System.err.println("Read error " + failure + " at " + Clock.systemUTC().instant()))
+        submitter.read(readResult -> readResult.onFailure(failure -> System.err.println("Read error " + failure + " at " + Clock.systemUTC().instant()))
                                                .onFailure(connectionContext.onClose()::fail)
                                                //TODO: candidate for cleanup
                                                .onSuccess(bytesRead -> handler.apply(connectionContext, bytesRead, submitter)

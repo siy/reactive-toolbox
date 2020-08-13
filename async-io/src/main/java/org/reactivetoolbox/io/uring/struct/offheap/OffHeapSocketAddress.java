@@ -18,6 +18,10 @@ public class OffHeapSocketAddress<T extends SocketAddress<?>, R extends External
     private OffHeapSocketAddress(final RawSocketAddress<T, R> shape) {
         super(SIZE);
         this.shape = shape;
+        reset();
+    }
+
+    public void reset() {
         clear();
         shape.shape().reposition(address() + sockaddrLen.size());
         putInt(sockaddrLen, shape.shape().size());

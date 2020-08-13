@@ -22,7 +22,7 @@ import static org.reactivetoolbox.io.scheduler.impl.DaemonThreadFactory.threadFa
  * 10 - ~266-290K, 20 - ~242-257K, 30 - ~261-278K, 50 - ~280-293K
  * 100 - ~286-305K, 200 - ~277-300K, 300 - ~263-281K, 500 - ~254-269K
  */
-@Disabled
+//@Disabled
 public class EchoServerTest {
     @Disabled
     @Test
