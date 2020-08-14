@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.core.lang.functional.Unit.unit;
+import static org.reactivetoolbox.io.async.common.SizeT.sizeT;
 
 @SuppressWarnings("rawtypes")
 public abstract class AbstractExchangeEntry<T extends AbstractExchangeEntry<T, R>, R> implements ExchangeEntry<T> {
@@ -26,7 +27,7 @@ public abstract class AbstractExchangeEntry<T extends AbstractExchangeEntry<T, R
         RESULT_SIZET_POOL = new Result[RESULT_SIZET_POOL_SIZE + 1];
 
         for (int i = 0; i < RESULT_SIZET_POOL.length; i++) {
-            RESULT_SIZET_POOL[i] = Result.ok(new SizeT(i));
+            RESULT_SIZET_POOL[i] = Result.ok(sizeT(i));
         }
     }
 
@@ -96,6 +97,6 @@ public abstract class AbstractExchangeEntry<T extends AbstractExchangeEntry<T, R
     protected static Result<SizeT> sizeResult(final int res) {
         return res < RESULT_SIZET_POOL.length
                ? RESULT_SIZET_POOL[res]
-               : Result.ok(new SizeT(res));
+               : Result.ok(sizeT(res));
     }
 }

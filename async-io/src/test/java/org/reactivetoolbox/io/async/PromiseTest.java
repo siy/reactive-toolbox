@@ -161,7 +161,10 @@ class PromiseTest {
         final var holder = new AtomicInteger(-1);
         final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
 
-        executor.execute(() -> {safeSleep(20); promise.syncOk(1);});
+        executor.execute(() -> {
+            safeSleep(20);
+            promise.syncOk(1);
+        });
 
         promise.syncWait();
 
@@ -189,7 +192,10 @@ class PromiseTest {
 
         assertEquals(-1, holder.get());
 
-        executor.execute(() -> {safeSleep(20); promise.syncOk(1);});
+        executor.execute(() -> {
+            safeSleep(20);
+            promise.syncOk(1);
+        });
 
         assertEquals(-1, holder.get());
 
@@ -205,7 +211,10 @@ class PromiseTest {
 
         assertEquals(-1, holder.get());
 
-        executor.execute(() -> {safeSleep(200); promise.syncOk(1);});
+        executor.execute(() -> {
+            safeSleep(200);
+            promise.syncOk(1);
+        });
 
         promise.syncWait(timeout(10).millis());
 
@@ -215,7 +224,8 @@ class PromiseTest {
     @Test
     void promiseIsResolvedWhenTimeoutExpires() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set).async(timeout(100).millis(), task -> task.syncOk(123));
+        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set)
+                                                              .async(timeout(100).millis(), p -> p.syncOk(123));
 
         assertEquals(-1, holder.get());
 
@@ -344,8 +354,8 @@ class PromiseTest {
     @Test
     void ioTaskCanBeSubmitted() {
         final var promise = Promise.<String>promise()
-                                   .async((p, io) -> io.nop(Promise.promise())
-                                                       .thenDo(() -> p.syncOk("success")));
+                .async((p, io) -> io.nop(Promise.promise())
+                                    .thenDo(() -> p.syncOk("success")));
 
         promise.syncWait(timeout(1).seconds())
                .onSuccess(success -> assertEquals("success", success))

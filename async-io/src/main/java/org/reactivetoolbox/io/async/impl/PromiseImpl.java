@@ -45,6 +45,7 @@ public class PromiseImpl<T> implements Promise<T> {
     private final BooleanLatch actionsHandled;
 
     private static final ConcurrentObjectPool<Node> NODE_POOL = new ConcurrentObjectPool(Node::new);
+
     private static final VarHandle VALUE;
     private static final VarHandle HEAD;
 
@@ -152,7 +153,15 @@ public class PromiseImpl<T> implements Promise<T> {
      * {@inheritDoc}
      */
     @Override
-    public Promise<T> onResult(final Consumer<Result<T>> action) {
+    public Promise<T> onResult(final Consumer<Result<T>> unSafeAction) {
+        final Consumer<Result<T>> action = result -> {
+            try {
+                unSafeAction.accept(result);
+            } catch (final Throwable t) {
+                exceptionConsumer.get().accept(t);
+            }
+        };
+
         if (value != null) {
             action.accept(value);
             return this;
@@ -204,7 +213,6 @@ public class PromiseImpl<T> implements Promise<T> {
     private void handleActions() {
         //Note: this is very performance critical method, so internals are inlined
         //Warning: do not change unless you clearly understand what are you doing!
-        //final var result = value.get();
 
         boolean hasElements;
         do {
@@ -227,11 +235,7 @@ public class PromiseImpl<T> implements Promise<T> {
             hasElements = prev != null;
 
             while (prev != null) {
-                try {
-                    prev.resultConsumer().accept(value);
-                } catch (final Exception t) {
-                    exceptionConsumer.get().accept(t);
-                }
+                prev.resultConsumer().accept(value);
 
                 final var tempNode = prev;
                 prev = prev.next();
@@ -289,14 +293,14 @@ public class PromiseImpl<T> implements Promise<T> {
     @Override
     public Promise<T> async(final Timeout timeout, final Consumer<Promise<T>> task) {
         SingletonHolder.scheduler()
-                       .submit(timeout, () -> task.accept(this));
+                       .submit(submitter -> submitter.delay($ -> task.accept(this), timeout));
         return this;
     }
 
     @Override
     public Promise<T> async(final BiConsumer<Promise<T>, Submitter> task) {
         SingletonHolder.scheduler()
-                       .submit((Submitter submitter) -> task.accept(this, submitter));
+                       .submit(submitter -> task.accept(this, submitter));
         return this;
     }
 
@@ -313,7 +317,6 @@ public class PromiseImpl<T> implements Promise<T> {
     }
 
     private static final class SingletonHolder {
-        //    public static final class SingletonHolder {
         private static final int WORKER_SCHEDULER_SIZE = Math.max(Runtime.getRuntime().availableProcessors() - 1, 2);
 
         private static final TaskScheduler SCHEDULER = AppMetaRepository.instance()

@@ -35,8 +35,6 @@ public class ObjectHeap<T> {
 
     public T releaseUnsafe(final int key) {
         if (key < 0 || key >= nextFree || elements[key] == null || key == firstFree) {
-            System.out.printf("key: %d, nextFree: %d, elements[key] is %s, firstFree: %d",
-                              key, nextFree, elements[key], firstFree);
             return null;
         }
 

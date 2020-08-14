@@ -18,6 +18,7 @@ import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,14 +49,16 @@ class ProactorTest {
 
     @Test
     void delayCanBeSubmitted() {
-        final var finalResult = new AtomicReference<Result<?>>();
-        final var promise = proactor.delay(promise(), timeout(100).millis())
-                                    .onResult(Assertions::assertNotNull)
-                                    .onResult(System.out::println)
-                                    .onResult(finalResult::set);
+        final var finalResult = new AtomicReference<Result<Duration>>();
+        proactor.delay(finalResult::set, timeout(100).millis());
+        do {
+            proactor.processIO(); //For submission
+            proactor.processIO(); //For completion
+        } while (finalResult.get() == null);
 
-        waitForResult(promise);
-        finalResult.get().onFailure($ -> fail());
+        finalResult.get()
+                   .onFailure($ -> fail())
+                   .onSuccess(duration -> assertTrue(duration.compareTo(Duration.ofMillis(100)) > 0));
     }
 
     @Test

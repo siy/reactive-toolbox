@@ -17,6 +17,7 @@ import org.reactivetoolbox.io.async.net.lifecycle.ReadWriteLifeCycle;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import static org.reactivetoolbox.io.async.common.SizeT.sizeT;
 import static org.reactivetoolbox.io.async.net.InetPort.inetPort;
 
 //TODO: add support for IPv6
@@ -74,7 +75,7 @@ public class TcpServerConfiguration {
         public Set<SocketOption> listenerOptions = SocketOption.reuseAll();
         //TODO: do we actually need it???
         public FN1<Promise<Unit>, ConnectionContext> connectionHandler = ActiveServerContext::defaultConnectionHandler;
-        public SizeT backlogSize = new SizeT(16);
+        public SizeT backlogSize = sizeT(16);
         public LifeCycle lifeCycle = ReadWriteLifeCycle.readWrite(ActiveServerContext::echo);
 
         private Properties() {

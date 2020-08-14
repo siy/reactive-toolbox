@@ -15,7 +15,7 @@ import static org.reactivetoolbox.io.async.net.server.TcpServerConfiguration.con
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 import static org.reactivetoolbox.io.scheduler.impl.DaemonThreadFactory.threadFactory;
 
-@Disabled
+//@Disabled
 public class EchoServerTest {
 
     @Disabled

@@ -25,7 +25,6 @@ import org.reactivetoolbox.core.lang.Tuple.Tuple9;
 import org.reactivetoolbox.core.lang.collection.List;
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
-import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.io.async.impl.PromiseImpl;
@@ -108,8 +107,6 @@ public interface Promise<T> {
      * @return Current instance
      */
     Promise<T> async(final Timeout timeout, final Consumer<Promise<T>> task);
-
-    //Promise<T> async(final Timeout timeout, final BiConsumer<Promise<T>, Submitter> task);
 
     /**
      * Synchronously wait for this instance resolution. <br/> This method is provided only for testing purposes, it is not recommended to use it in production code.
@@ -206,10 +203,6 @@ public interface Promise<T> {
         return when(timeout, () -> timeoutResult);
     }
 
-    default Promise<T> when(final Option<Timeout> timeout, final Result<T> timeoutResult) {
-        return timeout.fold($ -> this, timeoutValue -> when(timeoutValue, () -> timeoutResult));
-    }
-
     /**
      * Set timeout for instance resolution. When timeout expires, instance will be resolved with value returned by provided supplier. Resolution value is lazily evaluated.
      *
@@ -285,24 +278,28 @@ public interface Promise<T> {
      */
     default <R> Promise<R> syncMap(final FN1<R, T> mapper) {
         final var result = PromiseImpl.<R>promise();
+
         onResult(value -> result.syncResolve(value.map(mapper)));
         return result;
     }
 
     default <R> Promise<R> map(final FN1<R, T> mapper) {
         final var result = PromiseImpl.<R>promise();
+
         onResult(value -> result.resolve(value.map(mapper)));
         return result;
     }
 
     default <R> Promise<R> syncMapResult(final FN1<Result<R>, T> mapper) {
         final var result = PromiseImpl.<R>promise();
+
         onResult(value -> result.syncResolve(value.flatMap(mapper)));
         return result;
     }
 
     default <R> Promise<R> mapResult(final FN1<Result<R>, T> mapper) {
         final var result = PromiseImpl.<R>promise();
+
         onResult(value -> result.resolve(value.flatMap(mapper)));
         return result;
     }

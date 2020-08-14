@@ -32,23 +32,6 @@ import java.util.function.Consumer;
  */
 public interface TaskScheduler extends Executor {
     /**
-     * Low-level method which accepts {@link Action} and processes it as many times, as {@link Action#perform(long, Submitter)}
-     * returns false.
-     *
-     * @param action
-     *         Runnable predicate to execute
-     *
-     * @return this instance for fluent call chaining.
-     */
-    default TaskScheduler submit(final Action action) {
-        return submit(() -> {
-            if (!action.perform(System.nanoTime()/*, localSubmitter()*/)) {
-                submit(action);
-            }
-        });
-    }
-
-    /**
      * Submit an I/O task.
      *
      * @param ioAction
@@ -67,28 +50,6 @@ public interface TaskScheduler extends Executor {
      * @return this instance for fluent call chaining.
      */
     TaskScheduler submit(final Runnable runnable);
-
-    /**
-     * Submit task which will be executed once specified timeout is expired.
-     *
-     * @param timeout
-     *         Timeout after which task will be executed
-     * @param runnable
-     *         Code to execute
-     *
-     * @return this instance fo fluent call chaining.
-     */
-    default TaskScheduler submit(final Timeout timeout, final Runnable runnable) {
-        final long threshOld = System.nanoTime() + timeout.asNanos();
-
-        return submit(nanoTime -> {
-            if (nanoTime >= threshOld) {
-                runnable.run();
-                return true;
-            }
-            return false;
-        });
-    }
 
     /**
      * Implementation of {@link Executor} interface

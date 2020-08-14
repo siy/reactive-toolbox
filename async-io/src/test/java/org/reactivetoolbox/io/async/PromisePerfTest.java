@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io.async;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.functional.Functions.FN1;
@@ -16,7 +17,7 @@ import static org.reactivetoolbox.core.lang.Tuple.tuple;
 import static org.reactivetoolbox.io.async.Promise.waitablePromise;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 
-//@Disabled
+@Disabled
 public class PromisePerfTest {
     void testRunner(final String name,
                     final FN1<Long, Integer> promiseBenchmark,
