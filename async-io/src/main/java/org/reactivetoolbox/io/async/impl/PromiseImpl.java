@@ -171,7 +171,15 @@ public class PromiseImpl<T> implements Promise<T> {
     }
 
     @Override
-    public Promise<T> onSuccess(final Consumer<T> action) {
+    public Promise<T> onSuccess(final Consumer<T> unSafeAction) {
+        final Consumer<T> action = result -> {
+            try {
+                unSafeAction.accept(result);
+            } catch (final Throwable t) {
+                exceptionConsumer.get().accept(t);
+            }
+        };
+
         if (value != null) {
             value.onSuccess(action);
             return this;
@@ -181,7 +189,15 @@ public class PromiseImpl<T> implements Promise<T> {
     }
 
     @Override
-    public Promise<T> onFailure(final Consumer<? super Failure> action) {
+    public Promise<T> onFailure(final Consumer<? super Failure> unSafeAction) {
+        final Consumer<? super Failure> action = result -> {
+            try {
+                unSafeAction.accept(result);
+            } catch (final Throwable t) {
+                exceptionConsumer.get().accept(t);
+            }
+        };
+
         if (value != null) {
             value.onFailure(action);
             return this;
