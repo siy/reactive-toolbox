@@ -3,6 +3,7 @@ package org.reactivetoolbox.io.uring.exchange;
 import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.lang.functional.Unit;
+import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
@@ -29,6 +30,8 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
 
 //TODO: transform parameters where possible
 public class ExchangeEntryFactory {
@@ -67,7 +70,11 @@ public class ExchangeEntryFactory {
                                        final FileDescriptor fd,
                                        final Option<Timeout> timeout) {
         return closePool.alloc()
-                        .prepare(completion, fd, timeout);
+                        .prepare(completion, fd.descriptor(), calculateFlags(timeout));
+    }
+
+    private byte calculateFlags(final Option<Timeout> timeout) {
+        return timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK;
     }
 
     public ReadExchangeEntry forRead(final Consumer<Result<SizeT>> completion,
@@ -76,7 +83,7 @@ public class ExchangeEntryFactory {
                                      final OffsetT offset,
                                      final Option<Timeout> timeout) {
         return readPool.alloc()
-                       .prepare(completion, fd, buffer, offset, timeout);
+                       .prepare(completion, fd.descriptor(), buffer, offset.value(), calculateFlags(timeout));
     }
 
     public WriteExchangeEntry forWrite(final Consumer<Result<SizeT>> completion,
@@ -85,14 +92,14 @@ public class ExchangeEntryFactory {
                                        final OffsetT offset,
                                        final Option<Timeout> timeout) {
         return writePool.alloc()
-                        .prepare(completion, fd, buffer, offset, timeout);
+                        .prepare(completion, fd.descriptor(), buffer, offset.value(), calculateFlags(timeout));
     }
 
     public SpliceExchangeEntry forSplice(final Consumer<Result<SizeT>> completion,
                                          final SpliceDescriptor descriptor,
                                          final Option<Timeout> timeout) {
         return splicePool.alloc()
-                         .prepare(completion, descriptor, timeout);
+                         .prepare(completion, descriptor, calculateFlags(timeout));
     }
 
     public OpenExchangeEntry forOpen(final Consumer<Result<FileDescriptor>> completion,
@@ -101,7 +108,7 @@ public class ExchangeEntryFactory {
                                      final Set<FilePermission> mode,
                                      final Option<Timeout> timeout) {
         return openPool.alloc()
-                       .prepare(completion, path, openFlags, mode, timeout);
+                       .prepare(completion, path, Bitmask.combine(openFlags), Bitmask.combine(mode), calculateFlags(timeout));
     }
 
     public SocketExchangeEntry forSocket(final Consumer<Result<FileDescriptor>> completion,
@@ -127,7 +134,7 @@ public class ExchangeEntryFactory {
                                          final FileDescriptor socket,
                                          final Set<SocketFlag> flags) {
         return acceptPool.alloc()
-                         .prepare(completion, socket, flags);
+                         .prepare(completion, socket.descriptor(), Bitmask.combine(flags));
     }
 
     public ConnectExchangeEntry forConnect(final Consumer<Result<FileDescriptor>> completion,
@@ -135,7 +142,7 @@ public class ExchangeEntryFactory {
                                            final OffHeapSocketAddress<SocketAddress<?>, ExternalRawStructure<?>> clientAddress,
                                            final Option<Timeout> timeout) {
         return connectPool.alloc()
-                          .prepare(completion, socket, clientAddress, timeout);
+                          .prepare(completion, socket, clientAddress, calculateFlags(timeout));
     }
 
     public StatExchangeEntry forStat(final Consumer<Result<FileStat>> completion,
@@ -153,7 +160,7 @@ public class ExchangeEntryFactory {
                                                  final Option<Timeout> timeout,
                                                  final OffHeapIoVector ioVector) {
         return readVectorPool.alloc()
-                             .prepare(completion, fileDescriptor, offset, timeout, ioVector);
+                             .prepare(completion, fileDescriptor.descriptor(), offset.value(), calculateFlags(timeout), ioVector);
     }
 
     public WriteVectorExchangeEntry forWriteVector(final Consumer<Result<SizeT>> completion,
@@ -162,10 +169,24 @@ public class ExchangeEntryFactory {
                                                    final Option<Timeout> timeout,
                                                    final OffHeapIoVector ioVector) {
         return writeVectorPool.alloc()
-                              .prepare(completion, fileDescriptor, offset, timeout, ioVector);
+                              .prepare(completion, fileDescriptor.descriptor(), offset.value(), calculateFlags(timeout), ioVector);
     }
 
     public void clear() {
-        //TODO: clear pools
+        nopPool.clear();
+        delayPool.clear();
+        closePool.clear();
+        timeoutPool.clear();
+        readPool.clear();
+        writePool.clear();
+        splicePool.clear();
+        openPool.clear();
+        socketPool.clear();
+        serverPool.clear();
+        acceptPool.clear();
+        connectPool.clear();
+        statPool.clear();
+        readVectorPool.clear();
+        writeVectorPool.clear();
     }
 }

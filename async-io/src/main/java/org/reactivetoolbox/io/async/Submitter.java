@@ -678,16 +678,19 @@ public interface Submitter {
      *         Flags which affect how information is retrieved, refer to {@link StatFlag} for more details
      * @param mask
      *         Specification of which information should be retrieved.
+     * @param timeout
+     *         Optional operation timeout
      *
      * @see FileStat
      */
     void stat(final Consumer<Result<FileStat>> completion,
               final Path path,
               final Set<StatFlag> flags,
-              final Set<StatMask> mask);
+              final Set<StatMask> mask,
+              final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #stat(Consumer, Path, Set, Set)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #stat(Consumer, Path, Set, Set, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -697,6 +700,8 @@ public interface Submitter {
      *         Flags which affect how information is retrieved, refer to {@link StatFlag} for more details
      * @param mask
      *         Specification of which information should be retrieved.
+     * @param timeout
+     *         Optional operation timeout
      * @return input {@link Promise} instance.
      *
      * @see FileStat
@@ -704,13 +709,14 @@ public interface Submitter {
     default Promise<FileStat> stat(final Promise<FileStat> promise,
                                    final Path path,
                                    final Set<StatFlag> flags,
-                                   final Set<StatMask> mask) {
-        stat(promise::syncResolve, path, flags, mask);
+                                   final Set<StatMask> mask,
+                                   final Option<Timeout> timeout) {
+        stat(promise::syncResolve, path, flags, mask, timeout);
         return promise;
     }
 
     /**
-     * Same as {@link #stat(Promise, Path, Set, Set)} except new {@link Promise} instance is created rather than received as a parameter.
+     * Same as {@link #stat(Promise, Path, Set, Set, Option)} except new {@link Promise} instance is created rather than received as a parameter.
      *
      * @param path
      *         File path
@@ -718,14 +724,17 @@ public interface Submitter {
      *         Flags which affect how information is retrieved, refer to {@link StatFlag} for more details
      * @param mask
      *         Specification of which information should be retrieved.
+     * @param timeout
+     *         Optional operation timeout
      * @return created {@link Promise} instance.
      *
      * @see FileStat
      */
     default Promise<FileStat> stat(final Path path,
                                    final Set<StatFlag> flags,
-                                   final Set<StatMask> mask) {
-        return stat(Promise.promise(), path, flags, mask);
+                                   final Set<StatMask> mask,
+                                   final Option<Timeout> timeout) {
+        return stat(Promise.promise(), path, flags, mask, timeout);
     }
 
     /**
@@ -738,16 +747,19 @@ public interface Submitter {
      *         Flags which affect how information is retrieved, refer to {@link StatFlag} for more details
      * @param mask
      *         Specification of which information should be retrieved.
+     * @param timeout
+     *         Optional operation timeout
      *
      * @see FileStat
      */
     void stat(final Consumer<Result<FileStat>> completion,
               final FileDescriptor fd,
               final Set<StatFlag> flags,
-              final Set<StatMask> mask);
+              final Set<StatMask> mask,
+              final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #stat(Promise, FileDescriptor, Set, Set)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #stat(Promise, FileDescriptor, Set, Set, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -757,6 +769,8 @@ public interface Submitter {
      *         Flags which affect how information is retrieved, refer to {@link StatFlag} for more details
      * @param mask
      *         Specification of which information should be retrieved.
+     * @param timeout
+     *         Optional operation timeout
      * @return input {@link Promise} instance.
      *
      * @see FileStat
@@ -764,13 +778,14 @@ public interface Submitter {
     default Promise<FileStat> stat(final Promise<FileStat> promise,
                                    final FileDescriptor fd,
                                    final Set<StatFlag> flags,
-                                   final Set<StatMask> mask) {
-        stat(promise::syncResolve, fd, flags, mask);
+                                   final Set<StatMask> mask,
+                                   final Option<Timeout> timeout) {
+        stat(promise::syncResolve, fd, flags, mask, timeout);
         return promise;
     }
 
     /**
-     * Same as {@link #stat(Promise, FileDescriptor, Set, Set)} except new {@link Promise} instance is created rather than received as a parameter.
+     * Same as {@link #stat(Promise, FileDescriptor, Set, Set, Option)} except new {@link Promise} instance is created rather than received as a parameter.
      *
      * @param fd
      *         File descriptor
@@ -778,14 +793,17 @@ public interface Submitter {
      *         Flags which affect how information is retrieved, refer to {@link StatFlag} for more details
      * @param mask
      *         Specification of which information should be retrieved.
+     * @param timeout
+     *         Optional operation timeout
      * @return created {@link Promise} instance.
      *
      * @see FileStat
      */
     default Promise<FileStat> stat(final FileDescriptor fd,
                                    final Set<StatFlag> flags,
-                                   final Set<StatMask> mask) {
-        return stat(Promise.promise(), fd, flags, mask);
+                                   final Set<StatMask> mask,
+                                   final Option<Timeout> timeout) {
+        return stat(Promise.promise(), fd, flags, mask, timeout);
     }
 
     /**

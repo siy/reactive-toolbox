@@ -52,7 +52,6 @@ import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
  * synchronization at all.
  * </pre>
  */
-//TODO: make API more consistent - add timeout to all calls
 public class Proactor implements Submitter {
     private static final int AT_FDCWD = -100; // Special value used to indicate the openat/statx functions should use the current working directory.
 
@@ -231,7 +230,8 @@ public class Proactor implements Submitter {
     public void stat(final Consumer<Result<FileStat>> completion,
                      final Path path,
                      final Set<StatFlag> flags,
-                     final Set<StatMask> mask) {
+                     final Set<StatMask> mask,
+                     final Option<Timeout> timeout) {
 
         //Reset EMPTY_PATH and force use the path.
         queue.add(factory.forStat(completion,
@@ -240,13 +240,15 @@ public class Proactor implements Submitter {
                                   Bitmask.combine(mask),
                                   OffHeapCString.cstring(path.toString()))
                          .register(pendingCompletions));
+        timeout.whenPresent(this::appendTimeout);
     }
 
     @Override
     public void stat(final Consumer<Result<FileStat>> completion,
                      final FileDescriptor fd,
                      final Set<StatFlag> flags,
-                     final Set<StatMask> mask) {
+                     final Set<StatMask> mask,
+                     final Option<Timeout> timeout) {
 
         //Set EMPTY_PATH and force use of file descriptor.
         queue.add(factory.forStat(completion,
@@ -255,6 +257,7 @@ public class Proactor implements Submitter {
                                   Bitmask.combine(mask),
                                   OffHeapCString.cstring(""))
                          .register(pendingCompletions));
+        timeout.whenPresent(this::appendTimeout);
     }
 
     @Override

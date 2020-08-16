@@ -1,18 +1,15 @@
 package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
-import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.ClientConnection;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
-import org.reactivetoolbox.io.async.net.SocketFlag;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress;
 import org.reactivetoolbox.io.uring.struct.raw.RawSocketAddressIn;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
-import java.util.Set;
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.io.async.net.ClientConnection.connectionIn;
@@ -54,10 +51,10 @@ public class AcceptExchangeEntry extends AbstractExchangeEntry<AcceptExchangeEnt
     }
 
     public AcceptExchangeEntry prepare(final Consumer<Result<ClientConnection<?>>> completion,
-                                       final FileDescriptor socket,
-                                       final Set<SocketFlag> flags) {
-        descriptor = socket.descriptor();
-        acceptFlags = Bitmask.combine(flags);
+                                       final int descriptor,
+                                       final int acceptFlags) {
+        this.descriptor = descriptor;
+        this.acceptFlags = acceptFlags;
         clientAddress.reset();
         return super.prepare(completion);
     }

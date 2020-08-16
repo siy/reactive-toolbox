@@ -1,19 +1,16 @@
 package org.reactivetoolbox.io.uring.exchange;
 
-import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.NativeError;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.SpliceDescriptor;
-import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_SPLICE;
-import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
 
 public class SpliceExchangeEntry extends AbstractExchangeEntry<SpliceExchangeEntry, SizeT> {
     private SpliceDescriptor descriptor;
@@ -42,8 +39,8 @@ public class SpliceExchangeEntry extends AbstractExchangeEntry<SpliceExchangeEnt
 
     public SpliceExchangeEntry prepare(final Consumer<Result<SizeT>> completion,
                                        final SpliceDescriptor descriptor,
-                                       final Option<Timeout> timeout) {
-        flags = timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK;
+                                       final byte flags) {
+        this.flags = flags;
         this.descriptor = descriptor;
         return super.prepare(completion);
     }

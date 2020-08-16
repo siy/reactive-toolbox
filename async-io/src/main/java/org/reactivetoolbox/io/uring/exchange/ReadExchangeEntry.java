@@ -1,20 +1,15 @@
 package org.reactivetoolbox.io.uring.exchange;
 
-import org.reactivetoolbox.core.lang.functional.Option;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.NativeError;
-import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
-import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.util.OffHeapBuffer;
-import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_READ;
-import static org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntryFlags.IOSQE_IO_LINK;
 
 public class ReadExchangeEntry extends AbstractExchangeEntry<ReadExchangeEntry, SizeT> {
     private static final Result<SizeT> EOF_RESULT = Result.fail(NativeError.ENODATA.asFailure());
@@ -22,7 +17,7 @@ public class ReadExchangeEntry extends AbstractExchangeEntry<ReadExchangeEntry, 
     private int descriptor;
     private byte flags;
     private OffHeapBuffer buffer;
-    private OffsetT offset;
+    private long offset;
 
     protected ReadExchangeEntry(final PlainObjectPool<ReadExchangeEntry> pool) {
         super(IORING_OP_READ, pool);
@@ -43,16 +38,16 @@ public class ReadExchangeEntry extends AbstractExchangeEntry<ReadExchangeEntry, 
                     .flags(flags)
                     .addr(buffer.address())
                     .len(buffer.size())
-                    .off(offset.value());
+                    .off(offset);
     }
 
     public ReadExchangeEntry prepare(final Consumer<Result<SizeT>> completion,
-                                     final FileDescriptor fd,
+                                     final int descriptor,
                                      final OffHeapBuffer buffer,
-                                     final OffsetT offset,
-                                     final Option<Timeout> timeout) {
-        descriptor = fd.descriptor();
-        flags = timeout.equals(Option.empty()) ? 0 : IOSQE_IO_LINK;
+                                     final long offset,
+                                     final byte flags) {
+        this.descriptor = descriptor;
+        this.flags = flags;
         this.buffer = buffer;
         this.offset = offset;
         return super.prepare(completion);
