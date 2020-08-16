@@ -2,6 +2,7 @@ package org.reactivetoolbox.io.async.net.context;
 
 import org.reactivetoolbox.core.lang.functional.Unit;
 import org.reactivetoolbox.core.lang.support.ULID;
+import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.OffsetT;
@@ -60,6 +61,10 @@ public class ActiveServerContext {
 
     public FileDescriptor socket() {
         return serverContext.socket();
+    }
+
+    public CoreLogger logger() {
+        return shutdownPromise.logger();
     }
 
     public Promise<Unit> handleConnection(final ClientConnection<?> clientConnection) {

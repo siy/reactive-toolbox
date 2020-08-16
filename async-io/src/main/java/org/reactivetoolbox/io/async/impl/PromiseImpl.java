@@ -171,23 +171,23 @@ public class PromiseImpl<T> implements Promise<T> {
     }
 
     @Override
-    public Promise<T> onSuccess(final Consumer<T> consumer) {
+    public Promise<T> onSuccess(final Consumer<T> action) {
         if (value != null) {
-            value.onSuccess(consumer);
+            value.onSuccess(action);
             return this;
         }
 
-        return attachAction(NODE_POOL.alloc().successConsumer(consumer));
+        return attachAction(NODE_POOL.alloc().successConsumer(action));
     }
 
     @Override
-    public Promise<T> onFailure(final Consumer<? super Failure> consumer) {
+    public Promise<T> onFailure(final Consumer<? super Failure> action) {
         if (value != null) {
-            value.onFailure(consumer);
+            value.onFailure(action);
             return this;
         }
 
-        return attachAction(NODE_POOL.alloc().failureConsumer(consumer));
+        return attachAction(NODE_POOL.alloc().failureConsumer(action));
     }
 
     private Promise<T> attachAction(final Node<T> newHead) {

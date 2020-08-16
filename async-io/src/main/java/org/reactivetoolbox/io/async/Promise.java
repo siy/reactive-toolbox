@@ -17,6 +17,7 @@ package org.reactivetoolbox.io.async;
  */
 
 import org.reactivetoolbox.core.Errors;
+import org.reactivetoolbox.core.lang.Tuple;
 import org.reactivetoolbox.core.lang.Tuple.Tuple5;
 import org.reactivetoolbox.core.lang.Tuple.Tuple6;
 import org.reactivetoolbox.core.lang.Tuple.Tuple7;
@@ -29,6 +30,7 @@ import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.io.async.impl.PromiseImpl;
 import org.reactivetoolbox.io.async.util.BooleanLatch;
+import org.reactivetoolbox.io.scheduler.TaskScheduler;
 import org.reactivetoolbox.io.scheduler.Timeout;
 
 import java.util.function.BiConsumer;
@@ -44,74 +46,61 @@ import static org.reactivetoolbox.core.lang.collection.List.list;
 import static org.reactivetoolbox.io.async.util.ActionableThreshold.threshold;
 
 /**
- * Extended {@link Promise} implementation which works with {@link Result} values.
+ * Promise represents a result of the asynchronous operation which might not be yet available. Since result might be not yet
+ * available, instead of providing access to result, Promise allows to register actions which will be executed when result became
+ * available. Every action is executed only once. If result is already available, then action is executed at the moment of its
+ * registration in the context of current thread.
+ * <p>
+ * Every action should be as short as possible and should not block execution. Each action is guaranteed to be executed by
+ * exactly one thread so there is no need to perform any additional synchronization.
+ * <p>
+ * Most Promise API's provided in two versions - synchronous and asynchronous. Synchronous version handles request in context of
+ * current thread. Asynchronous version submits asynchronous task where request will be handled. The chosen method naming assumes
+ * that by default operations should be performed asynchronously.
+ * <p>
+ * Beside basic operation on single Promise instance this interface also provides access operations combining several Promises:
+ * {@link #all}, {@link #allOf}, {@link #any} and {@link #anySuccess}. These operations allow to synchronise execution of several
+ * independent asynchronous operations in a non-blocking fashion.
+ * <p>
+ * The Promise API also provides access to underlying task scheduler via {@link #async(Consumer)} API. The {@link #async(BiConsumer)}
+ * method provides access to asynchronous I/O API via {@link Submitter} interface.
  */
 public interface Promise<T> {
-    /**
-     * Perform user-provided action once this instance will be resolved. Action will be executed once regardless if instance is already resolved or not. User may add as many
-     * actions as necessary.
-     *
-     * @param action
-     *         Action to perform
-     * @return Current instance
-     */
-    Promise<T> onResult(final Consumer<Result<T>> action);
-
-    default Promise<T> thenDo(final Runnable action) {
-        return onResult(ignored -> action.run());
-    }
-
-    default <R> Promise<R> chainTo(final Promise<R> promise, final FN1<R, T> mapper) {
-        onResult(result -> promise.resolve(result.map(mapper)));
-        return promise;
-    }
-
-    default Promise<T> chainTo(final Promise<T> promise) {
-        onResult(promise::resolve);
-        return promise;
-    }
-
-    default <R> Promise<R> syncChainTo(final Promise<R> promise, final FN1<R, T> mapper) {
-        onResult(result -> promise.syncResolve(result.map(mapper)));
-        return promise;
-    }
-
-    default Promise<T> syncChainTo(final Promise<T> promise) {
-        onResult(promise::syncResolve);
-        return promise;
-    }
-
     /**
      * Run specified task asynchronously. Current instance of {@link Promise} is passed to the task as a parameter.
      *
      * @param task
      *         Task to execute with this promise
-     * @return Current instance
+     * @return Current instance for fluent call chaining
      */
     Promise<T> async(final Consumer<Promise<T>> task);
 
     /**
-     * Run specified task asynchronously and for I/O operations. Current instance of {@link Promise} and I/O {@link Submitter} are passed as a parameters.
+     * Run specified task asynchronously and for I/O operations. Current instance of {@link Promise} and I/O {@link Submitter}
+     * are passed as a parameters to provided {@link BiConsumer}.
      *
      * @param task
      *         Task to execute
-     * @return Current instance
+     * @return Current instance for fluent call chaining
      */
     Promise<T> async(final BiConsumer<Promise<T>, Submitter> task);
 
     /**
-     * Run specified task asynchronously after specified timeout expires. Current instance of {@link Promise} is passed to the task as a parameter.
+     * Run specified task asynchronously when specified timeout expires. Current instance of {@link Promise} is passed to the task as a parameter.
      *
      * @param task
      *         Task to execute with this promise
-     * @return Current instance
+     * @return Current instance for fluent call chaining
      */
     Promise<T> async(final Timeout timeout, final Consumer<Promise<T>> task);
 
     /**
-     * Synchronously wait for this instance resolution. <br/> This method is provided only for testing purposes, it is not recommended to use it in production code.
+     * Synchronously wait for this instance resolution.
+     * <p>
+     * WARNING: This method is a no-op unless Promise instance is specifically obtained via {@link #waitablePromise()} or {@link #waitablePromise(Consumer)}
+     * methods.
      *
-     * @return Current instance
+     * @return Current instance for fluent call chaining
      */
     Promise<T> syncWait();
 
@@ -120,7 +109,8 @@ public interface Promise<T> {
      * <p>
      * If timeout expires and instance is not resolved, then it is resolved with {@link Errors#TIMEOUT}.
      * <p>
-     * This method is provided only for testing purposes, it is not recommended to use it in production code.
+     * WARNING: This method is a no-op unless Promise instance is specifically obtained via {@link #waitablePromise()} or {@link #waitablePromise(Consumer)}
+     * methods.
      *
      * @param timeout
      *         Timeout amount
@@ -129,16 +119,9 @@ public interface Promise<T> {
     Promise<T> syncWait(final Timeout timeout);
 
     /**
-     * Resolve the promise with specified result. All actions already waiting for resolution will be scheduled for synchronous execution.
-     *
-     * @param result
-     *         The value which will be stored in this instance and make it resolved
-     * @return Current instance
-     */
-    Promise<T> syncResolve(final Result<T> result);
-
-    /**
      * Resolve the promise with specified result. All actions already waiting for resolution will be scheduled for asynchronous execution.
+     * <p>
+     * Note that resolution may happen only once. All subsequent resolutions will be ignored.
      *
      * @param result
      *         The value which will be stored in this instance and make it resolved
@@ -147,18 +130,20 @@ public interface Promise<T> {
     Promise<T> resolve(final Result<T> result);
 
     /**
-     * Resolve current instance with successful result.
+     * Resolve the promise with specified result. All actions already waiting for resolution will be executed in context of current thread.
+     * <p>
+     * Note that resolution may happen only once. All subsequent resolutions will be ignored.
      *
      * @param result
-     *         Successful result value
+     *         The value which will be stored in this instance and make it resolved
      * @return Current instance
      */
-    default Promise<T> syncOk(final T result) {
-        return syncResolve(Result.ok(result));
-    }
+    Promise<T> syncResolve(final Result<T> result);
 
     /**
-     * Resolve current instance with successful result asynchronously.
+     * Asynchronously resolve current instance with successful result.
+     * <p>
+     * Note that resolution may happen only once. All subsequent resolutions will be ignored.
      *
      * @param result
      *         Successful result value
@@ -169,18 +154,22 @@ public interface Promise<T> {
     }
 
     /**
-     * Resolve current instance with failure result.
+     * Synchronously resolve current instance with successful result.
+     * <p>
+     * Note that resolution may happen only once. All subsequent resolutions will be ignored.
      *
-     * @param failure
-     *         Failure result value
+     * @param result
+     *         Successful result value
      * @return Current instance
      */
-    default Promise<T> syncFail(final Failure failure) {
-        return syncResolve(Result.fail(failure));
+    default Promise<T> syncOk(final T result) {
+        return syncResolve(Result.ok(result));
     }
 
     /**
-     * Resolve current instance with failure result asynchronously.
+     * Asynchronously resolve current instance with failure result.
+     * <p>
+     * Note that resolution may happen only once. All subsequent resolutions will be ignored.
      *
      * @param failure
      *         Failure result value
@@ -188,6 +177,19 @@ public interface Promise<T> {
      */
     default Promise<T> fail(final Failure failure) {
         return resolve(Result.fail(failure));
+    }
+
+    /**
+     * Synchronously resolve current instance with failure result.
+     * <p>
+     * Note that resolution may happen only once. All subsequent resolutions will be ignored.
+     *
+     * @param failure
+     *         Failure result value
+     * @return Current instance
+     */
+    default Promise<T> syncFail(final Failure failure) {
+        return syncResolve(Result.fail(failure));
     }
 
     /**
@@ -204,7 +206,7 @@ public interface Promise<T> {
     }
 
     /**
-     * Set timeout for instance resolution. When timeout expires, instance will be resolved with value returned by provided supplier. Resolution value is lazily evaluated.
+     * Set timeout for instance resolution. When timeout expires, instance will be resolved with value returned by provided supplier.
      *
      * @param timeout
      *         Timeout amount
@@ -216,32 +218,135 @@ public interface Promise<T> {
         return async(timeout, promise -> promise.syncResolve(timeoutResultSupplier.get()));
     }
 
-    Promise<T> onSuccess(final Consumer<T> consumer);
-
-    Promise<T> onFailure(final Consumer<? super Failure> consumer);
+    /**
+     * Perform action provided by user when this instance will be resolved. Action will be executed exactly once regardless if instance is already resolved or not. User may add as
+     * many actions as necessary. Note that provided {@link Consumer} action will be invoked regardless from the result success or failure.
+     *
+     * @param action
+     *         Action to perform on received result
+     * @return Current instance for fluent call chaining
+     */
+    Promise<T> onResult(final Consumer<Result<T>> action);
 
     /**
-     * Resolve instance with {@link Errors#CANCELLED}. Often necessary if pending request need to be resolved prematurely, without waiting for response or timeout.
+     * Perform action provided by user when this instance will be resolved. Action will be executed exactly once regardless if instance is already resolved or not. User may add as
+     * many actions as necessary. Note that provided {@link Runnable} action will be invoked regardless from the result success or failure.
      *
-     * @return Current instance
+     * @param action
+     *         Action to perform on received result
+     * @return Current instance for fluent call chaining
      */
-    default Promise<T> syncCancel() {
-        syncFail(Errors.CANCELLED);
-        return this;
+    default Promise<T> thenDo(final Runnable action) {
+        return onResult(ignored -> action.run());
     }
 
+    /**
+     * Perform special action once this instance will be resolved. The action will transform Result from current Promise instance and then resolve input Promise instance with
+     * transformed result.
+     *
+     * @param promise
+     *         Input instance to resolve.
+     * @param mapper
+     *         Transformation function
+     * @return Current instance for fluent call chaining
+     */
+    default <R> Promise<R> chainTo(final Promise<R> promise, final FN1<R, T> mapper) {
+        onResult(result -> promise.resolve(result.map(mapper)));
+        return promise;
+    }
+
+    /**
+     * Perform special action once this instance will be resolved. The action will take Result from current Promise instance and then resolve input Promise with the same result.
+     *
+     * @param promise
+     *         Input instance to resolve.
+     * @return Current instance for fluent call chaining
+     */
+    default Promise<T> chainTo(final Promise<T> promise) {
+        onResult(promise::resolve);
+        return promise;
+    }
+
+    /**
+     * Same as {@link Promise#chainTo(Promise, FN1)} except resolution of input promise is done synchronously.
+     *
+     * @param promise
+     *         Input instance to resolve.
+     * @param mapper
+     *         Transformation function
+     * @return Current instance for fluent call chaining
+     */
+    default <R> Promise<R> syncChainTo(final Promise<R> promise, final FN1<R, T> mapper) {
+        onResult(result -> promise.syncResolve(result.map(mapper)));
+        return promise;
+    }
+
+    /**
+     * Same as {@link Promise#chainTo(Promise)} except resolution of input promise is done synchronously.
+     *
+     * @param promise
+     *         Input instance to resolve.
+     * @return Current instance for fluent call chaining
+     */
+    default Promise<T> syncChainTo(final Promise<T> promise) {
+        onResult(promise::syncResolve);
+        return promise;
+    }
+
+    /**
+     * Perform action provided by user when this instance will be resolved with success. If instance will be resolved with failure result then
+     * action will be ignored.
+     *
+     * @param action
+     *         Action to perform on success result
+     * @return Current instance for fluent call chaining
+     */
+    Promise<T> onSuccess(final Consumer<T> action);
+
+    /**
+     * Perform action provided by user when this instance will be resolved with failure. If instance will be resolved with success result then
+     * action will be ignored.
+     *
+     * @param action
+     *         Action to perform on failure result
+     * @return Current instance for fluent call chaining
+     */
+    Promise<T> onFailure(final Consumer<? super Failure> action);
+
+    /**
+     * Convenience method to asynchronously resolve instance with {@link Errors#CANCELLED}.
+     * <p>
+     * Useful in cases when pending request need to be resolved prematurely,
+     * without waiting for response or timeout.
+     *
+     * @return Current instance for fluent call chaining
+     */
     default Promise<T> cancel() {
         fail(Errors.CANCELLED);
         return this;
     }
 
     /**
-     * Invoke provided mapping function once successful result will be available. If current instance is resolved to failure, no invocation is performed and error value is returned
-     * instead.
+     * Convenience method to synchronously resolve instance with {@link Errors#CANCELLED}.
+     * <p>
+     * Useful in cases when pending request need to be resolved prematurely,
+     * without waiting for response or timeout.
+     *
+     * @return Current instance for fluent call chaining
+     */
+    default Promise<T> syncCancel() {
+        syncFail(Errors.CANCELLED);
+        return this;
+    }
+
+    /**
+     * Compose current Promise instance with subsequent call which also returns Promise and requires data from current instance
+     * to be available. The provided mapping function will be called once successful result available.
+     * If current instance is resolved to failure, no invocation is performed and error value is returned instead.
      *
      * @param mapper
      *         Function to call if current instance is resolved with success.
-     * @return Created instance which represents result of resolution of current instance (if current instance is resolved to failure) or result of invocation of provided function
+     * @return New Promise instance which represents result of resolution of current instance (if current instance is resolved to failure) or result of invocation of provided function
      *         (if current instance is resolved to success).
      */
     default <R> Promise<R> flatMap(final FN1<Promise<R>, T> mapper) {
@@ -269,8 +374,24 @@ public interface Promise<T> {
     }
 
     /**
-     * Convenience method which provides access to inner value of successful result. If current instance contains failure, then mapping function is not called and created instance
-     * is resolved with same error as current instance.
+     * Compose current instance with the transformation function. Once current instance will be resolved with success result,
+     * the provided mapping function will be used to transform result and resolve Promise instance returned by this method.
+     * If current instance resolved with failure result, then mapping function is not called and failure result is propagated
+     * to Promise instance returned by this method.
+     *
+     * @param mapper
+     *         Function to transform successful result value if current instance is resolved with success
+     * @return Created instance
+     */
+    default <R> Promise<R> map(final FN1<R, T> mapper) {
+        final var result = PromiseImpl.<R>promise();
+
+        onResult(value -> result.resolve(value.map(mapper)));
+        return result;
+    }
+
+    /**
+     * Synchronous version of {@link #map(FN1)} method.
      *
      * @param mapper
      *         Function to transform successful result value if current instance is resolved with success
@@ -283,20 +404,18 @@ public interface Promise<T> {
         return result;
     }
 
-    default <R> Promise<R> map(final FN1<R, T> mapper) {
-        final var result = PromiseImpl.<R>promise();
-
-        onResult(value -> result.resolve(value.map(mapper)));
-        return result;
-    }
-
-    default <R> Promise<R> syncMapResult(final FN1<Result<R>, T> mapper) {
-        final var result = PromiseImpl.<R>promise();
-
-        onResult(value -> result.syncResolve(value.flatMap(mapper)));
-        return result;
-    }
-
+    /**
+     * Compose current instance with the transformation function. Once current instance will be resolved with success result,
+     * the provided mapping function will be used to transform result and resolve Promise instance returned by this method.
+     * If current instance resolved with failure result, then mapping function is not called and failure result is propagated
+     * to Promise instance returned by this method.
+     * <p>
+     * The method is similar to {@link #map(FN1)} except it can transform success result into both, success and failure results.
+     *
+     * @param mapper
+     *         Function to transform successful result value if current instance is resolved with success
+     * @return Created instance
+     */
     default <R> Promise<R> mapResult(final FN1<Result<R>, T> mapper) {
         final var result = PromiseImpl.<R>promise();
 
@@ -305,15 +424,29 @@ public interface Promise<T> {
     }
 
     /**
-     * Get internal logger instance.
+     * Synchronous version of {@link #mapResult(FN1)} method.
+     *
+     * @param mapper
+     *         Function to transform successful result value if current instance is resolved with success
+     * @return Created instance
+     */
+    default <R> Promise<R> syncMapResult(final FN1<Result<R>, T> mapper) {
+        final var result = PromiseImpl.<R>promise();
+
+        onResult(value -> result.syncResolve(value.flatMap(mapper)));
+        return result;
+    }
+
+    /**
+     * Get access to internal logger instance.
      *
      * @return logger instance used to log {@link Promise} internal events
      */
     CoreLogger logger();
 
     /**
-     * Configure consumer for exceptions which may happen during {@link Promise} resolution, in particular during invocation of attached actions triggered by resolution. By default
-     * these exceptions are logged, but user may define custom exception processing.
+     * Configure consumer for exceptions which may happen during {@link Promise} resolution, in particular during invocation of attached actions triggered by resolution.
+     * By default these exceptions are logged, but user may define custom exception processing.
      *
      * @param consumer
      *         Consumer for intercepted exceptions.
@@ -322,12 +455,17 @@ public interface Promise<T> {
         PromiseImpl.exceptionConsumer(consumer);
     }
 
+    /**
+     * Get information about current level of parallelism set for underlying {@link TaskScheduler}.
+     *
+     * @return number of threads executing Promise asynchronous tasks.
+     */
     static int parallelism() {
         return PromiseImpl.schedulerParallelism();
     }
 
     /**
-     * Create new unresolved instance.om
+     * Create new unresolved Promise instance.
      *
      * @return Created instance
      */
@@ -336,7 +474,8 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance and immediately invoke provided function with created instance. Usually this function is used to configure actions on created instance.
+     * Create instance and synchronously invoke provided function with created instance.
+     * Usually this function is used to configure actions on created instance.
      *
      * @param setup
      *         Function to invoke with created instance
@@ -350,10 +489,26 @@ public interface Promise<T> {
         return result;
     }
 
+    /**
+     * Create a Promise instance with synchronous waiting functionality enabled.
+     *
+     * @see #syncWait()
+     * @see #syncWait(Timeout)
+     *
+     * @return Created instance.
+     */
     static <T> Promise<T> waitablePromise() {
         return new PromiseImpl<>(new BooleanLatch());
     }
 
+    /**
+     * Create a Promise instance with synchronous waiting functionality enabled and immediately call provided setup function.
+     *
+     * @see #syncWait()
+     * @see #syncWait(Timeout)
+     *
+     * @return Created instance.
+     */
     static <T> Promise<T> waitablePromise(final Consumer<Promise<T>> setup) {
         final var result = new PromiseImpl<T>(new BooleanLatch());
 
@@ -374,9 +529,10 @@ public interface Promise<T> {
     }
 
     /**
-     * Create instance and asynchronously start specified I/O task with created instance.
+     * Create instance and asynchronously start specified task with created instance.
      * <p>
-     * This method is similar to {@link Promise#asyncPromise(Consumer)} except task can perform I/O operations using {@link Submitter} passed as a parameter.
+     * This method is similar to {@link Promise#asyncPromise(Consumer)} except task can perform I/O operations using {@link Submitter} passed as
+     * a second parameter.
      *
      * @param task
      *         Function to invoke with created instance
@@ -396,7 +552,7 @@ public interface Promise<T> {
     }
 
     /**
-     * Create new resolved instance.
+     * Create new resolved instance. The instance is resolved with successful result and provided value.
      *
      * @return Created instance
      */
@@ -405,7 +561,7 @@ public interface Promise<T> {
     }
 
     /**
-     * Create new resolved instance.
+     * Create new resolved instance. The instance is resolved with failure result and provided failure value.
      *
      * @return Created instance
      */
@@ -416,7 +572,8 @@ public interface Promise<T> {
     /**
      * Create instance for synchronization point of type {@code ANY}.
      * <p>
-     * The returned instance will be resolved once any of the promises provided as a parameters will be resolved. Remaining promises are cancelled.
+     * The returned instance will be resolved once any of the promises provided as a parameters will be resolved.
+     * Remaining promises are automatically cancelled.
      *
      * @param promises
      *         Input promises
@@ -433,23 +590,8 @@ public interface Promise<T> {
     /**
      * Create instance for synchronization point of type {@code ANY}.
      * <p>
-     * The returned instance which will be resolved once any of the promises provided as a parameters will be resolved with success. If none of the promises will be resolved with
-     * success, then created instance will be resolved with {@link Errors#CANCELLED}.
-     *
-     * @param promises
-     *         Input promises
-     * @return Created instance
-     */
-    @SafeVarargs
-    static <T> Promise<T> anySuccess(final Promise<T>... promises) {
-        return anySuccess(Result.fail(Errors.CANCELLED), promises);
-    }
-
-    /**
-     * Create instance for synchronization point of type {@code ANY}.
-     * <p>
-     * The returned instance will be resolved once any of the promises provided as a parameters will be resolved with success. If none of the promises will be resolved with
-     * success, then created instance will be resolved with provided {@code failureResult}.
+     * The returned instance will be resolved once any of the promises provided as a parameters will be resolved with success.
+     * If none of the promises will be resolved with success, then created instance will be resolved with provided {@code failureResult}.
      *
      * @param failureResult
      *         Result in case if no instances were resolved with success
@@ -461,13 +603,26 @@ public interface Promise<T> {
         return Promise.promise(anySuccess -> threshold(promises.length,
                                                        at -> list(promises)
                                                                .apply(promise -> promise.onResult(result -> {
-                                                                   result.onSuccess(succ -> {
-                                                                       anySuccess.syncOk(succ);
-                                                                       cancelAll(promises);
-                                                                   });
+                                                                   result.onSuccess(anySuccess::syncOk)
+                                                                         .onSuccessDo(() -> cancelAll(promises));
                                                                    at.registerEvent();
                                                                })),
                                                        () -> anySuccess.syncResolve(failureResult)));
+    }
+
+    /**
+     * Create instance for synchronization point of type {@code ANY}.
+     * <p>
+     * The returned instance which will be resolved once any of the promises provided as a parameters will be resolved with success.
+     * If none of the promises will be resolved with success, then created instance will be resolved with {@link Errors#CANCELLED}.
+     *
+     * @param promises
+     *         Input promises
+     * @return Created instance
+     */
+    @SafeVarargs
+    static <T> Promise<T> anySuccess(final Promise<T>... promises) {
+        return anySuccess(Result.fail(Errors.CANCELLED), promises);
     }
 
     /**
@@ -493,6 +648,15 @@ public interface Promise<T> {
                 .apply(promise -> promise.syncResolve(result));
     }
 
+    /**
+     * Wait for several promises of same type. The returned instance resolved with the list of results returned by all Promise
+     * instances contained in the input list.
+     *
+     * @param promises
+     *      List of promises to wait.
+     *
+     * @return Promise which will be resolved with list of results from Promises passes in the input list.
+     */
     static <T> Promise<List<Result<T>>> allOf(final List<Promise<T>> promises) {
         final var results = new Result[promises.size()];
 
@@ -504,15 +668,42 @@ public interface Promise<T> {
                                            () -> result.ok(list(results))));
     }
 
+    /**
+     * Wait for several promises of same type. The returned instance resolved with the list of results returned by all Promise
+     * instances passed as a parameter.
+     *
+     * @param promises
+     *      Promises to wait.
+     *
+     * @return Promise which will be resolved with list of results from Promises passes as a parameters.
+     */
     @SafeVarargs
     static <T> Promise<List<Result<T>>> allOf(final Promise<T>... promises) {
         return allOf(List.list(promises));
     }
 
+    /**
+     * Same as {@link #allOf(List)} except returned list is "flattened". If all results in the list were successes, then returned
+     * Promise instance is resolved with list of values contained in the results. If any result is failure then returned Promise
+     * instance is resolved to failure.
+     *
+     * @param promises
+     *      Promises to wait.
+     * @return Promise with list of success values
+     */
     static <T> Promise<List<T>> flatAllOf(final List<Promise<T>> promises) {
         return allOf(promises).syncMapResult(Result::flatten);
     }
 
+    /**
+     * Same as {@link #allOf(Promise[])} except returned list is "flattened". If all results in the list were successes, then returned
+     * Promise instance is resolved with list of values contained in the results. If any result is failure then returned Promise
+     * instance is resolved to failure.
+     *
+     * @param promises
+     *      Promises to wait.
+     * @return Promise with list of success values
+     */
     static <T> Promise<List<T>> flatAllOf(final Promise<T>... promises) {
         return flatAllOf(List.list(promises));
     }
@@ -521,6 +712,10 @@ public interface Promise<T> {
      * Create instance for synchronization point of type {@code ALL}.
      * <p>
      * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     * <p>
+     * Returned Promise instance will contain {@link Tuple} with value from passed Promise instance if passed Promise instance
+     * is resolved to success result. If passed Promise instance resolved to failure then returned Promise instance resolved with
+     * same failure result.
      *
      * @param promise1
      *         Input promise
@@ -537,6 +732,10 @@ public interface Promise<T> {
      * Create instance for synchronization point of type {@code ALL}.
      * <p>
      * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     * <p>
+     * Returned Promise instance will contain {@link Tuple} with values from passed Promise instances if passed Promise instances
+     * are resolved to success result. If any passed Promise instance resolved to failure then returned Promise instance resolved
+     * with first found failure result.
      *
      * @param promise1
      *         Input promise
@@ -561,6 +760,10 @@ public interface Promise<T> {
      * Create instance for synchronization point of type {@code ALL}.
      * <p>
      * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     * <p>
+     * Returned Promise instance will contain {@link Tuple} with values from passed Promise instances if passed Promise instances
+     * are resolved to success result. If any passed Promise instance resolved to failure then returned Promise instance resolved
+     * with first found failure result.
      *
      * @param promise1
      *         Input promise
@@ -590,6 +793,10 @@ public interface Promise<T> {
      * Create instance for synchronization point of type {@code ALL}.
      * <p>
      * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     * <p>
+     * Returned Promise instance will contain {@link Tuple} with values from passed Promise instances if passed Promise instances
+     * are resolved to success result. If any passed Promise instance resolved to failure then returned Promise instance resolved
+     * with first found failure result.
      *
      * @param promise1
      *         Input promise
@@ -624,6 +831,10 @@ public interface Promise<T> {
      * Create instance for synchronization point of type {@code ALL}.
      * <p>
      * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     * <p>
+     * Returned Promise instance will contain {@link Tuple} with values from passed Promise instances if passed Promise instances
+     * are resolved to success result. If any passed Promise instance resolved to failure then returned Promise instance resolved
+     * with first found failure result.
      *
      * @param promise1
      *         Input promise
@@ -664,6 +875,10 @@ public interface Promise<T> {
      * Create instance for synchronization point of type {@code ALL}.
      * <p>
      * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     * <p>
+     * Returned Promise instance will contain {@link Tuple} with values from passed Promise instances if passed Promise instances
+     * are resolved to success result. If any passed Promise instance resolved to failure then returned Promise instance resolved
+     * with first found failure result.
      *
      * @param promise1
      *         Input promise
@@ -709,6 +924,10 @@ public interface Promise<T> {
      * Create instance for synchronization point of type {@code ALL}.
      * <p>
      * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     * <p>
+     * Returned Promise instance will contain {@link Tuple} with values from passed Promise instances if passed Promise instances
+     * are resolved to success result. If any passed Promise instance resolved to failure then returned Promise instance resolved
+     * with first found failure result.
      *
      * @param promise1
      *         Input promise
@@ -759,6 +978,10 @@ public interface Promise<T> {
      * Create instance for synchronization point of type {@code ALL}.
      * <p>
      * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     * <p>
+     * Returned Promise instance will contain {@link Tuple} with values from passed Promise instances if passed Promise instances
+     * are resolved to success result. If any passed Promise instance resolved to failure then returned Promise instance resolved
+     * with first found failure result.
      *
      * @param promise1
      *         Input promise
@@ -814,6 +1037,10 @@ public interface Promise<T> {
      * Create instance for synchronization point of type {@code ALL}.
      * <p>
      * Create instance which will be resolved when all promises provided as parameters will be resolved.
+     * <p>
+     * Returned Promise instance will contain {@link Tuple} with values from passed Promise instances if passed Promise instances
+     * are resolved to success result. If any passed Promise instance resolved to failure then returned Promise instance resolved
+     * with first found failure result.
      *
      * @param promise1
      *         Input promise

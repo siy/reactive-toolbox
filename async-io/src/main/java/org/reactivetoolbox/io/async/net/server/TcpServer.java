@@ -9,7 +9,6 @@ import org.reactivetoolbox.io.async.net.SocketType;
 import org.reactivetoolbox.io.async.net.context.ActiveServerContext;
 import org.reactivetoolbox.io.async.net.context.ServerContext;
 
-import java.time.Clock;
 import java.util.function.Consumer;
 
 import static org.reactivetoolbox.io.async.Promise.asyncPromise;
@@ -51,7 +50,7 @@ public class TcpServer {
     private static void doAccept(final ActiveServerContext context) {
         final Runnable worker = () -> doAccept(context);
         final Consumer<Result<ClientConnection<?>>> handler = clientConnection -> clientConnection.onSuccessDo(worker)
-                                                                                                  .onFailure(failure -> System.err.println("Accept error " + failure + " at " + Clock.systemUTC().instant()))
+                                                                                                  .onFailure(failure -> context.logger().debug("Accept error {1} ", failure))
                                                                                                   .onSuccess(context::handleConnection);
 
         if (!context.shutdownInProgress()) {
