@@ -33,14 +33,6 @@ public interface Failure {
     default <T> Result<T> asResult() {
         return Result.fail(this);
     }
-//
-//    static <T> Supplier<Result<T>> lazyFailure(final FailureType type, final String format, final Object ... params) {
-//        return () -> failure(type, format, params).asResult();
-//    }
-//
-//    static Supplier<Failure> lazy(final FailureType type, final String format, final Object ... params) {
-//        return () -> failure(type, format, params);
-//    }
 
     static Failure failure(final FailureType type, final String format, final Object ... params) {
         return failure(type, MessageFormat.format(format, params));
