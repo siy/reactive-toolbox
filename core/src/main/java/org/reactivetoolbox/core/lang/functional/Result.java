@@ -16,7 +16,6 @@ package org.reactivetoolbox.core.lang.functional;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.core.lang.Tuple;
 import org.reactivetoolbox.core.lang.Tuple.Tuple1;
 import org.reactivetoolbox.core.lang.Tuple.Tuple2;
 import org.reactivetoolbox.core.lang.Tuple.Tuple3;
@@ -39,11 +38,11 @@ import static org.reactivetoolbox.core.lang.Tuple.tuple;
 
 /**
  * Representation of the operation result. The result can be either success or failure.
- * In case of success it holds value returned by the operation. In case of error it
- * holds an error which describes the failure.
+ * In case of success it holds value returned by the operation. In case of failure it
+ * holds a failure description.
  *
  * @param <T>
- *     Type of value in case of successful result.
+ *     Type of value in case of success.
  */
 public interface Result<T> extends Either<Failure, T> {
     /**
@@ -57,7 +56,6 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return transformed value (in case of success) or current instance (in case of failure)
      */
-    @SuppressWarnings("unchecked")
     default <R> Result<R> map(final FN1<R, ? super T> mapper) {
         return fold(l -> (Result<R>) this, r -> ok(mapper.apply(r)));
     }
@@ -72,7 +70,6 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return transformed value (in case of success) or current instance (in case of failure)
      */
-    @SuppressWarnings("unchecked")
     default <R> Result<R> flatMap(final FN1<Result<R>, ? super T> mapper) {
         return fold(t -> (Result<R>) this, mapper);
     }
@@ -128,9 +125,9 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return current instance for fluent call chaining
      */
-    default Result<T> onSuccess(final Consumer<T> consumer) {
-        return fold(t1 -> this, t1 -> { consumer.accept(t1); return this; });
-    }
+    Result<T> onSuccess(final Consumer<T> consumer);
+
+    Result<T> onSuccessDo(final Runnable action);
 
     /**
      * Pass failure operation result value into provided consumer.
@@ -140,9 +137,9 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return current instance for fluent call chaining
      */
-    default Result<T> onFailure(final Consumer<? super Failure> consumer) {
-        return fold(t1 -> { consumer.accept(t1); return this; }, t1 -> this);
-    }
+    Result<T> onFailure(final Consumer<? super Failure> consumer);
+
+    Result<T> onFailureDo(final Runnable action);
 
     /**
      * Convert instance into {@link Option} of the same type. Successful instance
@@ -165,36 +162,7 @@ public interface Result<T> extends Either<Failure, T> {
      * @return created instance
      */
     static <R> Result<R> ok(final R value) {
-        return new Result<>() {
-            @Override
-            public <T> T fold(final FN1<? extends T, ? super Failure> leftMapper,
-                              final FN1<? extends T, ? super R> rightMapper) {
-                return rightMapper.apply(value);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(value);
-            }
-
-            @Override
-            public boolean equals(final Object obj) {
-                if (this == obj) {
-                    return true;
-                }
-
-                return (obj instanceof Result<?> result)
-                       ? result.fold($ -> false, val -> Objects.equals(val, value))
-                       : false;
-            }
-
-            @Override
-            public String toString() {
-                return new StringJoiner(", ", "Result-success(", ")")
-                        .add(value.toString())
-                        .toString();
-            }
-        };
+        return new ResultOk<>(value);
     }
 
     /**
@@ -205,41 +173,12 @@ public interface Result<T> extends Either<Failure, T> {
      * @return created instance
      */
     static <R> Result<R> fail(final Failure value) {
-        return new Result<>() {
-            @Override
-            public <T> T fold(final FN1<? extends T, ? super Failure> leftMapper,
-                              final FN1<? extends T, ? super R> rightMapper) {
-                return leftMapper.apply(value);
-            }
-
-            @Override
-            public int hashCode() {
-                return Objects.hash(value);
-            }
-
-            @Override
-            public boolean equals(final Object obj) {
-                if (this == obj) {
-                    return true;
-                }
-
-                return (obj instanceof Result<?> result)
-                       ? result.fold(val -> Objects.equals(val, value), $ -> false)
-                       : false;
-            }
-
-            @Override
-            public String toString() {
-                return new StringJoiner(", ", "Result-failure(", ")")
-                        .add(value.toString())
-                        .toString();
-            }
-        };
+        return new ResultFail<R>(value);
     }
 
-    static <T> Result<List<T>> flatten(List<Result<T>> resultList) {
-        Failure[] failure = new Failure[1];
-        var values = new ArrayList<T>();
+    static <T> Result<List<T>> flatten(final List<Result<T>> resultList) {
+        final Failure[] failure = new Failure[1];
+        final var values = new ArrayList<T>();
 
         resultList.apply(val -> val.fold(f -> failure[0] = f, values::add));
 
@@ -349,5 +288,123 @@ public interface Result<T> extends Either<Failure, T> {
                            value7.flatMap(vv7 ->
                              value8.flatMap(vv8 ->
                                value9.flatMap(vv9 -> ok(tuple(vv1, vv2, vv3, vv4, vv5, vv6, vv7, vv8, vv9)))))))))));
+    }
+
+    class ResultOk<R> implements Result<R> {
+        private final R value;
+
+        protected ResultOk(final R value) {
+            this.value = value;
+        }
+
+        @Override
+        public <T> T fold(final FN1<? extends T, ? super Failure> leftMapper,
+                          final FN1<? extends T, ? super R> rightMapper) {
+            return rightMapper.apply(value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value);
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            return (obj instanceof Result<?> result)
+                   ? result.fold($ -> false, val -> Objects.equals(val, value))
+                   : false;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", "Result-success(", ")")
+                    .add(value.toString())
+                    .toString();
+        }
+
+        @Override
+        public Result<R> onSuccess(final Consumer<R> consumer) {
+            consumer.accept(value);
+            return this;
+        }
+
+        @Override
+        public Result<R> onSuccessDo(final Runnable action) {
+            action.run();
+            return this;
+        }
+
+        @Override
+        public Result<R> onFailure(final Consumer<? super Failure> consumer) {
+            return this;
+        }
+
+        @Override
+        public Result<R> onFailureDo(final Runnable action) {
+            return this;
+        }
+    }
+
+    class ResultFail<R> implements Result<R> {
+        private final Failure value;
+
+        protected ResultFail(final Failure value) {
+            this.value = value;
+        }
+
+        @Override
+        public <T> T fold(final FN1<? extends T, ? super Failure> leftMapper,
+                          final FN1<? extends T, ? super R> rightMapper) {
+            return leftMapper.apply(value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value);
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            return (obj instanceof Result<?> result)
+                   ? result.fold(val -> Objects.equals(val, value), $ -> false)
+                   : false;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", "Result-failure(", ")")
+                    .add(value.toString())
+                    .toString();
+        }
+
+        @Override
+        public Result<R> onSuccess(final Consumer<R> consumer) {
+            return this;
+        }
+
+        @Override
+        public Result<R> onSuccessDo(final Runnable action) {
+            return this;
+        }
+
+        @Override
+        public Result<R> onFailure(final Consumer<? super Failure> consumer) {
+            consumer.accept(value);
+            return this;
+        }
+
+        @Override
+        public Result<R> onFailureDo(final Runnable action) {
+            action.run();
+            return this;
+        }
     }
 }

@@ -1,11 +1,6 @@
 package org.reactivetoolbox.io.uring.utils;
 
-import org.reactivetoolbox.core.lang.functional.Option;
-
 import java.util.Arrays;
-
-import static org.reactivetoolbox.core.lang.functional.Option.empty;
-import static org.reactivetoolbox.core.lang.functional.Option.option;
 
 /**
  * Temporary storage for objects.
@@ -38,10 +33,9 @@ public class ObjectHeap<T> {
         return new ObjectHeap<>(initialCapacity);
     }
 
-    @SuppressWarnings("unchecked")
-    public Option<T> release(final int key) {
+    public T releaseUnsafe(final int key) {
         if (key < 0 || key >= nextFree || elements[key] == null || key == firstFree) {
-            return empty();
+            return null;
         }
 
         indexes[key] = firstFree;
@@ -49,7 +43,7 @@ public class ObjectHeap<T> {
         final T result = (T) elements[key];
         elements[key] = null;
         count--;
-        return option(result);
+        return result;
     }
 
     public int allocKey(final T value) {

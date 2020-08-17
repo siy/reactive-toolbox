@@ -17,17 +17,21 @@ package org.reactivetoolbox.io.async.impl;
  */
 
 import org.reactivetoolbox.core.Errors;
+import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.core.meta.AppMetaRepository;
 import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.Submitter;
+import org.reactivetoolbox.io.async.util.BooleanLatch;
 import org.reactivetoolbox.io.scheduler.TaskScheduler;
 import org.reactivetoolbox.io.scheduler.Timeout;
+import org.reactivetoolbox.io.uring.utils.ConcurrentObjectPool;
+import org.reactivetoolbox.io.uring.utils.Poolable;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.util.StringJoiner;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -36,31 +40,92 @@ import java.util.function.Consumer;
  * Implementation of {@link Promise}
  */
 public class PromiseImpl<T> implements Promise<T> {
-    private final AtomicReference<Result<T>> value = new AtomicReference<>(null);
-    private final CountDownLatch actionsHandled = new CountDownLatch(1);
-    private final AtomicReference<Node<T>> head = new AtomicReference<>();
+    private volatile Result<T> value;
+    private volatile Node<T> head;
+    private final BooleanLatch actionsHandled;
+
+    private static final ConcurrentObjectPool<Node> NODE_POOL = new ConcurrentObjectPool(Node::new);
+
+    private static final VarHandle VALUE;
+    private static final VarHandle HEAD;
+
+    static {
+        try {
+            final MethodHandles.Lookup l = MethodHandles.lookup();
+            VALUE = l.findVarHandle(PromiseImpl.class, "value", Result.class);
+            HEAD = l.findVarHandle(PromiseImpl.class, "head", Node.class);
+        } catch (final ReflectiveOperationException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
 
     private static final AtomicReference<Consumer<Throwable>> exceptionConsumer =
             new AtomicReference<>(e -> SingletonHolder.logger().debug("Exception while applying handlers", e));
 
-    private static final class Node<T> {
-        public Consumer<Result<T>> element;
-        public Node<T> nextNode;
-
-        public Node(final Consumer<Result<T>> element) {
-            this.element = element;
-        }
+    public PromiseImpl(final BooleanLatch latch) {
+        actionsHandled = latch;
     }
 
-    private PromiseImpl() {
+    public PromiseImpl(final Result<T> value) {
+        actionsHandled = null;
+        this.value = value;
+    }
+
+    public static int schedulerParallelism() {
+        return SingletonHolder.scheduler().parallelism();
+    }
+
+    public static <T> Promise<T> promise() {
+        return new PromiseImpl<>((BooleanLatch) null);
+    }
+
+    public static <T> Promise<T> promise(final Result<T> result) {
+        return new PromiseImpl<T>(result);
+    }
+
+    private static final class Node<T> implements Poolable<Node<T>> {
+        private Consumer<Result<T>> resultConsumer;
+        private Node<T> next;
+        private Consumer<T> successConsumer;
+        private Consumer<? super Failure> failureConsumer;
+        private final Consumer<Result<T>> successResultConsumer = result -> result.onSuccess(successConsumer);
+        private final Consumer<Result<T>> failureResultConsumer = result -> result.onFailure(failureConsumer);
+
+        @Override
+        public Node<T> next() {
+            return next;
+        }
+
+        @Override
+        public Node<T> next(final Node<T> next) {
+            this.next = next;
+            return this;
+        }
+
+        public Consumer<Result<T>> resultConsumer() {
+            return resultConsumer;
+        }
+
+        public Node<T> resultConsumer(final Consumer<Result<T>> resultConsumer) {
+            this.resultConsumer = resultConsumer;
+            return this;
+        }
+
+        public Node<T> successConsumer(final Consumer<T> consumer) {
+            successConsumer = consumer;
+            resultConsumer = successResultConsumer;
+            return this;
+        }
+
+        public Node<T> failureConsumer(final Consumer<? super Failure> consumer) {
+            failureConsumer = consumer;
+            resultConsumer = failureResultConsumer;
+            return this;
+        }
     }
 
     public static void exceptionConsumer(final Consumer<Throwable> consumer) {
         exceptionConsumer.set(consumer);
-    }
-
-    public static <T> Promise<T> promise() {
-        return new PromiseImpl<>();
     }
 
     /**
@@ -68,7 +133,7 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncResolve(final Result<T> result) {
-        if (value.compareAndSet(null, result)) {
+        if (VALUE.compareAndSet(this, null, result)) {
             handleActions();
         }
 
@@ -77,7 +142,7 @@ public class PromiseImpl<T> implements Promise<T> {
 
     @Override
     public Promise<T> resolve(final Result<T> result) {
-        if (value.compareAndSet(null, result)) {
+        if (VALUE.compareAndSet(this, null, result)) {
             handleActionsAsync();
         }
 
@@ -88,32 +153,68 @@ public class PromiseImpl<T> implements Promise<T> {
      * {@inheritDoc}
      */
     @Override
-    public Promise<T> onResult(final Consumer<Result<T>> action) {
-        //Note: this is very performance critical method, so internals are inlined
-        //Warning: do not change unless you clearly understand what are you doing!
-
-        final Consumer<Result<T>> safeAction = result -> {
+    public Promise<T> onResult(final Consumer<Result<T>> unSafeAction) {
+        final Consumer<Result<T>> action = result -> {
             try {
-                action.accept(result);
+                unSafeAction.accept(result);
             } catch (final Throwable t) {
                 exceptionConsumer.get().accept(t);
             }
         };
 
-        if (value.get() != null) {
-            safeAction.accept(value.get());
+        if (value != null) {
+            action.accept(value);
             return this;
         }
 
-        final var newHead = new Node<>(safeAction);
+        return attachAction(NODE_POOL.alloc().resultConsumer(action));
+    }
+
+    @Override
+    public Promise<T> onSuccess(final Consumer<T> unSafeAction) {
+        final Consumer<T> action = result -> {
+            try {
+                unSafeAction.accept(result);
+            } catch (final Throwable t) {
+                exceptionConsumer.get().accept(t);
+            }
+        };
+
+        if (value != null) {
+            value.onSuccess(action);
+            return this;
+        }
+
+        return attachAction(NODE_POOL.alloc().successConsumer(action));
+    }
+
+    @Override
+    public Promise<T> onFailure(final Consumer<? super Failure> unSafeAction) {
+        final Consumer<? super Failure> action = result -> {
+            try {
+                unSafeAction.accept(result);
+            } catch (final Throwable t) {
+                exceptionConsumer.get().accept(t);
+            }
+        };
+
+        if (value != null) {
+            value.onFailure(action);
+            return this;
+        }
+
+        return attachAction(NODE_POOL.alloc().failureConsumer(action));
+    }
+
+    private Promise<T> attachAction(final Node<T> newHead) {
         Node<T> oldHead;
 
         do {
-            oldHead = head.get();
-            newHead.nextNode = oldHead;
-        } while (!head.compareAndSet(oldHead, newHead));
+            oldHead = head;
+            newHead.next(oldHead);
+        } while (!HEAD.compareAndSet(this, oldHead, newHead));
 
-        if (value.get() != null) {
+        if (value != null) {
             handleActions();
         }
 
@@ -128,22 +229,21 @@ public class PromiseImpl<T> implements Promise<T> {
     private void handleActions() {
         //Note: this is very performance critical method, so internals are inlined
         //Warning: do not change unless you clearly understand what are you doing!
-        final var result = value.get();
 
         boolean hasElements;
         do {
             Node<T> head;
             do {
-                head = this.head.get();
-            } while (!this.head.compareAndSet(head, null));
+                head = this.head;
+            } while (!HEAD.compareAndSet(this, head, null));
 
             Node<T> current = head;
             Node<T> prev = null;
-            Node<T> next = null;
+            Node<T> next;
 
-            while(current != null) {
-                next = current.nextNode;
-                current.nextNode = prev;
+            while (current != null) {
+                next = current.next();
+                current.next(prev);
                 prev = current;
                 current = next;
             }
@@ -151,13 +251,18 @@ public class PromiseImpl<T> implements Promise<T> {
             hasElements = prev != null;
 
             while (prev != null) {
-                prev.element.accept(result);
-                prev = prev.nextNode;
+                prev.resultConsumer().accept(value);
+
+                final var tempNode = prev;
+                prev = prev.next();
+                NODE_POOL.release(tempNode);
             }
 
         } while (hasElements);
 
-        actionsHandled.countDown();
+        if (actionsHandled != null) {
+            actionsHandled.signal();
+        }
     }
 
     /**
@@ -165,10 +270,12 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncWait() {
-        try {
-            actionsHandled.await();
-        } catch (final Exception e) {
-            logger().debug("Exception in syncWait()", e);
+        if (actionsHandled == null) {
+            return this;
+        }
+
+        if (!actionsHandled.await()) {
+            logger().debug("syncWait() was interrupted");
         }
         return this;
     }
@@ -178,12 +285,13 @@ public class PromiseImpl<T> implements Promise<T> {
      */
     @Override
     public Promise<T> syncWait(final Timeout timeout) {
-        try {
-            if (!actionsHandled.await(timeout.asMillis(), TimeUnit.MILLISECONDS)) {
-                syncFail(Errors.TIMEOUT);
-            }
-        } catch (final Exception e) {
-            logger().debug("Exception in syncWait(timeout)", e);
+        if (actionsHandled == null) {
+            return this;
+        }
+
+        if (!actionsHandled.await(timeout)) {
+            syncFail(Errors.TIMEOUT);
+            logger().debug("syncWait(Timeout) expired or interrupted");
         }
         return this;
     }
@@ -201,7 +309,7 @@ public class PromiseImpl<T> implements Promise<T> {
     @Override
     public Promise<T> async(final Timeout timeout, final Consumer<Promise<T>> task) {
         SingletonHolder.scheduler()
-                       .submit(timeout, () -> task.accept(this));
+                       .submit(submitter -> submitter.delay($ -> task.accept(this), timeout));
         return this;
     }
 
@@ -215,7 +323,7 @@ public class PromiseImpl<T> implements Promise<T> {
     @Override
     public String toString() {
         return new StringJoiner(", ", "Promise(", ")")
-                .add(value.get() == null ? "<pending>" : value.get().toString())
+                .add(value == null ? "<pending>" : value.toString())
                 .toString();
     }
 

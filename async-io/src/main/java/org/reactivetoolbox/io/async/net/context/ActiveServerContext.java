@@ -2,18 +2,24 @@ package org.reactivetoolbox.io.async.net.context;
 
 import org.reactivetoolbox.core.lang.functional.Unit;
 import org.reactivetoolbox.core.lang.support.ULID;
+import org.reactivetoolbox.core.log.CoreLogger;
 import org.reactivetoolbox.io.async.Promise;
+import org.reactivetoolbox.io.async.Submitter;
+import org.reactivetoolbox.io.async.common.OffsetT;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.ClientConnection;
+import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.async.net.lifecycle.LifeCycle;
 import org.reactivetoolbox.io.async.net.server.TcpServerConfiguration;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static org.reactivetoolbox.core.lang.functional.Option.empty;
 import static org.reactivetoolbox.io.async.net.context.ConnectionContext.connectionContext;
 
+//TODO: some redesign is required. get rid of lifecycle???
 public class ActiveServerContext {
     private final ServerContext<?> serverContext;
     private final TcpServerConfiguration configuration;
@@ -23,6 +29,10 @@ public class ActiveServerContext {
     private ActiveServerContext(final ServerContext<?> serverContext, final TcpServerConfiguration configuration) {
         this.serverContext = serverContext;
         this.configuration = configuration;
+    }
+
+    public SocketAddressIn serverAddress() {
+        return configuration.address();
     }
 
     public static ActiveServerContext activeContext(final ServerContext<?> serverContext,
@@ -53,14 +63,17 @@ public class ActiveServerContext {
         return serverContext.socket();
     }
 
+    public CoreLogger logger() {
+        return shutdownPromise.logger();
+    }
+
     public Promise<Unit> handleConnection(final ClientConnection<?> clientConnection) {
         return configuration.connectionHandler()
                             .apply(connectionContext(this, clientConnection));
     }
 
-    public static Promise<SizeT> echo(final ReadConnectionContext context) {
-        return Promise.asyncPromise((promise, submitter) ->
-                                            submitter.write(promise, context.socket(), context.buffer()));
+    public static Promise<SizeT> echo(final ReadConnectionContext context, final SizeT bytesRead, final Submitter submitter) {
+        return submitter.write(context.socket(), context.buffer(), OffsetT.ZERO, empty());
     }
 
     public void shutdown() {

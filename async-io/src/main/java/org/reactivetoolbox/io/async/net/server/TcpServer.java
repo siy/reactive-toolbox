@@ -1,5 +1,6 @@
 package org.reactivetoolbox.io.async.net.server;
 
+import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.net.ClientConnection;
@@ -8,7 +9,9 @@ import org.reactivetoolbox.io.async.net.SocketType;
 import org.reactivetoolbox.io.async.net.context.ActiveServerContext;
 import org.reactivetoolbox.io.async.net.context.ServerContext;
 
-import static java.util.stream.IntStream.range;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
+
 import static org.reactivetoolbox.io.async.Promise.asyncPromise;
 import static org.reactivetoolbox.io.async.net.context.ActiveServerContext.activeContext;
 
@@ -31,8 +34,7 @@ public class TcpServer {
     private Promise<ActiveServerContext> setupAcceptors(final ServerContext<?> context) {
         final ActiveServerContext activeServerContext = activeContext(context, configuration);
 
-        range(0, context.queueDepth())
-                .forEach($ -> doAccept(activeServerContext));
+        IntStream.range(0, Promise.parallelism()).forEach($ -> doAccept(activeServerContext));
 
         return Promise.readyOk(activeServerContext);
     }
@@ -47,10 +49,15 @@ public class TcpServer {
     }
 
     private static void doAccept(final ActiveServerContext context) {
+        final Runnable worker = () -> doAccept(context);
+        final Consumer<Result<ClientConnection<?>>> handler = clientConnection -> clientConnection.onSuccessDo(worker)
+                                                                                                  .onFailure(failure -> context.logger().debug("Accept error {1} ", failure))
+                                                                                                  .onSuccess(context::handleConnection);
+
         if (!context.shutdownInProgress()) {
-            Promise.<ClientConnection<?>>asyncPromise((promise, submitter) -> submitter.accept(promise, context.socket(), SocketFlag.closeOnExec())
-                                                                                       .onSuccess($ -> doAccept(context))
-                                                                                       .flatMap(context::handleConnection));
+            context.shutdownPromise().async((promise, submitter) -> submitter.accept(handler,
+                                                                                     context.socket(),
+                                                                                     SocketFlag.closeOnExec()));
         }
     }
 }

@@ -150,6 +150,8 @@ public enum NativeError implements FailureType {
     private static final NativeError[] index = new NativeError[NativeError.values()[NativeError.values().length - 2].code];
     private final int code;
     private final String description;
+    private final Result result;
+    private final Failure failure;
 
     static {
         for(final NativeError err : NativeError.values()) {
@@ -162,6 +164,8 @@ public enum NativeError implements FailureType {
     NativeError(final int code, final String description) {
         this.code = code;
         this.description = description;
+        failure = Failure.failure(this, description);
+        result = Result.fail(failure);
     }
 
     @Override
@@ -175,13 +179,21 @@ public enum NativeError implements FailureType {
     }
 
     public Failure asFailure() {
-        return Failure.failure(this, description);
+        return failure;
+    }
+
+    public <T> Result<T> asResult() {
+        return (Result<T>) result;
     }
 
     public static <T> Result<T> result(final int code, final FN1<T, Integer> constructor) {
         return code >= 0
                ? Result.ok(constructor.apply(code))
-               : Result.fail(fromCode(code).asFailure());
+               : fromCode(code).asResult();
+    }
+
+    public static <T> Result<T> result(final int code) {
+        return fromCode(code).asResult();
     }
 
     public static NativeError fromCode(final int code) {

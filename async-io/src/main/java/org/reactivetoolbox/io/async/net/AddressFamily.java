@@ -47,15 +47,16 @@ public enum AddressFamily {
         int high = values.length - 1;
 
         while (low <= high) {
-            int mid = (low + high) >>> 1;
+            final int mid = (low + high) >>> 1;
 
-            int cmp = values[mid].id - family;
-            if (cmp < 0)
+            final int cmp = values[mid].id - family;
+            if (cmp < 0) {
                 low = mid + 1;
-            else if (cmp > 0)
+            } else if (cmp > 0) {
                 high = mid - 1;
-            else
+            } else {
                 return values[mid];
+            }
         }
 
         return null;
@@ -63,7 +64,7 @@ public enum AddressFamily {
 
     public static Result<AddressFamily> addressFamily(final short family) {
         return Option.option(unsafeFromCode(family))
-                     .fold($ -> Result.fail(EPFNOSUPPORT.asFailure()), Result::ok);
+                     .fold($ -> EPFNOSUPPORT.asResult(), Result::ok);
     }
 
     public short familyId() {

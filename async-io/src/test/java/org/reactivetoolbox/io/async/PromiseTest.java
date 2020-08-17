@@ -72,7 +72,7 @@ class PromiseTest {
     }
 
     @Test
-    void mapTransformsValue() {
+    void syncMapTransformsValue() {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
 
@@ -85,22 +85,24 @@ class PromiseTest {
     }
 
     @Test
-    void mapAsyncTransformsValue() {
+    void mapTransformsValue() {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
+        final var waitable = Promise.<String>waitablePromise();
 
         final var mappedPromise = promise.map(Objects::toString)
-                                         .onSuccess(holder::set);
+                                         .onSuccess(holder::set)
+                                         .chainTo(waitable);
 
-        promise.syncOk(1234);
+        promise.ok(1234);
 
-        mappedPromise.syncWait();
+        waitable.syncWait();
 
         assertEquals("1234", holder.get());
     }
 
     @Test
-    void flatMapTransformsValue() {
+    void syncMapResultTransformsValue() {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
 
@@ -113,7 +115,7 @@ class PromiseTest {
     }
 
     @Test
-    void flatMapAsyncTransformsValue() {
+    void asyncMapResultTransformsValue() {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
 
@@ -122,7 +124,8 @@ class PromiseTest {
 
         promise.syncOk(1234);
 
-        mappedPromise.syncWait();
+        Promise.<String>waitablePromise(mappedPromise::syncChainTo)
+                .syncWait();
 
         assertEquals("1234", holder.get());
     }
@@ -131,7 +134,7 @@ class PromiseTest {
     void promiseCanBeResolvedAsynchronouslyWithSuccess() {
         final var currentTid = Thread.currentThread().getId();
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise()
+        final var promise = Promise.<Integer>waitablePromise()
                 .onSuccess(val -> assertNotEquals(currentTid, Thread.currentThread().getId()))
                 .onSuccess(holder::set);
 
@@ -144,7 +147,7 @@ class PromiseTest {
     void promiseCanBeResolvedAsynchronouslyWithFailure() {
         final var currentTid = Thread.currentThread().getId();
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise()
+        final var promise = Promise.<Integer>waitablePromise()
                 .onFailure(f -> assertNotEquals(currentTid, Thread.currentThread().getId()))
                 .onFailure(f -> holder.set(1));
 
@@ -156,9 +159,12 @@ class PromiseTest {
     @Test
     void syncWaitIsWaitingForResolution() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
 
-        executor.execute(() -> {safeSleep(20); promise.syncOk(1);});
+        executor.execute(() -> {
+            safeSleep(20);
+            promise.syncOk(1);
+        });
 
         promise.syncWait();
 
@@ -182,11 +188,14 @@ class PromiseTest {
     @Test
     void syncWaitWithTimeoutIsWaitingForResolution() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
 
         assertEquals(-1, holder.get());
 
-        executor.execute(() -> {safeSleep(20); promise.syncOk(1);});
+        executor.execute(() -> {
+            safeSleep(20);
+            promise.syncOk(1);
+        });
 
         assertEquals(-1, holder.get());
 
@@ -202,7 +211,10 @@ class PromiseTest {
 
         assertEquals(-1, holder.get());
 
-        executor.execute(() -> {safeSleep(200); promise.syncOk(1);});
+        executor.execute(() -> {
+            safeSleep(200);
+            promise.syncOk(1);
+        });
 
         promise.syncWait(timeout(10).millis());
 
@@ -212,7 +224,8 @@ class PromiseTest {
     @Test
     void promiseIsResolvedWhenTimeoutExpires() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise().onSuccess(holder::set).async(timeout(100).millis(), task -> task.syncOk(123));
+        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set)
+                                                              .async(timeout(100).millis(), p -> p.syncOk(123));
 
         assertEquals(-1, holder.get());
 
@@ -224,7 +237,7 @@ class PromiseTest {
     @Test
     void taskCanBeExecuted() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise()
+        final var promise = Promise.<Integer>waitablePromise()
                 .onSuccess(holder::set)
                 .when(timeout(100).millis(), ok(123));
 
@@ -341,8 +354,8 @@ class PromiseTest {
     @Test
     void ioTaskCanBeSubmitted() {
         final var promise = Promise.<String>promise()
-                                   .async((p, io) -> io.nop(Promise.promise())
-                                                       .thenDo(() -> p.syncOk("success")));
+                .async((p, io) -> io.nop(Promise.promise())
+                                    .thenDo(() -> p.syncOk("success")));
 
         promise.syncWait(timeout(1).seconds())
                .onSuccess(success -> assertEquals("success", success))

@@ -14,6 +14,14 @@ public class OffHeapTimeSpec extends AbstractOffHeapStructure<OffHeapTimeSpec> {
         super(TimeSpecOffsets.SIZE);
     }
 
+    public OffHeapTimeSpec setSecondsNanos(final long seconds, final long nanos) {
+        return putLong(tv_sec, seconds).putLong(tv_nsec, nanos);
+    }
+
+    public static OffHeapTimeSpec uninitialized() {
+        return new OffHeapTimeSpec();
+    }
+
     public static OffHeapTimeSpec forSecondsNanos(final long seconds, final long nanos) {
         return new OffHeapTimeSpec()
                 .putLong(tv_sec, seconds)

@@ -16,7 +16,7 @@ public class Inet4Address implements InetAddress {
 
     public static Result<Inet4Address> inet4Address(final byte[] address) {
         return address.length != SIZE
-               ? Result.fail(EFAULT.asFailure())
+               ? EFAULT.asResult()
                : Result.ok(new Inet4Address(address));
     }
 

@@ -32,23 +32,6 @@ import java.util.function.Consumer;
  */
 public interface TaskScheduler extends Executor {
     /**
-     * Low-level method which accepts {@link Action} and processes it as many times, as {@link Action#perform(long, Submitter)}
-     * returns false.
-     *
-     * @param action
-     *         Runnable predicate to execute
-     *
-     * @return this instance for fluent call chaining.
-     */
-    default TaskScheduler submit(final Action action) {
-        return submit(() -> {
-            if (!action.perform(System.nanoTime(), localSubmitter())) {
-                TaskScheduler.this.submit(action);
-            }
-        });
-    }
-
-    /**
      * Submit an I/O task.
      *
      * @param ioAction
@@ -56,9 +39,7 @@ public interface TaskScheduler extends Executor {
      *
      * @return this instance for fluent call chaining.
      */
-    default TaskScheduler submit(final Consumer<Submitter> ioAction) {
-        return submit(() -> ioAction.accept(localSubmitter()));
-    }
+    TaskScheduler submit(final Consumer<Submitter> ioAction);
 
     /**
      * Submit task which will be executed exactly once and as soon as possible.
@@ -69,28 +50,6 @@ public interface TaskScheduler extends Executor {
      * @return this instance for fluent call chaining.
      */
     TaskScheduler submit(final Runnable runnable);
-
-    /**
-     * Submit task which will be executed once specified timeout is expired.
-     *
-     * @param timeout
-     *         Timeout after which task will be executed
-     * @param runnable
-     *         Code to execute
-     *
-     * @return this instance fo fluent call chaining.
-     */
-    default TaskScheduler submit(final Timeout timeout, final Runnable runnable) {
-        final long threshOld = System.nanoTime() + timeout.asNanos();
-
-        return submit((nanoTime, $$) -> {
-            if (nanoTime >= threshOld) {
-                runnable.run();
-                return true;
-            }
-            return false;
-        });
-    }
 
     /**
      * Implementation of {@link Executor} interface
@@ -117,21 +76,12 @@ public interface TaskScheduler extends Executor {
     CoreLogger logger();
 
     /**
-     * Return {@link Submitter} instance local for current thread.
-     * <p>
-     * Note that {@link Submitter} instances are present only for threads which belong to this instance of {@link TaskScheduler}.
-     * Calling this method from other threads will return {@code null}. The returned instance is not thread safe and should not
-     * be passed to other threads.
-     *
-     * @return instance of {@link Submitter} suitable for use in current thread.
-     */
-    Submitter localSubmitter();
-
-    /**
      * Shutdown scheduler. Once scheduler is shut down, remaining tasks will be processed, but no new tasks
      * will be accepted.
      */
     void shutdown();
+
+    int parallelism();
 
     /**
      * Create instance of scheduler with specified execution pool size.

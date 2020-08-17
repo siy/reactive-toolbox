@@ -26,6 +26,7 @@ import org.reactivetoolbox.io.scheduler.TaskScheduler;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import static java.util.stream.IntStream.range;
 
@@ -34,8 +35,8 @@ import static java.util.stream.IntStream.range;
  */
 public class PipelinedTaskScheduler implements TaskScheduler {
     private final ExecutorService executor;
-    private final java.util.List<StackingCollector<Runnable>> processors = new ArrayList<>();
-    private final ThreadLocal<Proactor> proactors = new ThreadLocal<>();
+    private final java.util.List<StackingCollector<Runnable>> pipelines = new ArrayList<>();
+    private final java.util.List<Proactor> proactors = new ArrayList<>();
     private int counter = 0;
 
     private PipelinedTaskScheduler(final int size) {
@@ -43,8 +44,10 @@ public class PipelinedTaskScheduler implements TaskScheduler {
 
         range(0, size).forEach(n -> {
             final var pipeline = StackingCollector.<Runnable>stackingCollector();
-            processors.add(pipeline);
-            executor.execute(createWorker(pipeline));
+            final var proactor = Proactor.proactor();
+            pipelines.add(pipeline);
+            proactors.add(proactor);
+            startWorker(pipeline, proactor);
         });
     }
 
@@ -54,11 +57,15 @@ public class PipelinedTaskScheduler implements TaskScheduler {
 
     @Override
     public TaskScheduler submit(final Runnable runnable) {
-        if (executor.isShutdown()) {
-            throw new IllegalStateException("Attempt to submit new task after scheduler is shut down");
-        }
-        final var index = counter = (counter + 1) % processors.size();
-        processors.get(index).push(runnable);
+        final var index = counter = (counter + 1) % pipelines.size();
+        pipelines.get(index).push(runnable);
+        return this;
+    }
+
+    @Override
+    public TaskScheduler submit(final Consumer<Submitter> ioAction) {
+        final var index = counter = (counter + 1) % pipelines.size();
+        pipelines.get(index).push(() -> ioAction.accept(proactors.get(index)));
         return this;
     }
 
@@ -73,31 +80,35 @@ public class PipelinedTaskScheduler implements TaskScheduler {
     }
 
     @Override
-    public Submitter localSubmitter() {
-        return proactors.get();
+    public int parallelism() {
+        return pipelines.size();
     }
 
-    private Runnable createWorker(final StackingCollector<Runnable> pipeline) {
-        return () -> {
-            final var proactor = Proactor.proactor();
-            proactors.set(proactor);
-
+    private void startWorker(final StackingCollector<Runnable> pipeline, final Proactor proactor) {
+        executor.execute(() -> {
             int idleRunCount = 0;
 
             while (!executor.isShutdown()) {
-                if (!pipeline.swapAndApplyFIFO(Runnable::run)) {
+                var head = pipeline.swapHead();
+
+                if (head == null) {
                     idleRunCount++;
 
                     if (idleRunCount == 2048) {
                         Thread.yield();
                         idleRunCount = 0;
                     }
+                } else {
+                    final int cnt = 0;
+                    while (head != null) {
+                        head.element.run();
+                        head = head.nextNode;
+                    }
                 }
                 proactor.processIO();
             }
-            proactors.remove();
             proactor.close();
-        };
+        });
     }
 
     private static final class SingletonHolder {
