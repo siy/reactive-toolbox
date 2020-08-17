@@ -10,6 +10,7 @@ import org.reactivetoolbox.io.async.net.context.ActiveServerContext;
 import org.reactivetoolbox.io.async.net.context.ServerContext;
 
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 import static org.reactivetoolbox.io.async.Promise.asyncPromise;
 import static org.reactivetoolbox.io.async.net.context.ActiveServerContext.activeContext;
@@ -33,7 +34,7 @@ public class TcpServer {
     private Promise<ActiveServerContext> setupAcceptors(final ServerContext<?> context) {
         final ActiveServerContext activeServerContext = activeContext(context, configuration);
 
-        doAccept(activeServerContext);
+        IntStream.range(0, Promise.parallelism()).forEach($ -> doAccept(activeServerContext));
 
         return Promise.readyOk(activeServerContext);
     }

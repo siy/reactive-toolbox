@@ -31,8 +31,6 @@ import org.reactivetoolbox.core.lang.functional.Functions.FN1;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -40,11 +38,11 @@ import static org.reactivetoolbox.core.lang.Tuple.tuple;
 
 /**
  * Representation of the operation result. The result can be either success or failure.
- * In case of success it holds value returned by the operation. In case of error it
- * holds an error which describes the failure.
+ * In case of success it holds value returned by the operation. In case of failure it
+ * holds a failure description.
  *
  * @param <T>
- *     Type of value in case of successful result.
+ *     Type of value in case of success.
  */
 public interface Result<T> extends Either<Failure, T> {
     /**
@@ -174,11 +172,8 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return created instance
      */
-    ConcurrentMap<Failure, Result> FAILURES = new ConcurrentHashMap<>();
-
     static <R> Result<R> fail(final Failure value) {
-        //return new ResultFail<R>(value);
-        return FAILURES.computeIfAbsent(value, ResultFail::new);
+        return new ResultFail<R>(value);
     }
 
     static <T> Result<List<T>> flatten(final List<Result<T>> resultList) {
