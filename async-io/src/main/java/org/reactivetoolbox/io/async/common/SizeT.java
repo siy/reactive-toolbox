@@ -21,6 +21,21 @@ public class SizeT {
     }
 
     @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        } else if (o instanceof SizeT sizeT) {
+            return value == sizeT.value;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (value ^ (value >>> 32));
+    }
+
+    @Override
     public String toString() {
         return "SizeT(" + value + ")";
     }

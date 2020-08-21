@@ -20,7 +20,9 @@ import static org.reactivetoolbox.core.lang.functional.Option.empty;
 import static org.reactivetoolbox.io.async.net.context.ReadConnectionContext.readConnectionContext;
 
 public class ReadWriteLifeCycle implements LifeCycle {
-    private static final int DEFAULT_READ_BUFFER_SIZE = 16384;
+//    private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
+    private static final int DEFAULT_READ_BUFFER_SIZE = 16 * 1024;
+//    private static final int DEFAULT_READ_BUFFER_SIZE = 64 * 1024;
     private static final Failure EOF = NativeError.ENODATA.asFailure();
 
     private final FN3<Promise<?>, ReadConnectionContext, SizeT, Submitter> handler;

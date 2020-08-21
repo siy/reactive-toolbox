@@ -147,6 +147,11 @@ public class Proactor implements Submitter {
                       final OffsetT offset,
                       final Option<Timeout> timeout) {
 
+        if (buffer.used() == 0) {
+            completion.accept(NativeError.ENODATA.asResult());
+            return;
+        }
+
         queue.add(factory.forWrite(completion, fd, buffer, offset, timeout)
                          .register(pendingCompletions));
 

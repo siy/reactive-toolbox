@@ -73,7 +73,20 @@ public class ActiveServerContext {
     }
 
     public static Promise<SizeT> echo(final ReadConnectionContext context, final SizeT bytesRead, final Submitter submitter) {
-        return submitter.write(context.socket(), context.buffer(), OffsetT.ZERO, empty());
+        //context.onClose().logger().info("Read: {0}", bytesRead);
+        return submitter.write(context.socket(), context.buffer(), OffsetT.ZERO, empty())
+                        .onFailure(failure -> context.onClose()
+                                                     .logger()
+                                                     .info("Write error: {0}", failure))
+                        .onSuccess(bytesWritten -> {
+                            if (!bytesWritten.equals(bytesRead)) {
+                                context.onClose()
+                                       .logger()
+                                       .info("Write != Read, {0} != {1}, buffer {2}", bytesWritten, bytesRead, context.buffer().used());
+                            }
+                        })
+                //        .onSuccess(bytesWritten -> context.onClose().logger().info("Write: {0}", bytesWritten))
+                ;
     }
 
     public void shutdown() {

@@ -32,7 +32,7 @@ public class WriteExchangeEntry extends AbstractExchangeEntry<WriteExchangeEntry
                     .fd(descriptor)
                     .flags(flags)
                     .addr(buffer.address())
-                    .len(buffer.size())
+                    .len(buffer.used())
                     .off(offset);
     }
 
