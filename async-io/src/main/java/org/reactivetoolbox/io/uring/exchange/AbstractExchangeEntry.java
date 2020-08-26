@@ -3,13 +3,14 @@ package org.reactivetoolbox.io.uring.exchange;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.lang.functional.Unit;
 import org.reactivetoolbox.io.CompletionHandler;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.uring.AsyncOperation;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.ObjectHeap;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.core.lang.functional.Unit.unit;
@@ -35,7 +36,7 @@ public abstract class AbstractExchangeEntry<T extends AbstractExchangeEntry<T, R
     private final AsyncOperation operation;
     private T next;
     private int key;
-    protected Consumer<Result<R>> completion;
+    protected BiConsumer<Result<R>, Submitter> completion;
 
     protected AbstractExchangeEntry(final AsyncOperation operation, final PlainObjectPool pool) {
         this.operation = operation;
@@ -53,12 +54,12 @@ public abstract class AbstractExchangeEntry<T extends AbstractExchangeEntry<T, R
     }
 
     @Override
-    public final void accept(final int result, final int flags) {
-        doAccept(result, flags);
+    public final void accept(final int result, final int flags, final Submitter submitter) {
+        doAccept(result, flags, submitter);
         release();
     }
 
-    protected abstract void doAccept(final int result, final int flags);
+    protected abstract void doAccept(final int result, final int flags, final Submitter submitter);
 
     @Override
     public void close() {
@@ -88,7 +89,7 @@ public abstract class AbstractExchangeEntry<T extends AbstractExchangeEntry<T, R
                     .opcode(operation.opcode());
     }
 
-    public T prepare(final Consumer<Result<R>> completion) {
+    public T prepare(final BiConsumer<Result<R>, Submitter> completion) {
         this.completion = completion;
         return (T) this;
     }

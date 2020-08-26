@@ -2,12 +2,13 @@ package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.util.OffHeapBuffer;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_READ;
 
@@ -24,11 +25,11 @@ public class ReadExchangeEntry extends AbstractExchangeEntry<ReadExchangeEntry, 
     }
 
     @Override
-    protected void doAccept(final int res, final int flags) {
+    protected void doAccept(final int res, final int flags, final Submitter submitter) {
         if (res > 0) {
             buffer.used(res);
         }
-        completion.accept(bytesReadToResult(res));
+        completion.accept(bytesReadToResult(res), submitter);
     }
 
     @Override
@@ -41,7 +42,7 @@ public class ReadExchangeEntry extends AbstractExchangeEntry<ReadExchangeEntry, 
                     .off(offset);
     }
 
-    public ReadExchangeEntry prepare(final Consumer<Result<SizeT>> completion,
+    public ReadExchangeEntry prepare(final BiConsumer<Result<SizeT>, Submitter> completion,
                                      final int descriptor,
                                      final OffHeapBuffer buffer,
                                      final long offset,

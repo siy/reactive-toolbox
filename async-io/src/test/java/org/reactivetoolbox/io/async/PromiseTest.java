@@ -32,12 +32,14 @@ class PromiseTest {
     @Test
     void multipleResolutionsAreIgnored() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
 
-        promise.syncOk(1);
-        promise.syncOk(2);
-        promise.syncOk(3);
-        promise.syncOk(4);
+        promise.ok(1);
+        promise.ok(2);
+        promise.ok(3);
+        promise.ok(4);
+
+        promise.syncWait();
 
         assertEquals(1, holder.get());
     }
@@ -53,9 +55,9 @@ class PromiseTest {
     @Test
     void thenActionsAreExecuted() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
 
-        promise.syncOk(1);
+        promise.ok(1).syncWait();
 
         assertEquals(1, holder.get());
     }
@@ -63,9 +65,9 @@ class PromiseTest {
     @Test
     void thenActionsAreExecutedEvenIfAddedAfterPromiseResolution() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise();
+        final var promise = Promise.<Integer>waitablePromise();
 
-        promise.syncOk(1);
+        promise.ok(1).syncWait();
         promise.onSuccess(holder::set);
 
         assertEquals(1, holder.get());
@@ -76,10 +78,10 @@ class PromiseTest {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
 
-        promise.syncMap(Objects::toString)
+        promise.syncMap(Objects::toString, null)
                .onSuccess(holder::set);
 
-        promise.syncOk(1234);
+        promise.syncOk(1234, null);
 
         assertEquals("1234", holder.get());
     }
@@ -106,10 +108,10 @@ class PromiseTest {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
 
-        promise.syncMapResult((Integer o) -> Result.ok(Objects.toString(o)))
+        promise.syncMapResult((Integer o) -> Result.ok(Objects.toString(o)), null)
                .onSuccess(holder::set);
 
-        promise.syncOk(1234);
+        promise.syncOk(1234, null);
 
         assertEquals("1234", holder.get());
     }
@@ -117,15 +119,16 @@ class PromiseTest {
     @Test
     void asyncMapResultTransformsValue() {
         final var holder = new AtomicReference<String>();
+        final var threshold = Promise.<String>waitablePromise();
         final var promise = Promise.<Integer>promise();
 
-        final var mappedPromise = promise.mapResult((Integer o) -> Result.ok(Objects.toString(o)))
-                                         .onSuccess(holder::set);
+        promise.mapResult((Integer o) -> Result.ok(Objects.toString(o)))
+               .onSuccess(holder::set)
+               .chainTo(threshold);
 
-        promise.syncOk(1234);
+        promise.ok(1234);
 
-        Promise.<String>waitablePromise(mappedPromise::syncChainTo)
-                .syncWait();
+        threshold.syncWait();
 
         assertEquals("1234", holder.get());
     }
@@ -163,7 +166,7 @@ class PromiseTest {
 
         executor.execute(() -> {
             safeSleep(20);
-            promise.syncOk(1);
+            promise.ok(1);
         });
 
         promise.syncWait();
@@ -174,11 +177,11 @@ class PromiseTest {
     @Test
     void syncWaitDoesNotWaitForAlreadyResolved() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
 
         assertEquals(-1, holder.get());
 
-        promise.syncOk(1);
+        promise.ok(1);
 
         promise.syncWait();
 
@@ -194,7 +197,7 @@ class PromiseTest {
 
         executor.execute(() -> {
             safeSleep(20);
-            promise.syncOk(1);
+            promise.ok(1);
         });
 
         assertEquals(-1, holder.get());
@@ -213,7 +216,7 @@ class PromiseTest {
 
         executor.execute(() -> {
             safeSleep(200);
-            promise.syncOk(1);
+            promise.ok(1);
         });
 
         promise.syncWait(timeout(10).millis());
@@ -225,7 +228,7 @@ class PromiseTest {
     void promiseIsResolvedWhenTimeoutExpires() {
         final var holder = new AtomicInteger(-1);
         final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set)
-                                                              .async(timeout(100).millis(), p -> p.syncOk(123));
+                                                              .async(timeout(100).millis(), p -> p.ok(123));
 
         assertEquals(-1, holder.get());
 
@@ -243,7 +246,7 @@ class PromiseTest {
 
         assertEquals(-1, holder.get());
 
-        promise.async(p -> p.syncOk(345)).syncWait();
+        promise.async(p -> p.ok(345)).syncWait();
 
         assertEquals(345, holder.get());
     }
@@ -251,14 +254,18 @@ class PromiseTest {
     @Test
     void anyResolvedPromiseResolvesResultForFirstPromise() {
         final var holder = new AtomicInteger(-1);
+        final var threshold = Promise.<Integer>waitablePromise();
         final var promise1 = Promise.<Integer>promise();
         final var promise2 = Promise.<Integer>promise();
 
-        Promise.any(promise1, promise2).onSuccess(holder::set);
+        Promise.any(promise1, promise2)
+               .onSuccess(holder::set)
+               .chainTo(threshold);
 
         assertEquals(-1, holder.get());
 
-        promise1.syncOk(1);
+        promise1.ok(1);
+        threshold.syncWait();
 
         assertEquals(1, holder.get());
     }
@@ -266,13 +273,18 @@ class PromiseTest {
     @Test
     void anyResolvedPromiseResolvesResultForSecondPromise() {
         final var holder = new AtomicInteger(-1);
+        final var threshold = Promise.<Integer>waitablePromise();
         final var promise1 = Promise.<Integer>promise();
         final var promise2 = Promise.<Integer>promise();
-        Promise.any(promise1, promise2).onSuccess(holder::set);
+
+        Promise.any(promise1, promise2)
+               .onSuccess(holder::set).chainTo(threshold);
 
         assertEquals(-1, holder.get());
 
-        promise2.syncOk(1);
+        promise2.ok(1);
+
+        threshold.syncWait();
 
         assertEquals(1, holder.get());
     }
@@ -280,17 +292,22 @@ class PromiseTest {
     @Test
     void onlySuccessResolvesAnySuccess() {
         final var holder = new AtomicInteger(-1);
+        final var threshold = Promise.<Integer>waitablePromise();
         final var promise1 = Promise.<Integer>promise();
         final var promise2 = Promise.<Integer>promise();
-        Promise.anySuccess(promise1, promise2).onSuccess(holder::set);
+        Promise.anySuccess(promise1, promise2)
+               .onSuccess(holder::set)
+               .chainTo(threshold);
 
         assertEquals(-1, holder.get());
 
-        promise1.syncFail(TIMEOUT);
+        promise1.fail(TIMEOUT);
 
         assertEquals(-1, holder.get());
 
-        promise2.syncOk(1);
+        promise2.ok(1);
+
+        threshold.syncWait();
 
         assertEquals(1, holder.get());
     }
@@ -299,17 +316,24 @@ class PromiseTest {
     void allFailuresResolvesAnySuccessToFailure() {
         final var holder = new AtomicInteger(-1);
         final var errHolder = new AtomicReference<>();
+        final var threshold = Promise.<Integer>waitablePromise();
         final var promise1 = Promise.<Integer>promise();
         final var promise2 = Promise.<Integer>promise();
-        Promise.anySuccess(promise1, promise2).onSuccess(holder::set).onFailure(errHolder::set);
+
+        Promise.anySuccess(promise1, promise2)
+               .onSuccess(holder::set)
+               .onFailure(errHolder::set)
+               .chainTo(threshold);
 
         assertEquals(-1, holder.get());
 
-        promise1.syncFail(TIMEOUT);
+        promise1.fail(TIMEOUT);
 
         assertEquals(-1, holder.get());
 
-        promise2.syncFail(TIMEOUT);
+        promise2.fail(TIMEOUT);
+
+        threshold.syncWait();
 
         assertEquals(-1, holder.get());
 
@@ -323,11 +347,11 @@ class PromiseTest {
         final var promise = Promise.<Integer>promise().onSuccess(s -> holder.set(1))
                                                       .onFailure(f -> holder.set(2));
 
-        final var chain = promise.syncFlatMap(val -> Promise.readyOk(val.toString()))
+        final var chain = promise.syncFlatMap(val -> Promise.readyOk(val.toString()), null)
                                  .onSuccess(s -> stringHolder.set("success"))
                                  .onFailure(f -> stringHolder.set("failure"));
 
-        promise.syncFail(TIMEOUT);
+        promise.syncFail(TIMEOUT, null);
 
         assertEquals(2, holder.get());
         assertEquals("failure", stringHolder.get());
@@ -340,11 +364,11 @@ class PromiseTest {
         final var promise = Promise.<Integer>promise().onSuccess(s -> holder.set(1))
                                                       .onFailure(f -> holder.set(2));
 
-        final var chain = promise.syncFlatMap(val -> Promise.readyOk(val.toString()))
+        final var chain = promise.syncFlatMap(val -> Promise.readyOk(val.toString()), null)
                                  .onSuccess(s -> stringHolder.set("success"))
                                  .onFailure(f -> stringHolder.set("failure"));
 
-        promise.syncOk(123);
+        promise.syncOk(123, null);
 
         assertEquals(1, holder.get());
         assertEquals("success", stringHolder.get());
@@ -355,7 +379,7 @@ class PromiseTest {
     void ioTaskCanBeSubmitted() {
         final var promise = Promise.<String>promise()
                 .async((p, io) -> io.nop(Promise.promise())
-                                    .thenDo(() -> p.syncOk("success")));
+                                    .thenDo(() -> p.syncOk("success", null)));
 
         promise.syncWait(timeout(1).seconds())
                .onSuccess(success -> assertEquals("success", success))

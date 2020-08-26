@@ -36,7 +36,7 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.uring.UringHolder.DEFAULT_QUEUE_SIZE;
 
@@ -96,20 +96,20 @@ public class Proactor implements Submitter {
         }
 
         if (pendingCompletions.count() > 0) {
-            uringHolder.processCompletions(pendingCompletions);
+            uringHolder.processCompletions(pendingCompletions, this);
         }
         return this;
     }
 
     @Override
-    public void nop(final Consumer<Result<Unit>> completion) {
+    public void nop(final BiConsumer<Result<Unit>, Submitter> completion) {
 
         queue.add(factory.forNop(completion)
                          .register(pendingCompletions));
     }
 
     @Override
-    public void delay(final Consumer<Result<Duration>> completion,
+    public void delay(final BiConsumer<Result<Duration>, Submitter> completion,
                       final Timeout timeout) {
 
         queue.add(factory.forDelay(completion, timeout)
@@ -117,7 +117,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void closeFileDescriptor(final Consumer<Result<Unit>> completion,
+    public void closeFileDescriptor(final BiConsumer<Result<Unit>, Submitter> completion,
                                     final FileDescriptor fd,
                                     final Option<Timeout> timeout) {
 
@@ -128,7 +128,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void read(final Consumer<Result<SizeT>> completion,
+    public void read(final BiConsumer<Result<SizeT>, Submitter> completion,
                      final FileDescriptor fd,
                      final OffHeapBuffer buffer,
                      final OffsetT offset,
@@ -141,14 +141,14 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void write(final Consumer<Result<SizeT>> completion,
+    public void write(final BiConsumer<Result<SizeT>, Submitter> completion,
                       final FileDescriptor fd,
                       final OffHeapBuffer buffer,
                       final OffsetT offset,
                       final Option<Timeout> timeout) {
 
         if (buffer.used() == 0) {
-            completion.accept(NativeError.ENODATA.asResult());
+            completion.accept(NativeError.ENODATA.asResult(), this);
             return;
         }
 
@@ -159,7 +159,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void splice(final Consumer<Result<SizeT>> completion,
+    public void splice(final BiConsumer<Result<SizeT>, Submitter> completion,
                        final SpliceDescriptor descriptor,
                        final Option<Timeout> timeout) {
 
@@ -170,7 +170,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void open(final Consumer<Result<FileDescriptor>> completion,
+    public void open(final BiConsumer<Result<FileDescriptor>, Submitter> completion,
                      final Path path,
                      final Set<OpenFlags> flags,
                      final Set<FilePermission> mode,
@@ -183,7 +183,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void socket(final Consumer<Result<FileDescriptor>> completion,
+    public void socket(final BiConsumer<Result<FileDescriptor>, Submitter> completion,
                        final AddressFamily addressFamily,
                        final SocketType socketType,
                        final Set<SocketFlag> openFlags,
@@ -193,7 +193,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void server(final Consumer<Result<ServerContext<?>>> completion,
+    public void server(final BiConsumer<Result<ServerContext<?>>, Submitter> completion,
                        final SocketAddress<?> socketAddress,
                        final SocketType socketType,
                        final Set<SocketFlag> openFlags,
@@ -205,7 +205,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void accept(final Consumer<Result<ClientConnection<?>>> completion,
+    public void accept(final BiConsumer<Result<ClientConnection<?>>, Submitter> completion,
                        final FileDescriptor socket,
                        final Set<SocketFlag> flags) {
 
@@ -214,14 +214,14 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void connect(final Consumer<Result<FileDescriptor>> completion,
+    public void connect(final BiConsumer<Result<FileDescriptor>, Submitter> completion,
                         final FileDescriptor socket,
                         final SocketAddress<?> address,
                         final Option<Timeout> timeout) {
         final var clientAddress = OffHeapSocketAddress.unsafeSocketAddress(address);
 
         if (clientAddress == null) {
-            completion.accept(NativeError.EPFNOSUPPORT.asResult());
+            completion.accept(NativeError.EPFNOSUPPORT.asResult(), this);
             return;
         }
 
@@ -232,7 +232,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void stat(final Consumer<Result<FileStat>> completion,
+    public void stat(final BiConsumer<Result<FileStat>, Submitter> completion,
                      final Path path,
                      final Set<StatFlag> flags,
                      final Set<StatMask> mask,
@@ -249,7 +249,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void stat(final Consumer<Result<FileStat>> completion,
+    public void stat(final BiConsumer<Result<FileStat>, Submitter> completion,
                      final FileDescriptor fd,
                      final Set<StatFlag> flags,
                      final Set<StatMask> mask,
@@ -266,7 +266,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void readVector(final Consumer<Result<SizeT>> completion,
+    public void readVector(final BiConsumer<Result<SizeT>, Submitter> completion,
                            final FileDescriptor fileDescriptor,
                            final OffsetT offset,
                            final Option<Timeout> timeout,
@@ -279,7 +279,7 @@ public class Proactor implements Submitter {
     }
 
     @Override
-    public void writeVector(final Consumer<Result<SizeT>> completion,
+    public void writeVector(final BiConsumer<Result<SizeT>, Submitter> completion,
                             final FileDescriptor fileDescriptor,
                             final OffsetT offset,
                             final Option<Timeout> timeout,

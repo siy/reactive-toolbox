@@ -2,6 +2,7 @@ package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.uring.struct.ExternalRawStructure;
@@ -9,7 +10,7 @@ import org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_CONNECT;
 
@@ -23,10 +24,11 @@ public class ConnectExchangeEntry extends AbstractExchangeEntry<ConnectExchangeE
     }
 
     @Override
-    protected void doAccept(final int res, final int flags) {
+    protected void doAccept(final int res, final int flags, final Submitter submitter) {
         completion.accept(res < 0
                            ? NativeError.result(res)
-                           : Result.ok(descriptor));
+                           : Result.ok(descriptor),
+                          submitter);
 
         clientAddress.dispose();
         clientAddress = null;
@@ -40,7 +42,7 @@ public class ConnectExchangeEntry extends AbstractExchangeEntry<ConnectExchangeE
                     .off(clientAddress.sockAddrSize());
     }
 
-    public ConnectExchangeEntry prepare(final Consumer<Result<FileDescriptor>> completion,
+    public ConnectExchangeEntry prepare(final BiConsumer<Result<FileDescriptor>, Submitter> completion,
                                         final FileDescriptor descriptor,
                                         final OffHeapSocketAddress<SocketAddress<?>, ExternalRawStructure<?>> clientAddress,
                                         final byte flags) {

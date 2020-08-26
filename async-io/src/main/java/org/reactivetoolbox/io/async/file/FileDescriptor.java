@@ -1,9 +1,6 @@
 package org.reactivetoolbox.io.async.file;
 
-import org.reactivetoolbox.core.lang.functional.Result;
-
 import java.util.Objects;
-import java.util.StringJoiner;
 
 import static org.reactivetoolbox.io.async.file.DescriptorType.FILE;
 import static org.reactivetoolbox.io.async.file.DescriptorType.SOCKET;

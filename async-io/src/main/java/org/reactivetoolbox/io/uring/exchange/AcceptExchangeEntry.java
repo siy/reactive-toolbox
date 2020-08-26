@@ -2,6 +2,7 @@ package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.ClientConnection;
 import org.reactivetoolbox.io.async.net.SocketAddressIn;
@@ -10,7 +11,7 @@ import org.reactivetoolbox.io.uring.struct.raw.RawSocketAddressIn;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.async.net.ClientConnection.connectionIn;
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_ACCEPT;
@@ -31,13 +32,14 @@ public class AcceptExchangeEntry extends AbstractExchangeEntry<AcceptExchangeEnt
     }
 
     @Override
-    protected void doAccept(final int res, final int flags) {
+    protected void doAccept(final int res, final int flags, final Submitter submitter) {
         if (res <= 0) {
-            completion.accept(NativeError.result(res));
+            completion.accept(NativeError.result(res), submitter);
         }
 
         completion.accept(clientAddress.extract()
-                                       .map(addr -> connectionIn(FileDescriptor.socket(res), addr)));
+                                       .map(addr -> connectionIn(FileDescriptor.socket(res), addr)),
+                          submitter);
 
     }
 
@@ -50,7 +52,7 @@ public class AcceptExchangeEntry extends AbstractExchangeEntry<AcceptExchangeEnt
                     .acceptFlags(acceptFlags);
     }
 
-    public AcceptExchangeEntry prepare(final Consumer<Result<ClientConnection<?>>> completion,
+    public AcceptExchangeEntry prepare(final BiConsumer<Result<ClientConnection<?>>, Submitter> completion,
                                        final int descriptor,
                                        final int acceptFlags) {
         this.descriptor = descriptor;

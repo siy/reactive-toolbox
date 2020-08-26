@@ -183,7 +183,7 @@ public class PromisePerfTest {
         final long start = System.nanoTime();
 
         final long finish = promises.map((origin, last) -> {
-            origin.syncOk(1);
+            origin.syncOk(1, null);
             last.syncWait(timeout(10).seconds())
                 .onSuccess(holder::set);
             return System.nanoTime() - start;
@@ -201,7 +201,9 @@ public class PromisePerfTest {
             last = last.map(v -> v + 1);
         }
 
-        return tuple(origin, waitablePromise(last::syncChainTo));
+        final var lastPromise = last;
+
+        return tuple(origin, waitablePromise(promise -> lastPromise.syncChainTo(promise, null)));
     }
 
     static private Tuple2<CompletableFuture<Result<Integer>>, CompletableFuture<Result<Integer>>> configureCompletableFutures(final int count) {
@@ -235,9 +237,11 @@ public class PromisePerfTest {
         var last = origin;
 
         for (int i = 0; i < count; i++) {
-            last = last.syncMap(v -> v + 1);
+            last = last.syncMap(v -> v + 1, null);
         }
 
-        return tuple(origin, waitablePromise(last::syncChainTo));
+        final var lastPromise = last;
+
+        return tuple(origin, waitablePromise(promise -> lastPromise.syncChainTo(promise, null)));
     }
 }

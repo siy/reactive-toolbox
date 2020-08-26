@@ -5,21 +5,21 @@ import org.reactivetoolbox.core.lang.support.ULID;
 import java.util.concurrent.ConcurrentMap;
 
 public interface ConnectionRegistry {
-    ConnectionRegistry add(final ConnectionContext connectionContext);
+    ConnectionRegistry add(final IncomingConnectionContext incomingConnectionContext);
 
-    ConnectionRegistry remove(final ConnectionContext connectionContext);
+    ConnectionRegistry remove(final IncomingConnectionContext incomingConnectionContext);
 
-    static ConnectionRegistry withMap(final ConcurrentMap<ULID, ConnectionContext> connections) {
+    static ConnectionRegistry withMap(final ConcurrentMap<ULID, IncomingConnectionContext> connections) {
         return new ConnectionRegistry() {
             @Override
-            public ConnectionRegistry add(final ConnectionContext connectionContext) {
-                connections.putIfAbsent(connectionContext.id(), connectionContext);
+            public ConnectionRegistry add(final IncomingConnectionContext incomingConnectionContext) {
+                connections.putIfAbsent(incomingConnectionContext.id(), incomingConnectionContext);
                 return this;
             }
 
             @Override
-            public ConnectionRegistry remove(final ConnectionContext connectionContext) {
-                connections.remove(connectionContext.id(), connectionContext);
+            public ConnectionRegistry remove(final IncomingConnectionContext incomingConnectionContext) {
+                connections.remove(incomingConnectionContext.id(), incomingConnectionContext);
                 return this;
             }
         };

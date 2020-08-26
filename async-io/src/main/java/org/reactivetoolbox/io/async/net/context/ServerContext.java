@@ -19,7 +19,7 @@ public class ServerContext<T extends SocketAddress<?>> {
     private final FileDescriptor socket;
     private final T address;
     private final int queueDepth;
-    private final ConcurrentMap<ULID, ConnectionContext> connections = new ConcurrentHashMap<>();
+    private final ConcurrentMap<ULID, IncomingConnectionContext> connections = new ConcurrentHashMap<>();
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
 
     private ServerContext(final FileDescriptor socket, final T address, final int queueDepth) {
@@ -45,13 +45,13 @@ public class ServerContext<T extends SocketAddress<?>> {
     }
 
     //TODO: use some other approach?
-    public ServerContext<T> addConnection(final ConnectionContext connectionContext) {
-        connections.putIfAbsent(connectionContext.id(), connectionContext);
+    public ServerContext<T> addConnection(final IncomingConnectionContext incomingConnectionContext) {
+        connections.putIfAbsent(incomingConnectionContext.id(), incomingConnectionContext);
         return this;
     }
 
-    public ServerContext<T> removeConnection(final ConnectionContext connectionContext) {
-        connections.remove(connectionContext.id());
+    public ServerContext<T> removeConnection(final IncomingConnectionContext incomingConnectionContext) {
+        connections.remove(incomingConnectionContext.id());
         return this;
     }
 

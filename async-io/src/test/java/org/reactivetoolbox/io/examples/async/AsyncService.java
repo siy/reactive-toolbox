@@ -1,8 +1,8 @@
 package org.reactivetoolbox.io.examples.async;
 
-import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.meta.AppMetaRepository;
+import org.reactivetoolbox.io.async.Promise;
 import org.reactivetoolbox.io.scheduler.TaskScheduler;
 import org.reactivetoolbox.io.scheduler.Timeout;
 

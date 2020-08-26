@@ -1,6 +1,7 @@
 package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.AddressFamily;
 import org.reactivetoolbox.io.async.net.SocketFlag;
@@ -10,7 +11,7 @@ import org.reactivetoolbox.io.uring.UringHolder;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_NOP;
 
@@ -25,14 +26,15 @@ public class SocketExchangeEntry extends AbstractExchangeEntry<SocketExchangeEnt
     }
 
     @Override
-    protected void doAccept(final int result, final int flags) {
+    protected void doAccept(final int result, final int flags, final Submitter submitter) {
         completion.accept(UringHolder.socket(addressFamily,
                                              socketType,
                                              openFlags,
-                                             options));
+                                             options),
+                          submitter);
     }
 
-    public SocketExchangeEntry prepare(final Consumer<Result<FileDescriptor>> completion,
+    public SocketExchangeEntry prepare(final BiConsumer<Result<FileDescriptor>, Submitter> completion,
                                        final AddressFamily addressFamily,
                                        final SocketType socketType,
                                        final Set<SocketFlag> openFlags,

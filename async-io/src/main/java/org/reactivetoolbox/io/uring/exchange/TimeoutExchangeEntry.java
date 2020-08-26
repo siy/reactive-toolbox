@@ -1,6 +1,7 @@
 package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Unit;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.scheduler.Timeout;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapTimeSpec;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
@@ -21,7 +22,7 @@ public class TimeoutExchangeEntry extends AbstractExchangeEntry<TimeoutExchangeE
     }
 
     @Override
-    protected void doAccept(final int res, final int flags) {
+    protected void doAccept(final int res, final int flags, final Submitter submitter) {
     }
 
     public TimeoutExchangeEntry prepare(final Timeout timeout) {

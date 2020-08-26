@@ -2,12 +2,13 @@ package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapIoVector;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_WRITEV;
 
@@ -24,8 +25,8 @@ public class WriteVectorExchangeEntry extends AbstractExchangeEntry<WriteVectorE
     }
 
     @Override
-    protected void doAccept(final int res, final int flags) {
-        completion.accept(byteCountToResult(res));
+    protected void doAccept(final int res, final int flags, final Submitter submitter) {
+        completion.accept(byteCountToResult(res), submitter);
         ioVector.dispose();
         ioVector = null;
     }
@@ -40,7 +41,7 @@ public class WriteVectorExchangeEntry extends AbstractExchangeEntry<WriteVectorE
                     .off(offset);
     }
 
-    public WriteVectorExchangeEntry prepare(final Consumer<Result<SizeT>> completion,
+    public WriteVectorExchangeEntry prepare(final BiConsumer<Result<SizeT>, Submitter> completion,
                                             final int descriptor,
                                             final long offset,
                                             final byte flags,

@@ -2,13 +2,14 @@ package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
 import java.nio.file.Path;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_OPENAT;
 
@@ -25,13 +26,13 @@ public class OpenExchangeEntry extends AbstractExchangeEntry<OpenExchangeEntry, 
     }
 
     @Override
-    protected void doAccept(final int res, final int flags) {
+    protected void doAccept(final int res, final int flags, final Submitter submitter) {
         rawPath.dispose();
         rawPath = null;
 
         final var result = res < 0 ? NativeError.<FileDescriptor>result(res)
                                    : Result.ok(FileDescriptor.file(res));
-        completion.accept(result);
+        completion.accept(result, submitter);
     }
 
     @Override
@@ -44,7 +45,7 @@ public class OpenExchangeEntry extends AbstractExchangeEntry<OpenExchangeEntry, 
                     .openFlags(openFlags);
     }
 
-    public OpenExchangeEntry prepare(final Consumer<Result<FileDescriptor>> completion,
+    public OpenExchangeEntry prepare(final BiConsumer<Result<FileDescriptor>, Submitter> completion,
                                      final Path path,
                                      final int openFlags,
                                      final int mode,

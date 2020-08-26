@@ -84,12 +84,12 @@ public class PromiseImpl<T> implements Promise<T> {
     }
 
     private static final class Node<T> implements Poolable<Node<T>> {
-        private Consumer<Result<T>> resultConsumer;
+        private BiConsumer<Result<T>, Submitter> resultConsumer;
         private Node<T> next;
         private Consumer<T> successConsumer;
         private Consumer<? super Failure> failureConsumer;
-        private final Consumer<Result<T>> successResultConsumer = result -> result.onSuccess(successConsumer);
-        private final Consumer<Result<T>> failureResultConsumer = result -> result.onFailure(failureConsumer);
+        private final BiConsumer<Result<T>, Submitter> successResultConsumer = (result, consumer) -> result.onSuccess(successConsumer);
+        private final BiConsumer<Result<T>, Submitter> failureResultConsumer = (result, consumer) -> result.onFailure(failureConsumer);
 
         @Override
         public Node<T> next() {
@@ -102,11 +102,11 @@ public class PromiseImpl<T> implements Promise<T> {
             return this;
         }
 
-        public Consumer<Result<T>> resultConsumer() {
+        public BiConsumer<Result<T>, Submitter> resultConsumer() {
             return resultConsumer;
         }
 
-        public Node<T> resultConsumer(final Consumer<Result<T>> resultConsumer) {
+        public Node<T> resultConsumer(final BiConsumer<Result<T>, Submitter> resultConsumer) {
             this.resultConsumer = resultConsumer;
             return this;
         }
@@ -132,9 +132,9 @@ public class PromiseImpl<T> implements Promise<T> {
      * {@inheritDoc}
      */
     @Override
-    public Promise<T> syncResolve(final Result<T> result) {
+    public Promise<T> syncResolve(final Result<T> result, final Submitter submitter) {
         if (VALUE.compareAndSet(this, null, result)) {
-            handleActions();
+            handleActions(submitter);
         }
 
         return this;
@@ -153,8 +153,29 @@ public class PromiseImpl<T> implements Promise<T> {
      * {@inheritDoc}
      */
     @Override
+    public Promise<T> onResult(final Submitter submitter, final BiConsumer<Result<T>, Submitter> unSafeAction) {
+        final BiConsumer<Result<T>, Submitter> action = (result, submitter1) -> {
+            try {
+                unSafeAction.accept(result, submitter1);
+            } catch (final Throwable t) {
+                exceptionConsumer.get().accept(t);
+            }
+        };
+
+        if (value != null) {
+            action.accept(value, submitter);
+            return this;
+        }
+
+        return attachAction(NODE_POOL.alloc().resultConsumer(action));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Promise<T> onResult(final Consumer<Result<T>> unSafeAction) {
-        final Consumer<Result<T>> action = result -> {
+        final BiConsumer<Result<T>, Submitter> action = (result, submitter1) -> {
             try {
                 unSafeAction.accept(result);
             } catch (final Throwable t) {
@@ -163,7 +184,7 @@ public class PromiseImpl<T> implements Promise<T> {
         };
 
         if (value != null) {
-            action.accept(value);
+            action.accept(value, null);
             return this;
         }
 
@@ -215,7 +236,7 @@ public class PromiseImpl<T> implements Promise<T> {
         } while (!HEAD.compareAndSet(this, oldHead, newHead));
 
         if (value != null) {
-            handleActions();
+            handleActionsAsync();
         }
 
         return this;
@@ -226,7 +247,7 @@ public class PromiseImpl<T> implements Promise<T> {
                        .submit(this::handleActions);
     }
 
-    private void handleActions() {
+    private void handleActions(final Submitter submitter) {
         //Note: this is very performance critical method, so internals are inlined
         //Warning: do not change unless you clearly understand what are you doing!
 
@@ -251,7 +272,7 @@ public class PromiseImpl<T> implements Promise<T> {
             hasElements = prev != null;
 
             while (prev != null) {
-                prev.resultConsumer().accept(value);
+                prev.resultConsumer().accept(value, submitter);
 
                 final var tempNode = prev;
                 prev = prev.next();
@@ -290,7 +311,7 @@ public class PromiseImpl<T> implements Promise<T> {
         }
 
         if (!actionsHandled.await(timeout)) {
-            syncFail(Errors.TIMEOUT);
+            fail(Errors.TIMEOUT);
             logger().debug("syncWait(Timeout) expired or interrupted");
         }
         return this;
@@ -309,7 +330,7 @@ public class PromiseImpl<T> implements Promise<T> {
     @Override
     public Promise<T> async(final Timeout timeout, final Consumer<Promise<T>> task) {
         SingletonHolder.scheduler()
-                       .submit(submitter -> submitter.delay($ -> task.accept(this), timeout));
+                       .submit(submitter -> submitter.delay(($1,$2) -> task.accept(this), timeout));
         return this;
     }
 

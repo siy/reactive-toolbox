@@ -3,12 +3,13 @@ package org.reactivetoolbox.io.uring.exchange;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.SpliceDescriptor;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_SPLICE;
 
@@ -21,8 +22,8 @@ public class SpliceExchangeEntry extends AbstractExchangeEntry<SpliceExchangeEnt
     }
 
     @Override
-    protected void doAccept(final int res, final int flags) {
-        completion.accept(byteCountToResult(res));
+    protected void doAccept(final int res, final int flags, final Submitter submitter) {
+        completion.accept(byteCountToResult(res), submitter);
     }
 
     @Override
@@ -37,7 +38,7 @@ public class SpliceExchangeEntry extends AbstractExchangeEntry<SpliceExchangeEnt
                     .spliceFlags(Bitmask.combine(descriptor.flags()));
     }
 
-    public SpliceExchangeEntry prepare(final Consumer<Result<SizeT>> completion,
+    public SpliceExchangeEntry prepare(final BiConsumer<Result<SizeT>, Submitter> completion,
                                        final SpliceDescriptor descriptor,
                                        final byte flags) {
         this.flags = flags;

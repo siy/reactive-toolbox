@@ -25,7 +25,7 @@ import org.reactivetoolbox.io.scheduler.Timeout;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * Low level externally accessible API for submission of I/O operations.
@@ -44,10 +44,10 @@ public interface Submitter {
      * @param completion
      *         Callback which is invoked once operation is finished.
      */
-    void nop(final Consumer<Result<Unit>> completion);
+    void nop(final BiConsumer<Result<Unit>, Submitter> completion);
 
     /**
-     * Same as {@link #nop(Consumer)} except {@link Promise#syncResolve(Result)} is used as a callback. The provided {@link Promise} instance is resolved with {@link Unit} upon
+     * Same as {@link #nop(BiConsumer)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback. The provided {@link Promise} instance is resolved with {@link Unit} upon
      * completion of operation.
      *
      * @param promise
@@ -78,10 +78,10 @@ public interface Submitter {
      * @param timeout
      *         Requested delay.
      */
-    void delay(final Consumer<Result<Duration>> completion, final Timeout timeout);
+    void delay(final BiConsumer<Result<Duration>, Submitter> completion, final Timeout timeout);
 
     /**
-     * Same as {@link #delay(Consumer, Timeout)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #delay(BiConsumer, Timeout)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -118,12 +118,12 @@ public interface Submitter {
      *         Optional operation timeout.
      */
 
-    void splice(final Consumer<Result<SizeT>> completion,
+    void splice(final BiConsumer<Result<SizeT>, Submitter> completion,
                 final SpliceDescriptor descriptor,
                 final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #splice(Consumer, SpliceDescriptor, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #splice(BiConsumer, SpliceDescriptor, Option)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -172,14 +172,15 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    void read(final Consumer<Result<SizeT>> completion,
+    void read(final BiConsumer<Result<SizeT>, Submitter> completion,
               final FileDescriptor fdIn,
               final OffHeapBuffer buffer,
               final OffsetT offset,
               final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #read(Consumer, FileDescriptor, OffHeapBuffer, OffsetT, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #read(BiConsumer, FileDescriptor, OffHeapBuffer, OffsetT, Option)} except {@link Promise#syncResolve(Result, Submitter)}
+     * is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -239,14 +240,14 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    void write(final Consumer<Result<SizeT>> promise,
+    void write(final BiConsumer<Result<SizeT>, Submitter> promise,
                final FileDescriptor fdOut,
                final OffHeapBuffer buffer,
                final OffsetT offset,
                final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #write(Consumer, FileDescriptor, OffHeapBuffer, OffsetT, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #write(BiConsumer, FileDescriptor, OffHeapBuffer, OffsetT, Option)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -301,12 +302,12 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    void closeFileDescriptor(final Consumer<Result<Unit>> completion,
+    void closeFileDescriptor(final BiConsumer<Result<Unit>, Submitter> completion,
                              final FileDescriptor fd,
                              final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #closeFileDescriptor(Consumer, FileDescriptor, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #closeFileDescriptor(BiConsumer, FileDescriptor, Option)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -356,14 +357,14 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    void open(final Consumer<Result<FileDescriptor>> completion,
+    void open(final BiConsumer<Result<FileDescriptor>, Submitter> completion,
               final Path path,
               final Set<OpenFlags> flags,
               final Set<FilePermission> mode,
               final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #open(Consumer, Path, Set, Set, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #open(BiConsumer, Path, Set, Set, Option)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -421,14 +422,14 @@ public interface Submitter {
      * @param options
      *         Additional socket options. See {@link SocketOption} for more details.
      */
-    void socket(final Consumer<Result<FileDescriptor>> completion,
+    void socket(final BiConsumer<Result<FileDescriptor>, Submitter> completion,
                 final AddressFamily addressFamily,
                 final SocketType socketType,
                 final Set<SocketFlag> openFlags,
                 final Set<SocketOption> options);
 
     /**
-     * Same as {@link #socket(Consumer, AddressFamily, SocketType, Set, Set)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #socket(BiConsumer, AddressFamily, SocketType, Set, Set)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -489,7 +490,7 @@ public interface Submitter {
      *         Socket options. See {@link SocketOption} for more details
      * @see ServerContext
      */
-    void server(final Consumer<Result<ServerContext<?>>> completion,
+    void server(final BiConsumer<Result<ServerContext<?>>, Submitter> completion,
                 final SocketAddress<?> socketAddress,
                 final SocketType socketType,
                 final Set<SocketFlag> openFlags,
@@ -497,7 +498,7 @@ public interface Submitter {
                 final Set<SocketOption> options);
 
     /**
-     * Same as {@link #server(Consumer, SocketAddress, SocketType, Set, SizeT, Set)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #server(BiConsumer, SocketAddress, SocketType, Set, SizeT, Set)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -566,12 +567,12 @@ public interface Submitter {
      *         Accept flags (see {@link SocketFlag} for more details)
      * @see ClientConnection
      */
-    void accept(final Consumer<Result<ClientConnection<?>>> completion,
+    void accept(final BiConsumer<Result<ClientConnection<?>>, Submitter> completion,
                 final FileDescriptor socket,
                 final Set<SocketFlag> flags);
 
     /**
-     * Same as {@link #accept(Consumer, FileDescriptor, Set)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #accept(BiConsumer, FileDescriptor, Set)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -623,13 +624,13 @@ public interface Submitter {
      * @param timeout
      *         Optional operation timeout.
      */
-    void connect(final Consumer<Result<FileDescriptor>> completion,
+    void connect(final BiConsumer<Result<FileDescriptor>, Submitter> completion,
                  final FileDescriptor socket,
                  final SocketAddress<?> address,
                  final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #connect(Consumer, FileDescriptor, SocketAddress, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #connect(BiConsumer, FileDescriptor, SocketAddress, Option)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -683,14 +684,14 @@ public interface Submitter {
      *
      * @see FileStat
      */
-    void stat(final Consumer<Result<FileStat>> completion,
+    void stat(final BiConsumer<Result<FileStat>, Submitter> completion,
               final Path path,
               final Set<StatFlag> flags,
               final Set<StatMask> mask,
               final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #stat(Consumer, Path, Set, Set, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #stat(BiConsumer, Path, Set, Set, Option)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -752,14 +753,14 @@ public interface Submitter {
      *
      * @see FileStat
      */
-    void stat(final Consumer<Result<FileStat>> completion,
+    void stat(final BiConsumer<Result<FileStat>, Submitter> completion,
               final FileDescriptor fd,
               final Set<StatFlag> flags,
               final Set<StatMask> mask,
               final Option<Timeout> timeout);
 
     /**
-     * Same as {@link #stat(Promise, FileDescriptor, Set, Set, Option)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #stat(BiConsumer, FileDescriptor, Set, Set, Option)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -824,14 +825,14 @@ public interface Submitter {
      *         Set of buffers where read information will be put. Each buffer should have it's {@link OffHeapBuffer#used()} property set to actual number of bytes which application
      *         expects to see in this buffer.
      */
-    void readVector(final Consumer<Result<SizeT>> completion,
+    void readVector(final BiConsumer<Result<SizeT>, Submitter> completion,
                     final FileDescriptor fileDescriptor,
                     final OffsetT offset,
                     final Option<Timeout> timeout,
                     final OffHeapBuffer... buffers);
 
     /**
-     * Same as {@link #readVector(Consumer, FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #readVector(BiConsumer, FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.
@@ -892,14 +893,14 @@ public interface Submitter {
      * @param buffers
      *         Set of buffers to write from
      */
-    void writeVector(final Consumer<Result<SizeT>> completion,
+    void writeVector(final BiConsumer<Result<SizeT>, Submitter> completion,
                      final FileDescriptor fileDescriptor,
                      final OffsetT offset,
                      final Option<Timeout> timeout,
                      final OffHeapBuffer... buffers);
 
     /**
-     * Same as {@link #writeVector(Consumer, FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except {@link Promise#syncResolve(Result)} is used as a callback.
+     * Same as {@link #writeVector(BiConsumer, FileDescriptor, OffsetT, Option, OffHeapBuffer...)} except {@link Promise#syncResolve(Result, Submitter)} is used as a callback.
      *
      * @param promise
      *         Input {@link Promise} instance to resolve upon completion.

@@ -10,7 +10,7 @@ import org.reactivetoolbox.io.async.net.SocketAddressIn;
 import org.reactivetoolbox.io.async.net.SocketFlag;
 import org.reactivetoolbox.io.async.net.SocketOption;
 import org.reactivetoolbox.io.async.net.context.ActiveServerContext;
-import org.reactivetoolbox.io.async.net.context.ConnectionContext;
+import org.reactivetoolbox.io.async.net.context.IncomingConnectionContext;
 import org.reactivetoolbox.io.async.net.lifecycle.LifeCycle;
 import org.reactivetoolbox.io.async.net.lifecycle.ReadWriteLifeCycle;
 
@@ -59,7 +59,7 @@ public class TcpServerConfiguration {
         return properties.listenerOptions;
     }
 
-    public FN1<Promise<Unit>, ConnectionContext> connectionHandler() {
+    public FN1<Promise<Unit>, IncomingConnectionContext> connectionHandler() {
         return properties.connectionHandler;
     }
 
@@ -74,9 +74,9 @@ public class TcpServerConfiguration {
         public Set<SocketFlag> acceptorFlags = SocketFlag.closeOnExec();
         public Set<SocketOption> listenerOptions = SocketOption.reuseAll();
         //TODO: do we actually need it???
-        public FN1<Promise<Unit>, ConnectionContext> connectionHandler = ActiveServerContext::defaultConnectionHandler;
+        public FN1<Promise<Unit>, IncomingConnectionContext> connectionHandler = ActiveServerContext::defaultConnectionHandler;
         public SizeT backlogSize = sizeT(16);
-        public LifeCycle lifeCycle = ReadWriteLifeCycle.readWrite(ActiveServerContext::echo);
+        public LifeCycle lifeCycle = ReadWriteLifeCycle.readWrite(ReadWriteLifeCycle::echo);
 
         private Properties() {
         }

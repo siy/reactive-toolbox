@@ -138,7 +138,7 @@ public interface Promise<T> {
      *         The value which will be stored in this instance and make it resolved
      * @return Current instance
      */
-    Promise<T> syncResolve(final Result<T> result);
+    Promise<T> syncResolve(final Result<T> result, final Submitter submitter);
 
     /**
      * Asynchronously resolve current instance with successful result.
@@ -162,8 +162,8 @@ public interface Promise<T> {
      *         Successful result value
      * @return Current instance
      */
-    default Promise<T> syncOk(final T result) {
-        return syncResolve(Result.ok(result));
+    default Promise<T> syncOk(final T result, final Submitter submitter) {
+        return syncResolve(Result.ok(result), submitter);
     }
 
     /**
@@ -188,8 +188,8 @@ public interface Promise<T> {
      *         Failure result value
      * @return Current instance
      */
-    default Promise<T> syncFail(final Failure failure) {
-        return syncResolve(Result.fail(failure));
+    default Promise<T> syncFail(final Failure failure, final Submitter submitter) {
+        return syncResolve(Result.fail(failure), submitter);
     }
 
     /**
@@ -215,7 +215,7 @@ public interface Promise<T> {
      * @return Current instance
      */
     default Promise<T> when(final Timeout timeout, final Supplier<Result<T>> timeoutResultSupplier) {
-        return async(timeout, promise -> promise.syncResolve(timeoutResultSupplier.get()));
+        return async(timeout, promise -> promise.resolve(timeoutResultSupplier.get()));
     }
 
     /**
@@ -227,6 +227,8 @@ public interface Promise<T> {
      * @return Current instance for fluent call chaining
      */
     Promise<T> onResult(final Consumer<Result<T>> action);
+
+    Promise<T> onResult(final Submitter submitter, final BiConsumer<Result<T>, Submitter> action);
 
     /**
      * Perform action provided by user when this instance will be resolved. Action will be executed exactly once regardless if instance is already resolved or not. User may add as
@@ -276,8 +278,8 @@ public interface Promise<T> {
      *         Transformation function
      * @return Current instance for fluent call chaining
      */
-    default <R> Promise<R> syncChainTo(final Promise<R> promise, final FN1<R, T> mapper) {
-        onResult(result -> promise.syncResolve(result.map(mapper)));
+    default <R> Promise<R> syncChainTo(final Promise<R> promise, final FN1<R, T> mapper, final Submitter submitter) {
+        onResult(submitter, (result, asyncSubmitter) -> promise.syncResolve(result.map(mapper), asyncSubmitter));
         return promise;
     }
 
@@ -288,8 +290,8 @@ public interface Promise<T> {
      *         Input instance to resolve.
      * @return Current instance for fluent call chaining
      */
-    default Promise<T> syncChainTo(final Promise<T> promise) {
-        onResult(promise::syncResolve);
+    default Promise<T> syncChainTo(final Promise<T> promise, final Submitter submitter) {
+        onResult(submitter, promise::syncResolve);
         return promise;
     }
 
@@ -326,18 +328,18 @@ public interface Promise<T> {
         return this;
     }
 
-    /**
-     * Convenience method to synchronously resolve instance with {@link Errors#CANCELLED}.
-     * <p>
-     * Useful in cases when pending request need to be resolved prematurely,
-     * without waiting for response or timeout.
-     *
-     * @return Current instance for fluent call chaining
-     */
-    default Promise<T> syncCancel() {
-        syncFail(Errors.CANCELLED);
-        return this;
-    }
+//    /**
+//     * Convenience method to synchronously resolve instance with {@link Errors#CANCELLED}.
+//     * <p>
+//     * Useful in cases when pending request need to be resolved prematurely,
+//     * without waiting for response or timeout.
+//     *
+//     * @return Current instance for fluent call chaining
+//     */
+//    default Promise<T> syncCancel() {
+//        syncFail(Errors.CANCELLED);
+//        return this;
+//    }
 
     /**
      * Compose current Promise instance with subsequent call which also returns Promise and requires data from current instance
@@ -352,8 +354,9 @@ public interface Promise<T> {
     default <R> Promise<R> flatMap(final FN1<Promise<R>, T> mapper) {
         final var resultPromise = PromiseImpl.<R>promise();
 
-        onResult(result -> resultPromise.async(mapResult -> result.fold(failure -> mapResult.syncResolve((Result<R>) result),
-                                                                        success -> mapper.apply(success).onResult(mapResult::syncResolve))));
+        onResult(result -> resultPromise.async((mapResult, submitter) -> result.fold(failure -> mapResult.syncResolve((Result<R>) result, submitter),
+                                                                        success -> mapper.apply(success)
+                                                                                         .onResult(submitter, mapResult::syncResolve))));
         return resultPromise;
     }
 
@@ -365,11 +368,12 @@ public interface Promise<T> {
      * @return Created instance which represents result of resolution of current instance (if current instance is resolved to failure) or result of invocation of provided function
      *         (if current instance is resolved to success).
      */
-    default <R> Promise<R> syncFlatMap(final FN1<Promise<R>, T> mapper) {
+    default <R> Promise<R> syncFlatMap(final FN1<Promise<R>, T> mapper, final Submitter immediate) {
         final var mapResult = PromiseImpl.<R>promise();
 
-        onResult(result -> result.fold(failure -> mapResult.syncResolve((Result<R>) result),
-                                       success -> mapper.apply(success).onResult(mapResult::syncResolve)));
+        onResult(immediate, (result, submitter) -> result.fold(failure -> mapResult.syncResolve((Result<R>) result, submitter),
+                                       success -> mapper.apply(success)
+                                                        .onResult(submitter, mapResult::syncResolve)));
         return mapResult;
     }
 
@@ -397,10 +401,10 @@ public interface Promise<T> {
      *         Function to transform successful result value if current instance is resolved with success
      * @return Created instance
      */
-    default <R> Promise<R> syncMap(final FN1<R, T> mapper) {
+    default <R> Promise<R> syncMap(final FN1<R, T> mapper, final Submitter immediate) {
         final var result = PromiseImpl.<R>promise();
 
-        onResult(value -> result.syncResolve(value.map(mapper)));
+        onResult(immediate, (value, submitter) -> result.syncResolve(value.map(mapper), submitter));
         return result;
     }
 
@@ -430,10 +434,10 @@ public interface Promise<T> {
      *         Function to transform successful result value if current instance is resolved with success
      * @return Created instance
      */
-    default <R> Promise<R> syncMapResult(final FN1<Result<R>, T> mapper) {
+    default <R> Promise<R> syncMapResult(final FN1<Result<R>, T> mapper, final Submitter immediate) {
         final var result = PromiseImpl.<R>promise();
 
-        onResult(value -> result.syncResolve(value.flatMap(mapper)));
+        onResult(immediate, (value, submitter) -> result.syncResolve(value.flatMap(mapper), submitter));
         return result;
     }
 
@@ -582,7 +586,7 @@ public interface Promise<T> {
     @SafeVarargs
     static <T> Promise<T> any(final Promise<T>... promises) {
         return promise(result -> list(promises).apply(promise -> promise.onResult(v -> {
-            result.syncResolve(v);
+            result.resolve(v);
             cancelAll(promises);
         })));
     }
@@ -603,11 +607,11 @@ public interface Promise<T> {
         return Promise.promise(anySuccess -> threshold(promises.length,
                                                        at -> list(promises)
                                                                .apply(promise -> promise.onResult(result -> {
-                                                                   result.onSuccess(anySuccess::syncOk)
+                                                                   result.onSuccess(anySuccess::ok)
                                                                          .onSuccessDo(() -> cancelAll(promises));
                                                                    at.registerEvent();
                                                                })),
-                                                       () -> anySuccess.syncResolve(failureResult)));
+                                                       () -> anySuccess.resolve(failureResult)));
     }
 
     /**
@@ -632,7 +636,7 @@ public interface Promise<T> {
      *         Promises to cancel.
      */
     static <T> void cancelAll(final Promise<T>... promises) {
-        list(promises).apply(Promise::syncCancel);
+        list(promises).apply(Promise::cancel);
     }
 
     /**
@@ -645,7 +649,7 @@ public interface Promise<T> {
      */
     static <T> void resolveAll(final Result<T> result, final Promise<T>... promises) {
         list(promises)
-                .apply(promise -> promise.syncResolve(result));
+                .apply(promise -> promise.resolve(result));
     }
 
     /**
@@ -692,7 +696,7 @@ public interface Promise<T> {
      * @return Promise with list of success values
      */
     static <T> Promise<List<T>> flatAllOf(final List<Promise<T>> promises) {
-        return allOf(promises).syncMapResult(Result::flatten);
+        return allOf(promises).mapResult(Result::flatten);
     }
 
     /**
@@ -725,7 +729,8 @@ public interface Promise<T> {
         return promise(promise -> threshold(Tuple1.size(),
                                             at -> promise1.thenDo(at::registerEvent),
                                             () -> promise1.onResult(
-                                                    v1 -> promise.syncResolve(tuple(v1).map(Result::flatten)))));
+                                                    v1 -> promise.resolve(
+                                                            tuple(v1).map(Result::flatten)))));
     }
 
     /**
@@ -752,7 +757,7 @@ public interface Promise<T> {
                                             },
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
-                                                            v2 -> promise.syncResolve(
+                                                            v2 -> promise.resolve(
                                                                     tuple(v1, v2).map(Result::flatten))))));
     }
 
@@ -785,7 +790,7 @@ public interface Promise<T> {
                                             () -> promise1.onResult(
                                                     v1 -> promise2.onResult(
                                                             v2 -> promise3.onResult(
-                                                                    v3 -> promise.syncResolve(
+                                                                    v3 -> promise.resolve(
                                                                             tuple(v1, v2, v3).map(Result::flatten)))))));
     }
 
@@ -823,7 +828,7 @@ public interface Promise<T> {
                                                     v1 -> promise2.onResult(
                                                             v2 -> promise3.onResult(
                                                                     v3 -> promise4.onResult(
-                                                                            v4 -> promise.syncResolve(
+                                                                            v4 -> promise.resolve(
                                                                                     tuple(v1, v2, v3, v4).map(Result::flatten))))))));
     }
 
@@ -866,7 +871,7 @@ public interface Promise<T> {
                                                             v2 -> promise3.onResult(
                                                                     v3 -> promise4.onResult(
                                                                             v4 -> promise5.onResult(
-                                                                                    v5 -> promise.syncResolve(
+                                                                                    v5 -> promise.resolve(
                                                                                             tuple(v1, v2, v3, v4, v5)
                                                                                                     .map(Result::flatten)))))))));
     }
@@ -915,7 +920,7 @@ public interface Promise<T> {
                                                                     v3 -> promise4.onResult(
                                                                             v4 -> promise5.onResult(
                                                                                     v5 -> promise6.onResult(
-                                                                                            v6 -> promise.syncResolve(
+                                                                                            v6 -> promise.resolve(
                                                                                                     tuple(v1, v2, v3, v4, v5, v6)
                                                                                                             .map(Result::flatten))))))))));
     }
@@ -969,7 +974,7 @@ public interface Promise<T> {
                                                                             v4 -> promise5.onResult(
                                                                                     v5 -> promise6.onResult(
                                                                                             v6 -> promise7.onResult(
-                                                                                                    v7 -> promise.syncResolve(
+                                                                                                    v7 -> promise.resolve(
                                                                                                             tuple(v1, v2, v3, v4, v5, v6, v7)
                                                                                                                     .map(Result::flatten)))))))))));
     }
@@ -1028,7 +1033,7 @@ public interface Promise<T> {
                                                                                     v5 -> promise6.onResult(
                                                                                             v6 -> promise7.onResult(
                                                                                                     v7 -> promise8.onResult(
-                                                                                                            v8 -> promise.syncResolve(
+                                                                                                            v8 -> promise.resolve(
                                                                                                                     tuple(v1, v2, v3, v4, v5, v6, v7, v8)
                                                                                                                             .map(Result::flatten))))))))))));
     }
@@ -1092,7 +1097,7 @@ public interface Promise<T> {
                                                                                             v6 -> promise7.onResult(
                                                                                                     v7 -> promise8.onResult(
                                                                                                             v8 -> promise9.onResult(
-                                                                                                                    v9 -> promise.syncResolve(
+                                                                                                                    v9 -> promise.resolve(
                                                                                                                             tuple(v1, v2, v3, v4, v5, v6, v7, v8, v9)
                                                                                                                                     .map(Result::flatten)))))))))))));
     }

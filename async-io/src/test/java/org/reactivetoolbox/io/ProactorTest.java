@@ -50,7 +50,7 @@ class ProactorTest {
     @Test
     void delayCanBeSubmitted() {
         final var finalResult = new AtomicReference<Result<Duration>>();
-        proactor.delay(finalResult::set, timeout(100).millis());
+        proactor.delay((result, submitter) -> finalResult.set(result), timeout(100).millis());
         do {
             proactor.processIO(); //For submission
             proactor.processIO(); //For completion

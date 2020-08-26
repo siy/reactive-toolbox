@@ -5,6 +5,7 @@ import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.CompletionHandler;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
 import org.reactivetoolbox.io.async.net.AddressFamily;
@@ -32,7 +33,10 @@ import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.a
 import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.addressIn6;
 
 public class UringHolder implements AutoCloseable {
-    public static final int DEFAULT_QUEUE_SIZE = 32;
+//    public static final int DEFAULT_QUEUE_SIZE = 32;
+//    public static final int DEFAULT_QUEUE_SIZE = 128;
+//    public static final int DEFAULT_QUEUE_SIZE = 1024;
+    public static final int DEFAULT_QUEUE_SIZE = 8192;
 
     private static final int ENTRY_SIZE = 8;    // each entry is a 64-bit pointer
 
@@ -71,14 +75,14 @@ public class UringHolder implements AutoCloseable {
         closed = true;
     }
 
-    public void processCompletions(final ObjectHeap<CompletionHandler> pendingCompletions) {
+    public void processCompletions(final ObjectHeap<CompletionHandler> pendingCompletions, final Submitter submitter) {
         final long ready = Uring.peekCQ(ringBase, completionBuffer, completionEntries);
 
         for (long i = 0, address = completionBuffer; i < ready; i++, address += ENTRY_SIZE) {
             cqEntry.reposition(RawMemory.getLong(address));
 
             pendingCompletions.releaseUnsafe((int) cqEntry.userData())
-                              .accept(cqEntry.res(), cqEntry.flags());
+                              .accept(cqEntry.res(), cqEntry.flags(), submitter);
         }
 
         if (ready > 0) {

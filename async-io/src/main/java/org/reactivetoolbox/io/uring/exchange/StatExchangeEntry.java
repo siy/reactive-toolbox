@@ -2,13 +2,14 @@ package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.file.stat.FileStat;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapCString;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapFileStat;
 import org.reactivetoolbox.io.uring.struct.raw.SubmitQueueEntry;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_STATX;
 
@@ -24,10 +25,11 @@ public class StatExchangeEntry extends AbstractExchangeEntry<StatExchangeEntry, 
     }
 
     @Override
-    protected void doAccept(final int res, final int flags) {
+    protected void doAccept(final int res, final int flags, final Submitter submitter) {
         completion.accept(res < 0
                           ? NativeError.result(res)
-                          : Result.ok(fileStat.extract()));
+                          : Result.ok(fileStat.extract()),
+                          submitter);
         fileStat.dispose();
         rawPath.dispose();
         rawPath = null;
@@ -52,7 +54,7 @@ public class StatExchangeEntry extends AbstractExchangeEntry<StatExchangeEntry, 
                     .statxFlags(statFlags);
     }
 
-    public StatExchangeEntry prepare(final Consumer<Result<FileStat>> completion,
+    public StatExchangeEntry prepare(final BiConsumer<Result<FileStat>, Submitter> completion,
                                      final int descriptor,
                                      final int statFlags,
                                      final int statMask,

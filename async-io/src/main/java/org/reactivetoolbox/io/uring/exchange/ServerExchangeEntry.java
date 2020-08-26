@@ -1,6 +1,7 @@
 package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
+import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.net.SocketAddress;
 import org.reactivetoolbox.io.async.net.SocketFlag;
@@ -11,7 +12,7 @@ import org.reactivetoolbox.io.uring.UringHolder;
 import org.reactivetoolbox.io.uring.utils.PlainObjectPool;
 
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_NOP;
 
@@ -27,15 +28,16 @@ public class ServerExchangeEntry extends AbstractExchangeEntry<ServerExchangeEnt
     }
 
     @Override
-    protected void doAccept(final int result, final int flags) {
+    protected void doAccept(final int result, final int flags, final Submitter submitter) {
         completion.accept(UringHolder.server(socketAddress,
                                              socketType,
                                              openFlags,
                                              options,
-                                             queueDepth));
+                                             queueDepth),
+                          submitter);
     }
 
-    public ServerExchangeEntry prepare(final Consumer<Result<ServerContext<?>>> completion,
+    public ServerExchangeEntry prepare(final BiConsumer<Result<ServerContext<?>>, Submitter> completion,
                                        final SocketAddress<?> socketAddress,
                                        final SocketType socketType,
                                        final Set<SocketFlag> openFlags,
