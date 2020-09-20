@@ -14,15 +14,18 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <source>14</source>
-                    <target>14</target>
-                    <compilerArgs>--enable-preview</compilerArgs>
+                    <argLine>
+                        --illegal-access=permit
+                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang.support=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang.functional=ALL-UNNAMED
+                        ${java.enable-preview}
+                        -Xmx1024m
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-
 </project>

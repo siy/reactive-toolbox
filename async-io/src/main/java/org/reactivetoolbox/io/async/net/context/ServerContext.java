@@ -44,7 +44,6 @@ public class ServerContext<T extends SocketAddress<?>> {
         return queueDepth;
     }
 
-    //TODO: use some other approach?
     public ServerContext<T> addConnection(final IncomingConnectionContext incomingConnectionContext) {
         connections.putIfAbsent(incomingConnectionContext.id(), incomingConnectionContext);
         return this;

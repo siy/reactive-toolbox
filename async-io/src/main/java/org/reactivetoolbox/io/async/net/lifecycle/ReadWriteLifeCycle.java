@@ -53,7 +53,10 @@ public class ReadWriteLifeCycle implements LifeCycle {
     }
 
     public static Promise<SizeT> echo(final ReadConnectionContext context, final SizeT bytesRead) {
-        return Promise.asyncPromise((onClose, submitter) -> submitter.write(context.socket(), context.buffer(), OffsetT.ZERO, empty())
+        return Promise.asyncPromise((onClose, submitter) -> submitter.write(context.socket(),
+                                                                            context.buffer(),
+                                                                            OffsetT.ZERO,
+                                                                            empty())
                                                                      .onSuccess(bw -> context.logger().info("Wrote {0} bytes", bw))
                                                                      .onFailure(failure -> context.onClose()
                                                                                                   .logger()
