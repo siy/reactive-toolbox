@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
-import static org.reactivetoolbox.io.async.Promise.waitablePromise;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 
 @Disabled
@@ -138,8 +137,8 @@ public class PromisePerfTest {
 
         final long finish = promises.map((origin, last) -> {
             origin.ok(1);
-            last.syncWait(timeout(10).seconds())
-                .onSuccess(holder::set);
+            last.onSuccess(holder::set)
+                .syncWait(timeout(10).seconds());
             return System.nanoTime() - start;
         });
 
@@ -184,8 +183,8 @@ public class PromisePerfTest {
 
         final long finish = promises.map((origin, last) -> {
             origin.syncOk(1, null);
-            last.syncWait(timeout(10).seconds())
-                .onSuccess(holder::set);
+            last.onSuccess(holder::set)
+                .syncWait(timeout(10).seconds());
             return System.nanoTime() - start;
         });
 
@@ -201,9 +200,7 @@ public class PromisePerfTest {
             last = last.map(v -> v + 1);
         }
 
-        final var lastPromise = last;
-
-        return tuple(origin, waitablePromise(promise -> lastPromise.syncChainTo(promise, null)));
+        return tuple(origin, last);
     }
 
     static private Tuple2<CompletableFuture<Result<Integer>>, CompletableFuture<Result<Integer>>> configureCompletableFutures(final int count) {
@@ -240,8 +237,6 @@ public class PromisePerfTest {
             last = last.syncMap(v -> v + 1, null);
         }
 
-        final var lastPromise = last;
-
-        return tuple(origin, waitablePromise(promise -> lastPromise.syncChainTo(promise, null)));
+        return tuple(origin, last);
     }
 }

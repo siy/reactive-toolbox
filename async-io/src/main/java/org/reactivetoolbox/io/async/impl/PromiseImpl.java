@@ -16,7 +16,6 @@ package org.reactivetoolbox.io.async.impl;
  * limitations under the License.
  */
 
-import org.reactivetoolbox.core.Errors;
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
@@ -40,20 +39,32 @@ import java.util.function.Consumer;
  * Implementation of {@link Promise}
  */
 public class PromiseImpl<T> implements Promise<T> {
+    @SuppressWarnings("rawtypes")
+    private static final Consumer NOP = __ -> {
+    };
+
+    @SuppressWarnings("rawtypes")
+    private static final Consumer POST_PROCESS_NOP = __ -> {
+    };
+
     private volatile Result<T> value;
     private volatile Node<T> head;
-    private final BooleanLatch actionsHandled;
+    @SuppressWarnings("unchecked")
+    private volatile Consumer<Result<T>> finalizer = NOP;
 
-    private static final ConcurrentObjectPool<Node> NODE_POOL = new ConcurrentObjectPool(Node::new);
+    @SuppressWarnings("rawtypes")
+    private static final ConcurrentObjectPool<Node> NODE_POOL = new ConcurrentObjectPool<>(Node::new);
 
     private static final VarHandle VALUE;
     private static final VarHandle HEAD;
+    private static final VarHandle FINALIZER;
 
     static {
         try {
             final MethodHandles.Lookup l = MethodHandles.lookup();
             VALUE = l.findVarHandle(PromiseImpl.class, "value", Result.class);
             HEAD = l.findVarHandle(PromiseImpl.class, "head", Node.class);
+            FINALIZER = l.findVarHandle(PromiseImpl.class, "finalizer", Consumer.class);
         } catch (final ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -62,12 +73,10 @@ public class PromiseImpl<T> implements Promise<T> {
     private static final AtomicReference<Consumer<Throwable>> exceptionConsumer =
             new AtomicReference<>(e -> SingletonHolder.logger().debug("Exception while applying handlers", e));
 
-    public PromiseImpl(final BooleanLatch latch) {
-        actionsHandled = latch;
+    private PromiseImpl() {
     }
 
-    public PromiseImpl(final Result<T> value) {
-        actionsHandled = null;
+    private PromiseImpl(final Result<T> value) {
         this.value = value;
     }
 
@@ -76,11 +85,11 @@ public class PromiseImpl<T> implements Promise<T> {
     }
 
     public static <T> Promise<T> promise() {
-        return new PromiseImpl<>((BooleanLatch) null);
+        return new PromiseImpl<>();
     }
 
     public static <T> Promise<T> promise(final Result<T> result) {
-        return new PromiseImpl<T>(result);
+        return new PromiseImpl<>(result);
     }
 
     private static final class Node<T> implements Poolable<Node<T>> {
@@ -128,9 +137,32 @@ public class PromiseImpl<T> implements Promise<T> {
         exceptionConsumer.set(consumer);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public void syncWait(final Consumer<Result<T>> handler) {
+        prepareWait(handler).await();
+    }
+
+    @Override
+    public void syncWait(final Timeout timeout, final Consumer<Result<T>> handler) {
+        prepareWait(handler).await(timeout);
+    }
+
+    private BooleanLatch prepareWait(final Consumer<Result<T>> appHandler) {
+        final BooleanLatch latch = new BooleanLatch();
+        final Consumer<Result<T>> handler = result -> {
+            appHandler.accept(result);
+            latch.signal();
+        };
+
+        if (!FINALIZER.compareAndSet(this, NOP, handler)) {
+            handler.accept(value);
+        } else if (FINALIZER.compareAndSet(this, POST_PROCESS_NOP, handler)) {
+            callFinalHandler();
+        }
+
+        return latch;
+    }
+
     @Override
     public Promise<T> syncResolve(final Result<T> result, final Submitter submitter) {
         if (VALUE.compareAndSet(this, null, result)) {
@@ -149,9 +181,6 @@ public class PromiseImpl<T> implements Promise<T> {
         return this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Promise<T> onResult(final Submitter submitter, final BiConsumer<Result<T>, Submitter> unSafeAction) {
         final BiConsumer<Result<T>, Submitter> action = (result, submitter1) -> {
@@ -164,15 +193,13 @@ public class PromiseImpl<T> implements Promise<T> {
 
         if (value != null) {
             action.accept(value, submitter);
+            callFinalHandler();
             return this;
         }
 
         return attachAction(NODE_POOL.alloc().resultConsumer(action));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Promise<T> onResult(final Consumer<Result<T>> unSafeAction) {
         final BiConsumer<Result<T>, Submitter> action = (result, submitter1) -> {
@@ -185,6 +212,7 @@ public class PromiseImpl<T> implements Promise<T> {
 
         if (value != null) {
             action.accept(value, null);
+            callFinalHandler();
             return this;
         }
 
@@ -203,6 +231,7 @@ public class PromiseImpl<T> implements Promise<T> {
 
         if (value != null) {
             value.onSuccess(action);
+            callFinalHandler();
             return this;
         }
 
@@ -221,6 +250,7 @@ public class PromiseImpl<T> implements Promise<T> {
 
         if (value != null) {
             value.onFailure(action);
+            callFinalHandler();
             return this;
         }
 
@@ -281,45 +311,15 @@ public class PromiseImpl<T> implements Promise<T> {
 
         } while (hasElements);
 
-        if (actionsHandled != null) {
-            actionsHandled.signal();
-        }
+        callFinalHandler();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Promise<T> syncWait() {
-        if (actionsHandled == null) {
-            return this;
-        }
-
-        if (!actionsHandled.await()) {
-            logger().debug("syncWait() was interrupted");
-        }
-        return this;
+    @SuppressWarnings("unchecked")
+    private void callFinalHandler() {
+        final Consumer<Result<T>> handler = (Consumer<Result<T>>) FINALIZER.getAndSet(this, POST_PROCESS_NOP);
+        handler.accept(value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Promise<T> syncWait(final Timeout timeout) {
-        if (actionsHandled == null) {
-            return this;
-        }
-
-        if (!actionsHandled.await(timeout)) {
-            fail(Errors.TIMEOUT);
-            logger().debug("syncWait(Timeout) expired or interrupted");
-        }
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Promise<T> async(final Consumer<Promise<T>> task) {
         SingletonHolder.scheduler()
@@ -330,7 +330,7 @@ public class PromiseImpl<T> implements Promise<T> {
     @Override
     public Promise<T> async(final Timeout timeout, final Consumer<Promise<T>> task) {
         SingletonHolder.scheduler()
-                       .submit(submitter -> submitter.delay(($1,$2) -> task.accept(this), timeout));
+                       .submit(submitter -> submitter.delay(($1, $2) -> task.accept(this), timeout));
         return this;
     }
 
@@ -353,7 +353,7 @@ public class PromiseImpl<T> implements Promise<T> {
         return SingletonHolder.logger();
     }
 
-    private static final class SingletonHolder {
+    static final class SingletonHolder {
         private static final int WORKER_SCHEDULER_SIZE = Math.max(Runtime.getRuntime().availableProcessors() - 1, 2);
 
         private static final TaskScheduler SCHEDULER = AppMetaRepository.instance()

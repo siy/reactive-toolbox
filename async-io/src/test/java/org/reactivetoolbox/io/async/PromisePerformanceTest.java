@@ -111,7 +111,7 @@ public class PromisePerformanceTest {
         latch.await(5, TimeUnit.SECONDS);
     }
 
-    static private Tuple2<Promise<Integer>, Promise<Integer>> configurePromises(int count) {
+    static private Tuple2<Promise<Integer>, Promise<Integer>> configurePromises(final int count) {
         final var origin = Promise.<Integer>promise();
         var last = origin;
 
@@ -122,7 +122,7 @@ public class PromisePerformanceTest {
         return tuple(origin, last);
     }
 
-    static private Tuple2<CompletableFuture<Result<Integer>>, CompletableFuture<Result<Integer>>> configureCompletableFutures(int count) {
+    static private Tuple2<CompletableFuture<Result<Integer>>, CompletableFuture<Result<Integer>>> configureCompletableFutures(final int count) {
         final var origin = new CompletableFuture<Result<Integer>>();
         var last = origin;
 

@@ -12,7 +12,7 @@ import org.reactivetoolbox.io.examples.async.services.TopicService;
 import org.reactivetoolbox.io.examples.async.services.UserService;
 
 import static org.reactivetoolbox.core.lang.functional.Result.fail;
-import static org.reactivetoolbox.io.async.Promise.all;
+import static org.reactivetoolbox.io.async.Promises.all;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 
 public class UserFeedHandler_Test {

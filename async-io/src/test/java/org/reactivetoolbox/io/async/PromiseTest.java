@@ -32,7 +32,7 @@ class PromiseTest {
     @Test
     void multipleResolutionsAreIgnored() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
         promise.ok(1);
         promise.ok(2);
@@ -55,7 +55,7 @@ class PromiseTest {
     @Test
     void thenActionsAreExecuted() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
         promise.ok(1).syncWait();
 
@@ -65,7 +65,7 @@ class PromiseTest {
     @Test
     void thenActionsAreExecutedEvenIfAddedAfterPromiseResolution() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise();
+        final var promise = Promise.<Integer>promise();
 
         promise.ok(1).syncWait();
         promise.onSuccess(holder::set);
@@ -90,7 +90,7 @@ class PromiseTest {
     void mapTransformsValue() {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
-        final var waitable = Promise.<String>waitablePromise();
+        final var waitable = Promise.<String>promise();
 
         final var mappedPromise = promise.map(Objects::toString)
                                          .onSuccess(holder::set)
@@ -119,7 +119,7 @@ class PromiseTest {
     @Test
     void asyncMapResultTransformsValue() {
         final var holder = new AtomicReference<String>();
-        final var threshold = Promise.<String>waitablePromise();
+        final var threshold = Promise.<String>promise();
         final var promise = Promise.<Integer>promise();
 
         promise.mapResult((Integer o) -> Result.ok(Objects.toString(o)))
@@ -137,7 +137,7 @@ class PromiseTest {
     void promiseCanBeResolvedAsynchronouslyWithSuccess() {
         final var currentTid = Thread.currentThread().getId();
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise()
+        final var promise = Promise.<Integer>promise()
                 .onSuccess(val -> assertNotEquals(currentTid, Thread.currentThread().getId()))
                 .onSuccess(holder::set);
 
@@ -150,7 +150,7 @@ class PromiseTest {
     void promiseCanBeResolvedAsynchronouslyWithFailure() {
         final var currentTid = Thread.currentThread().getId();
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise()
+        final var promise = Promise.<Integer>promise()
                 .onFailure(f -> assertNotEquals(currentTid, Thread.currentThread().getId()))
                 .onFailure(f -> holder.set(1));
 
@@ -162,7 +162,7 @@ class PromiseTest {
     @Test
     void syncWaitIsWaitingForResolution() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
         executor.execute(() -> {
             safeSleep(20);
@@ -177,7 +177,7 @@ class PromiseTest {
     @Test
     void syncWaitDoesNotWaitForAlreadyResolved() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
         assertEquals(-1, holder.get());
 
@@ -191,7 +191,7 @@ class PromiseTest {
     @Test
     void syncWaitWithTimeoutIsWaitingForResolution() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set);
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
         assertEquals(-1, holder.get());
 
@@ -227,7 +227,7 @@ class PromiseTest {
     @Test
     void promiseIsResolvedWhenTimeoutExpires() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise().onSuccess(holder::set)
+        final var promise = Promise.<Integer>promise().onSuccess(holder::set)
                                                               .async(timeout(100).millis(), p -> p.ok(123));
 
         assertEquals(-1, holder.get());
@@ -240,7 +240,7 @@ class PromiseTest {
     @Test
     void taskCanBeExecuted() {
         final var holder = new AtomicInteger(-1);
-        final var promise = Promise.<Integer>waitablePromise()
+        final var promise = Promise.<Integer>promise()
                 .onSuccess(holder::set)
                 .when(timeout(100).millis(), ok(123));
 
@@ -254,13 +254,13 @@ class PromiseTest {
     @Test
     void anyResolvedPromiseResolvesResultForFirstPromise() {
         final var holder = new AtomicInteger(-1);
-        final var threshold = Promise.<Integer>waitablePromise();
+        final var threshold = Promise.<Integer>promise();
         final var promise1 = Promise.<Integer>promise();
         final var promise2 = Promise.<Integer>promise();
 
-        Promise.any(promise1, promise2)
-               .onSuccess(holder::set)
-               .chainTo(threshold);
+        Promises.any(promise1, promise2)
+                .onSuccess(holder::set)
+                .chainTo(threshold);
 
         assertEquals(-1, holder.get());
 
@@ -273,12 +273,12 @@ class PromiseTest {
     @Test
     void anyResolvedPromiseResolvesResultForSecondPromise() {
         final var holder = new AtomicInteger(-1);
-        final var threshold = Promise.<Integer>waitablePromise();
+        final var threshold = Promise.<Integer>promise();
         final var promise1 = Promise.<Integer>promise();
         final var promise2 = Promise.<Integer>promise();
 
-        Promise.any(promise1, promise2)
-               .onSuccess(holder::set).chainTo(threshold);
+        Promises.any(promise1, promise2)
+                .onSuccess(holder::set).chainTo(threshold);
 
         assertEquals(-1, holder.get());
 
@@ -292,12 +292,12 @@ class PromiseTest {
     @Test
     void onlySuccessResolvesAnySuccess() {
         final var holder = new AtomicInteger(-1);
-        final var threshold = Promise.<Integer>waitablePromise();
+        final var threshold = Promise.<Integer>promise();
         final var promise1 = Promise.<Integer>promise();
         final var promise2 = Promise.<Integer>promise();
-        Promise.anySuccess(promise1, promise2)
-               .onSuccess(holder::set)
-               .chainTo(threshold);
+        Promises.anySuccess(promise1, promise2)
+                .onSuccess(holder::set)
+                .chainTo(threshold);
 
         assertEquals(-1, holder.get());
 
@@ -316,14 +316,14 @@ class PromiseTest {
     void allFailuresResolvesAnySuccessToFailure() {
         final var holder = new AtomicInteger(-1);
         final var errHolder = new AtomicReference<>();
-        final var threshold = Promise.<Integer>waitablePromise();
+        final var threshold = Promise.<Integer>promise();
         final var promise1 = Promise.<Integer>promise();
         final var promise2 = Promise.<Integer>promise();
 
-        Promise.anySuccess(promise1, promise2)
-               .onSuccess(holder::set)
-               .onFailure(errHolder::set)
-               .chainTo(threshold);
+        Promises.anySuccess(promise1, promise2)
+                .onSuccess(holder::set)
+                .onFailure(errHolder::set)
+                .chainTo(threshold);
 
         assertEquals(-1, holder.get());
 
@@ -381,9 +381,9 @@ class PromiseTest {
                 .async((p, io) -> io.nop(Promise.promise())
                                     .thenDo(() -> p.syncOk("success", null)));
 
-        promise.syncWait(timeout(1).seconds())
-               .onSuccess(success -> assertEquals("success", success))
-               .onFailure(failure -> fail());
+        promise.onSuccess(success -> assertEquals("success", success))
+               .onFailure(failure -> fail())
+               .syncWait(timeout(1).seconds());
 
     }
 
