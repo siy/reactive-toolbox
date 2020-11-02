@@ -1,5 +1,3 @@
-package org.reactivetoolbox.core.lang.support;
-
 /*
  * Copyright (c) 2019, 2020 Sergiy Yevtushenko
  *
@@ -7,7 +5,7 @@ package org.reactivetoolbox.core.lang.support;
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +14,11 @@ package org.reactivetoolbox.core.lang.support;
  * limitations under the License.
  */
 
+package org.reactivetoolbox.core.lang.support;
+
 import org.reactivetoolbox.core.lang.functional.FailureType;
 
-public enum WebFailureTypes implements FailureType {
+public enum WebFailureType implements FailureType {
     BAD_REQUEST(400, "Bad Request"),
     UNAUTHORIZED(401, "Unauthorized"),
     PAYMENT_REQUIRED(402, "Payment Required"),
@@ -70,7 +70,7 @@ public enum WebFailureTypes implements FailureType {
     private final int code;
     private final String description;
 
-    WebFailureTypes(final int code, final String description) {
+    WebFailureType(final int code, final String description) {
         this.code = code;
         this.description = description;
     }

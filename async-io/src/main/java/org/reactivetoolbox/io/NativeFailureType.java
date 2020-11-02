@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2020 Sergiy Yevtushenko
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.reactivetoolbox.io;
 
 import org.reactivetoolbox.core.lang.functional.Failure;
@@ -8,7 +24,7 @@ import org.reactivetoolbox.core.lang.functional.Result;
 /**
  * Representation of native error codes in Java
  */
-public enum NativeError implements FailureType {
+public enum NativeFailureType implements FailureType {
     ENOERR(0, "Operation successful"),
     EPERM(1, "Operation not permitted"),
     ENOENT(2, "No such file or directory"),
@@ -147,21 +163,21 @@ public enum NativeError implements FailureType {
     // Always keep this constant last in the list
     EUNKNOWN(Integer.MAX_VALUE, "Memory page has hardware error");
 
-    private static final NativeError[] index = new NativeError[NativeError.values()[NativeError.values().length - 2].code];
+    private static final NativeFailureType[] index = new NativeFailureType[NativeFailureType.values()[NativeFailureType.values().length - 2].code];
     private final int code;
     private final String description;
     private final Result result;
     private final Failure failure;
 
     static {
-        for(final NativeError err : NativeError.values()) {
+        for(final NativeFailureType err : NativeFailureType.values()) {
             if (err.code < index.length) {
                 index[err.code] = err;
             }
         }
     }
 
-    NativeError(final int code, final String description) {
+    NativeFailureType(final int code, final String description) {
         this.code = code;
         this.description = description;
         failure = Failure.failure(this, description);
@@ -196,7 +212,7 @@ public enum NativeError implements FailureType {
         return fromCode(code).asResult();
     }
 
-    public static NativeError fromCode(final int code) {
+    public static NativeFailureType fromCode(final int code) {
         final int key = Math.abs(code);
 
         if (code >= index.length) {

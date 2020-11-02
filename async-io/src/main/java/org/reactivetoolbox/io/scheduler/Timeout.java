@@ -1,4 +1,3 @@
-package org.reactivetoolbox.io.scheduler;
 /*
  * Copyright (c) 2019, 2020 Sergiy Yevtushenko
  *
@@ -6,7 +5,7 @@ package org.reactivetoolbox.io.scheduler;
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +13,8 @@ package org.reactivetoolbox.io.scheduler;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package org.reactivetoolbox.io.scheduler;
 
 import org.reactivetoolbox.core.lang.Tuple;
 import org.reactivetoolbox.core.lang.Tuple.Tuple2;

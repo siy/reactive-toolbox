@@ -1,10 +1,26 @@
+/*
+ * Copyright (c) 2020 Sergiy Yevtushenko
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.reactivetoolbox.io.uring;
 
 import org.reactivetoolbox.core.lang.Tuple.Tuple3;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.io.Bitmask;
 import org.reactivetoolbox.io.CompletionHandler;
-import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.NativeFailureType;
 import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.async.file.FileDescriptor;
@@ -26,9 +42,9 @@ import java.util.Deque;
 import java.util.Set;
 
 import static org.reactivetoolbox.core.lang.Tuple.tuple;
-import static org.reactivetoolbox.io.NativeError.ENOTSOCK;
-import static org.reactivetoolbox.io.NativeError.EPFNOSUPPORT;
-import static org.reactivetoolbox.io.NativeError.result;
+import static org.reactivetoolbox.io.NativeFailureType.ENOTSOCK;
+import static org.reactivetoolbox.io.NativeFailureType.EPFNOSUPPORT;
+import static org.reactivetoolbox.io.NativeFailureType.result;
 import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.addressIn;
 import static org.reactivetoolbox.io.uring.struct.offheap.OffHeapSocketAddress.addressIn6;
 
@@ -110,7 +126,7 @@ public class UringHolder implements AutoCloseable {
 
         if (rc != 0) {
             RawMemory.dispose(ringBase);
-            return NativeError.fromCode(rc).asResult();
+            return NativeFailureType.fromCode(rc).asResult();
         }
 
         return Result.ok(new UringHolder(numEntries, ringBase));

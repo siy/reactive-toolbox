@@ -1,10 +1,26 @@
+/*
+ * Copyright (c) 2020 Sergiy Yevtushenko
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.reactivetoolbox.core.lang;
 
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.Errors;
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Result;
-import org.reactivetoolbox.core.lang.support.WebFailureTypes;
+import org.reactivetoolbox.core.lang.support.WebFailureType;
 
 import java.util.Objects;
 
@@ -12,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
-import static org.reactivetoolbox.core.lang.support.WebFailureTypes.INTERNAL_SERVER_ERROR;
+import static org.reactivetoolbox.core.lang.support.WebFailureType.INTERNAL_SERVER_ERROR;
 
 class ResultTest {
     static final Failure TEST_FAILURE = Failure.failure(INTERNAL_SERVER_ERROR, "Test error");
@@ -69,12 +85,12 @@ class ResultTest {
     }
 
     private Result<Integer> validateGE(final int value, final int min) {
-        return value < min ? Result.fail(Failure.failure(WebFailureTypes.UNPROCESSABLE_ENTITY, "Input value below %d", min))
+        return value < min ? Result.fail(Failure.failure(WebFailureType.UNPROCESSABLE_ENTITY, "Input value below %d", min))
                            : ok(value);
     }
 
     private Result<Integer> validateLE(final int value, final int max) {
-        return value > max ? Result.fail(Failure.failure(WebFailureTypes.UNPROCESSABLE_ENTITY, "Input value above %d", max))
+        return value > max ? Result.fail(Failure.failure(WebFailureType.UNPROCESSABLE_ENTITY, "Input value above %d", max))
                            : ok(value);
     }
 }

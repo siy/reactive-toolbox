@@ -1,5 +1,3 @@
-package org.reactivetoolbox.io.async;
-
 /*
  * Copyright (c) 2019, 2020 Sergiy Yevtushenko
  *
@@ -7,7 +5,7 @@ package org.reactivetoolbox.io.async;
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +13,8 @@ package org.reactivetoolbox.io.async;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package org.reactivetoolbox.io.async;
 
 import org.reactivetoolbox.core.Errors;
 import org.reactivetoolbox.core.lang.functional.Failure;
@@ -385,17 +385,28 @@ public interface Promise<T> {
 
     /**
      * Synchronously wait for resolution.
+     * If for some reason waiting will be interrupted before resolution, then instance
+     * will be resolved with {@link Errors#CANCELLED} error.
      */
     default void syncWait() {
         syncWait(__ -> {});
     }
 
+    /**
+     * Synchronously wait for resolution and then pass resulting value to provided handler.
+     * <p>
+     * WARNING: If for some reason waiting will be interrupted before resolution, then instance
+     * will be resolved with {@link Errors#CANCELLED} error. Note that in this case handler
+     * will be invoked asynchronously.
+     *
+     * @param handler
+     *         Handler which will receive result with which {@link Promise} was resolved.
+     */
     void syncWait(final Consumer<Result<T>> handler);
 
     /**
-     * Synchronously wait for resolution or timeout.
-     * <p>
-     * If timeout expires and {@link Promise} is not resolved, then it is resolved with {@link Errors#TIMEOUT}.
+     * Synchronously wait for resolution or timeout. If timeout expires before {@link Promise} is resolved,
+     * then it is resolved with {@link Errors#TIMEOUT} error.
      *
      * @param timeout
      *         Timeout amount
@@ -404,6 +415,15 @@ public interface Promise<T> {
         syncWait(timeout, __ -> {});
     }
 
+    /**
+     * Synchronously wait for resolution or timeout and then pass resulting value to provided handler.
+     * If timeout expires before {@link Promise} is resolved, then it is resolved with {@link Errors#TIMEOUT}.
+     *
+     * @param timeout
+     *         Timeout amount
+     * @param handler
+     *         Handler which will receive result with which {@link Promise} was resolved.
+     */
     void syncWait(final Timeout timeout, final Consumer<Result<T>> handler);
 
     /**

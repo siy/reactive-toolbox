@@ -14,25 +14,31 @@
  * limitations under the License.
  */
 
-package org.reactivetoolbox.io.async.net;
+package org.reactivetoolbox.core.lang.support;
 
-/**
- * Socket types.
- */
-public enum SocketType {
-    STREAM(1),       // Provides sequenced, reliable, two-way, connection-based byte streams.
-    DGRAM(2),        // Supports datagrams (connectionless, unreliable messages of a fixed maximum length).
-    RAW(3),          // Provides raw network protocol access.
-    RDM(4),          // Provides a reliable datagram layer that does not guarantee ordering.
-    SEQPACKET(5),    // Provides a sequenced, reliable, two-way connection-based data transmission path for datagrams of fixed maximum length
-    ;
+import org.reactivetoolbox.core.lang.functional.FailureType;
+
+public enum CoreFailureType implements FailureType {
+    TIMEOUT(1, "Processing timeout"),
+    CANCELLED(2, "Processing cancelled"),
+    UNKNOWN_TYPE(3, "The type is unknown"),
+    INVALID_VALUE(4, "The passed value is invalid");
+
     private final int code;
+    private final String description;
 
-    SocketType(final int code) {
+    CoreFailureType(final int code, final String description) {
         this.code = code;
+        this.description = description;
     }
 
-    public int code() {
+    @Override
+    public int typeCode() {
         return code;
+    }
+
+    @Override
+    public String description() {
+        return description;
     }
 }

@@ -1,4 +1,4 @@
-package org.reactivetoolbox.io.uring.utils;/*
+/*
  * Class NativeUtils is published under the The MIT License:
  *
  * Copyright (c) 2012 Adam Heinrich <adam@adamh.cz>
@@ -21,6 +21,8 @@ package org.reactivetoolbox.io.uring.utils;/*
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+package org.reactivetoolbox.io.uring.utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;

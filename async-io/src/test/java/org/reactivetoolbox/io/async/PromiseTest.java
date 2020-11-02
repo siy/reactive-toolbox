@@ -1,5 +1,22 @@
+/*
+ * Copyright (c) 2020 Sergiy Yevtushenko
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.reactivetoolbox.io.async;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.openjdk.jol.info.ClassLayout;
 import org.reactivetoolbox.core.Errors;
@@ -17,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.reactivetoolbox.core.Errors.TIMEOUT;
+import static org.reactivetoolbox.core.lang.functional.Option.option;
 import static org.reactivetoolbox.core.lang.functional.Result.ok;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 
@@ -25,8 +43,8 @@ class PromiseTest {
 
     @Test
     void checkInstanceSize() {
-        System.out.println(ClassLayout.parseClass(PromiseImpl.class).toPrintable());
-        System.out.println(ClassLayout.parseClass(CompletableFuture.class).toPrintable());
+        assertEquals(ClassLayout.parseClass(CompletableFuture.class).instanceSize(),
+                     ClassLayout.parseClass(PromiseImpl.class).instanceSize());
     }
 
     @Test
@@ -90,15 +108,13 @@ class PromiseTest {
     void mapTransformsValue() {
         final var holder = new AtomicReference<String>();
         final var promise = Promise.<Integer>promise();
-        final var waitable = Promise.<String>promise();
 
         final var mappedPromise = promise.map(Objects::toString)
-                                         .onSuccess(holder::set)
-                                         .chainTo(waitable);
+                                         .onSuccess(holder::set);
 
         promise.ok(1234);
 
-        waitable.syncWait();
+        mappedPromise.syncWait();
 
         assertEquals("1234", holder.get());
     }
@@ -210,6 +226,7 @@ class PromiseTest {
     @Test
     void syncWaitWithTimeoutIsWaitingForTimeout() {
         final var holder = new AtomicInteger(-1);
+        final var resultHolder = new AtomicReference<Result<Integer>>();
         final var promise = Promise.<Integer>promise().onSuccess(holder::set);
 
         assertEquals(-1, holder.get());
@@ -219,7 +236,12 @@ class PromiseTest {
             promise.ok(1);
         });
 
-        promise.syncWait(timeout(10).millis());
+        promise.syncWait(timeout(100).millis(), resultHolder::set);
+
+        option(resultHolder.get())
+                .whenEmpty(Assertions::fail)
+                .whenPresent(result -> result.onSuccess(v -> fail())
+                                             .onFailure(f -> assertEquals(Errors.TIMEOUT, f)));
 
         assertEquals(-1, holder.get());
     }
@@ -228,7 +250,8 @@ class PromiseTest {
     void promiseIsResolvedWhenTimeoutExpires() {
         final var holder = new AtomicInteger(-1);
         final var promise = Promise.<Integer>promise().onSuccess(holder::set)
-                                                              .async(timeout(100).millis(), p -> p.ok(123));
+                                                      .async(timeout(100).millis(),
+                                                             p -> p.ok(123));
 
         assertEquals(-1, holder.get());
 

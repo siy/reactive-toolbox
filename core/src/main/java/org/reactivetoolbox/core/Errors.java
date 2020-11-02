@@ -1,4 +1,3 @@
-package org.reactivetoolbox.core;
 /*
  * Copyright (c) 2019, 2020 Sergiy Yevtushenko
  *
@@ -6,7 +5,7 @@ package org.reactivetoolbox.core;
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,8 +14,10 @@ package org.reactivetoolbox.core;
  * limitations under the License.
  */
 
+package org.reactivetoolbox.core;
+
 import org.reactivetoolbox.core.lang.functional.Failure;
-import org.reactivetoolbox.core.lang.support.WebFailureTypes;
+import org.reactivetoolbox.core.lang.support.CoreFailureType;
 
 import java.lang.reflect.Type;
 
@@ -25,20 +26,20 @@ import java.lang.reflect.Type;
  */
 public interface Errors {
     // Scheduler
-    Failure TIMEOUT = Failure.failure(WebFailureTypes.REQUEST_TIMEOUT, "Processing timeout error");
-    Failure CANCELLED = Failure.failure(WebFailureTypes.NO_RESPONSE, "Request cancelled");
+    Failure TIMEOUT = Failure.failure(CoreFailureType.TIMEOUT, "Processing timeout error");
+    Failure CANCELLED = Failure.failure(CoreFailureType.CANCELLED, "Request cancelled");
 
     //TypeToken
     static Failure TYPE_ERROR(final Type type) {
-        return Failure.failure(WebFailureTypes.INTERNAL_SERVER_ERROR, "Unable to recognize type {0}", type);
+        return Failure.failure(CoreFailureType.UNKNOWN_TYPE, "Unable to recognize type {0}", type);
     }
 
     //Various validations - KSUID/ULID, etc.
     static Failure NOT_VALID(final String message) {
-        return Failure.failure(WebFailureTypes.UNPROCESSABLE_ENTITY, message);
+        return Failure.failure(CoreFailureType.INVALID_VALUE, message);
     }
 
     static Failure NOT_VALID(final String format, final Object... params) {
-        return Failure.failure(WebFailureTypes.UNPROCESSABLE_ENTITY, format, params);
+        return Failure.failure(CoreFailureType.INVALID_VALUE, format, params);
     }
 }

@@ -1,7 +1,23 @@
+/*
+ * Copyright (c) 2020 Sergiy Yevtushenko
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.reactivetoolbox.io.uring.exchange;
 
 import org.reactivetoolbox.core.lang.functional.Result;
-import org.reactivetoolbox.io.NativeError;
+import org.reactivetoolbox.io.NativeFailureType;
 import org.reactivetoolbox.io.async.Submitter;
 import org.reactivetoolbox.io.async.common.SizeT;
 import org.reactivetoolbox.io.uring.struct.offheap.OffHeapIoVector;
@@ -13,7 +29,7 @@ import java.util.function.BiConsumer;
 import static org.reactivetoolbox.io.uring.AsyncOperation.IORING_OP_READV;
 
 public class ReadVectorExchangeEntry extends AbstractExchangeEntry<ReadVectorExchangeEntry, SizeT> {
-    private static final Result<SizeT> EOF_RESULT = Result.fail(NativeError.ENODATA.asFailure());
+    private static final Result<SizeT> EOF_RESULT = Result.fail(NativeFailureType.ENODATA.asFailure());
 
     private OffHeapIoVector ioVector;
     private byte flags;
@@ -56,6 +72,6 @@ public class ReadVectorExchangeEntry extends AbstractExchangeEntry<ReadVectorExc
     private Result<SizeT> bytesReadToResult(final int res) {
         return res == 0 ? EOF_RESULT
                         : res > 0 ? sizeResult(res)
-                                  : NativeError.result(res);
+                                  : NativeFailureType.result(res);
     }
 }

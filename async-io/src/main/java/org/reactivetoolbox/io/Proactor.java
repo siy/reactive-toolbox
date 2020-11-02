@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2020 Sergiy Yevtushenko
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.reactivetoolbox.io;
 
 import org.reactivetoolbox.core.lang.functional.Option;
@@ -148,7 +164,7 @@ public class Proactor implements Submitter {
                       final Option<Timeout> timeout) {
 
         if (buffer.used() == 0) {
-            completion.accept(NativeError.ENODATA.asResult(), this);
+            completion.accept(NativeFailureType.ENODATA.asResult(), this);
             return;
         }
 
@@ -221,7 +237,7 @@ public class Proactor implements Submitter {
         final var clientAddress = OffHeapSocketAddress.unsafeSocketAddress(address);
 
         if (clientAddress == null) {
-            completion.accept(NativeError.EPFNOSUPPORT.asResult(), this);
+            completion.accept(NativeFailureType.EPFNOSUPPORT.asResult(), this);
             return;
         }
 

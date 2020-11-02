@@ -1,5 +1,3 @@
-package org.reactivetoolbox.io.async.impl;
-
 /*
  * Copyright (c) 2019, 2020 Sergiy Yevtushenko
  *
@@ -7,7 +5,7 @@ package org.reactivetoolbox.io.async.impl;
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +14,9 @@ package org.reactivetoolbox.io.async.impl;
  * limitations under the License.
  */
 
+package org.reactivetoolbox.io.async.impl;
+
+import org.reactivetoolbox.core.Errors;
 import org.reactivetoolbox.core.lang.functional.Failure;
 import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.log.CoreLogger;
@@ -34,6 +35,8 @@ import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import static org.reactivetoolbox.io.async.util.BooleanLatch.booleanLatch;
 
 /**
  * Implementation of {@link Promise}
@@ -139,16 +142,23 @@ public class PromiseImpl<T> implements Promise<T> {
 
     @Override
     public void syncWait(final Consumer<Result<T>> handler) {
-        prepareWait(handler).await();
+        if (!prepareWait(handler).await()) {
+            resolve(Result.fail(Errors.CANCELLED));
+        }
     }
 
     @Override
     public void syncWait(final Timeout timeout, final Consumer<Result<T>> handler) {
-        prepareWait(handler).await(timeout);
+        final BooleanLatch latch = prepareWait(handler);
+
+        if (!latch.await(timeout)) {
+            resolve(Result.fail(Errors.TIMEOUT));
+            latch.await();
+        }
     }
 
     private BooleanLatch prepareWait(final Consumer<Result<T>> appHandler) {
-        final BooleanLatch latch = new BooleanLatch();
+        final var latch = booleanLatch();
         final Consumer<Result<T>> handler = result -> {
             appHandler.accept(result);
             latch.signal();
@@ -197,6 +207,7 @@ public class PromiseImpl<T> implements Promise<T> {
             return this;
         }
 
+        //noinspection unchecked
         return attachAction(NODE_POOL.alloc().resultConsumer(action));
     }
 
@@ -216,6 +227,7 @@ public class PromiseImpl<T> implements Promise<T> {
             return this;
         }
 
+        //noinspection unchecked
         return attachAction(NODE_POOL.alloc().resultConsumer(action));
     }
 
@@ -235,6 +247,7 @@ public class PromiseImpl<T> implements Promise<T> {
             return this;
         }
 
+        //noinspection unchecked
         return attachAction(NODE_POOL.alloc().successConsumer(action));
     }
 
@@ -254,6 +267,7 @@ public class PromiseImpl<T> implements Promise<T> {
             return this;
         }
 
+        //noinspection unchecked
         return attachAction(NODE_POOL.alloc().failureConsumer(action));
     }
 

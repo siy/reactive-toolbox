@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package org.reactivetoolbox.io.uring.struct;
+package org.reactivetoolbox.io.examples.style;
 
-public abstract class AbstractExternalRawStructure<T extends ExternalRawStructure<T>> extends AbstractRawStructure<T> implements ExternalRawStructure<T> {
-    protected AbstractExternalRawStructure(final long address, final int size) {
-        super(address, size);
+import org.reactivetoolbox.core.lang.Tuple.Tuple1;
+import org.reactivetoolbox.core.lang.functional.Functions.FN1;
+import org.reactivetoolbox.io.async.Promise;
+
+public interface Mapper<T1> {
+    Promise<Tuple1<T1>> id();
+
+    default <R> Promise<R> map(final FN1<R, T1> mapper) {
+        return id().map(tuple -> tuple.map(mapper));
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public T reposition(final long address) {
-        address(address);
-        return (T) this;
+    default <R> Promise<R> flatMap(final FN1<Promise<R>, T1> mapper) {
+        return id().flatMap(tuple -> tuple.map(mapper));
     }
 }
