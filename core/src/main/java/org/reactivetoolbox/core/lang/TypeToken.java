@@ -37,12 +37,14 @@ import java.lang.reflect.Type;
  *
  * See http://gafter.blogspot.com/2006/12/super-type-tokens.html for more details.
  */
+@SuppressWarnings("unused")
 public abstract class TypeToken<T> {
     public Result<Type> type() {
         final Type type = getClass().getGenericSuperclass();
 
         if (type instanceof ParameterizedType pt) {
-            return Result.ok(pt.getActualTypeArguments()[0]);
+            final Type[] typeArgument = pt.getActualTypeArguments();
+            return Result.ok(typeArgument[0]);
         }
 
         return Errors.TYPE_ERROR(type).asResult();

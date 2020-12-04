@@ -16,7 +16,7 @@
 
 package org.reactivetoolbox.io.async;
 
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.lang.Tuple.Tuple1;
 import org.reactivetoolbox.core.lang.Tuple.Tuple2;
@@ -42,7 +42,7 @@ import static org.reactivetoolbox.io.async.Promises.all;
 import static org.reactivetoolbox.io.scheduler.Timeout.timeout;
 
 class PromiseAllTest {
-    @BeforeClass
+    @BeforeAll
     public static void setupExceptionConsumer() {
         Promise.exceptionConsumer(throwable -> System.out.println("Exception inside Promise: " + throwable));
     }

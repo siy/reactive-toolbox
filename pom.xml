@@ -36,13 +36,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.release>14</java.release>
+        <java.release>15</java.release>
         <java.enable-preview>--enable-preview</java.enable-preview>
 
         <!-- Testing -->
-        <junit.version>5.6.2</junit.version>
-        <junit.params.version>5.3.1</junit.params.version>
-        <junit.platform.version>1.6.2</junit.platform.version>
+        <junit.version>5.7.0</junit.version>
+        <junit.params.version>5.7.0</junit.params.version>
+        <junit.platform.version>1.7.0</junit.platform.version>
     </properties>
 
     <dependencyManagement>
@@ -73,12 +73,18 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.junit.vintage</groupId>-->
+<!--            <artifactId>junit-vintage-engine</artifactId>-->
+<!--            <version>${junit.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <artifactId>junit</artifactId>-->
+<!--                    <groupId>junit</groupId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.junit.platform</groupId>
@@ -99,6 +105,12 @@
             <artifactId>junit-jupiter-params</artifactId>
             <version>${junit.params.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -143,8 +155,8 @@
                 <configuration>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
-                    <source>14</source>
-                    <target>14</target>
+                    <source>${java.release}</source>
+                    <target>${java.release}</target>
                     <compilerArgs>
                         <arg>${java.enable-preview}</arg>
                         <arg>--add-exports</arg>

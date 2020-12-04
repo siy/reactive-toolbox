@@ -20,6 +20,7 @@
                         --illegal-access=permit
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang.support=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang.collection=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.core/org.reactivetoolbox.core.lang.functional=ALL-UNNAMED
                         ${java.enable-preview}
                         -Xmx1024m

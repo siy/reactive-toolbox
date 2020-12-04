@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package org.reactivetoolbox.core.lang;
+package org.reactivetoolbox.core.lang.functional;
 
 import org.junit.jupiter.api.Test;
 import org.reactivetoolbox.core.Errors;
-import org.reactivetoolbox.core.lang.functional.Failure;
-import org.reactivetoolbox.core.lang.functional.Result;
 import org.reactivetoolbox.core.lang.support.WebFailureType;
 
 import java.util.Objects;

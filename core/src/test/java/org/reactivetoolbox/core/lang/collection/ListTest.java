@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package org.reactivetoolbox.core.lang;
+package org.reactivetoolbox.core.lang.collection;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.reactivetoolbox.core.lang.collection.List;
 import org.reactivetoolbox.core.lang.functional.Option;
 
 import java.util.ArrayList;
