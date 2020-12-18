@@ -46,7 +46,7 @@ class ListTest {
         assertEquals("List(1,2,3)", list.toString());
         assertEquals(list(1, 2, 3).hashCode(), list.hashCode());
         assertNotEquals(0, list.hashCode());
-        assertFalse(arrayList.equals(""));
+        assertFalse(list.equals(""));
     }
 
     @Test
@@ -165,5 +165,21 @@ class ListTest {
         assertEquals(list(1, 2, 3), list.filter(v -> v < 4));
         assertEquals(list(1, 2, 3), list.filter(v -> v > 0));
         assertEquals(list(), list.filter(v -> v < 0));
+    }
+
+    @Test
+    void listCanBeFoldedLeft() {
+        final var list = list(1, 2, 3);
+
+        assertEquals(6, list.foldLeft(0, value -> sum -> sum + value));
+        assertEquals(" 1 2 3", list.foldLeft("", value -> sum -> sum + " " + value));
+    }
+
+    @Test
+    void listCanBeFoldedRight() {
+        final var list = list(1, 2, 3);
+
+        assertEquals(6, list.foldRight(0, value -> sum -> sum + value)); //order does not matter here
+        assertEquals(" 3 2 1", list.foldRight("", value -> sum -> sum + " " + value));
     }
 }

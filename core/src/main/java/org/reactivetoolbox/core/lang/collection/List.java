@@ -28,6 +28,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -109,10 +110,19 @@ public interface List<E> extends Collection<E> {
      *
      * @return New list with transformed elements
      */
-    <R> List<R> mapN(FN2<R, Integer, E> mapper);
+    <R> List<R> mapN(final FN2<R, Integer, E> mapper);
 
     /**
      * Perform 'folding' or 'reduction' of list elements starting from the rightmost (last) element.
+     * <p>
+     * Unlike similar {@link Stream#reduce(Object, BiFunction, BinaryOperator)} method, all reduction operations are
+     * expressed using single function which accepts the element value and returns function which combines (probably
+     * transformed) value with accumulator. Although this sounds complicated, in practice this results to very concise
+     * expressions. For example:
+     * <pre>
+     * list.foldRight(0, value -> sum -> sum + value); // sum of all elements in the list
+     * list.foldRight("", value -> sum -> sum + " " + value); // string with list values
+     * </pre>
      *
      * @param seed
      *        Initial value
@@ -121,10 +131,19 @@ public interface List<E> extends Collection<E> {
      *
      * @return result of application of provided function to all list elements.
      */
-    <V> V foldRight(final V seed, FN1<FN1<V, V>, E> function);
+    <V> V foldRight(final V seed, final FN1<FN1<V, V>, E> function);
 
     /**
      * Perform 'folding' or 'reduction' of list elements starting from the leftmost (first) element.
+     * <p>
+     * Unlike similar {@link Stream#reduce(Object, BiFunction, BinaryOperator)} method, all reduction operations are
+     * expressed using single function which accepts the element value and returns function which combines (probably
+     * transformed) value with accumulator. Although this sounds complicated, in practice this results to very concise
+     * expressions. For example:
+     * <pre>
+     * list.foldLeft(0, value -> sum -> sum + value); // sum of all elements in the list
+     * list.foldLeft("", value -> sum -> sum + " " + value); // string with list values
+     * </pre>
      *
      * @param seed
      *        Initial value
@@ -181,8 +200,8 @@ public interface List<E> extends Collection<E> {
 
     @Override
     default List<E> filter(final Predicate<E> predicate) {
-        return ListBuilder.<E>builder(size())
-                       .then(builder -> mapN((n, e) -> predicate.test(e) ? builder.append(e) : null)).build();
+        return foldLeft(ListBuilder.<E>builder(size()),
+                        e -> builder -> predicate.test(e) ? builder.append(e): builder).build();
     }
 
     @Override
@@ -199,10 +218,12 @@ public interface List<E> extends Collection<E> {
 
     boolean elementEquals(E[] elements);
 
+    @SuppressWarnings("unchecked")
     static <T> List<T> from(final java.util.Collection<T> source) {
         return (List<T>) list(source.toArray());
     }
 
+    @SuppressWarnings("unchecked")
     static <T> List<T> list() {
         return (List<T>) EMPTY_LIST;
     }

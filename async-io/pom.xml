@@ -146,6 +146,7 @@
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.raw=ALL-UNNAMED
                         --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.uring=ALL-UNNAMED
+                        --add-opens org.reactivetoolbox.io.async/org.reactivetoolbox.io.async.generated=ALL-UNNAMED
                         --add-opens java.base/jdk.internal.misc=org.reactivetoolbox.io.async,ALL-UNNAMED
 
                         --add-exports java.base/jdk.internal.misc=org.reactivetoolbox.io.async

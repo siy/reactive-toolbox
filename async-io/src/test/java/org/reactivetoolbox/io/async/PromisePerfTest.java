@@ -153,8 +153,7 @@ public class PromisePerfTest {
 
         final long finish = promises.map((origin, last) -> {
             origin.ok(1);
-            last.onSuccess(holder::set)
-                .syncWait(timeout(10).seconds());
+            last.syncWait(timeout(10).seconds(), value -> value.onSuccess(holder::set));
             return System.nanoTime() - start;
         });
 
