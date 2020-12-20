@@ -75,6 +75,13 @@ class ListTest {
     }
 
     @Test
+    void listCanBeSortedWithoutComparator() {
+        final var list = list(3, 2, 1);
+
+        assertEquals(list(1, 2, 3), list.sort());
+    }
+
+    @Test
     void listCanBeSplitByPredicate() {
         final var result = list(4, 3, 2, 1).splitBy(e -> e >= 3);
 
@@ -95,6 +102,19 @@ class ListTest {
         final var list = list(3, 2, 1).mapN(Integer::sum);
 
         assertEquals(list(3, 3, 3), list);
+    }
+
+    @Test
+    void applyReceivesAllElements() {
+        final var list = list(3, 2, 1);
+        final int[] values = new int[list.size()];
+        final var count = new AtomicInteger(0);
+
+        list.apply(v -> values[count.getAndIncrement()] = v);
+
+        assertEquals(3, values[0]);
+        assertEquals(2, values[1]);
+        assertEquals(1, values[2]);
     }
 
     @Test
