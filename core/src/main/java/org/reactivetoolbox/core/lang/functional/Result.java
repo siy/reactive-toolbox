@@ -56,6 +56,7 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return transformed value (in case of success) or current instance (in case of failure)
      */
+    @SuppressWarnings("unchecked")
     default <R> Result<R> map(final FN1<R, ? super T> mapper) {
         return fold(l -> (Result<R>) this, r -> ok(mapper.apply(r)));
     }
@@ -70,6 +71,7 @@ public interface Result<T> extends Either<Failure, T> {
      *
      * @return transformed value (in case of success) or current instance (in case of failure)
      */
+    @SuppressWarnings("unchecked")
     default <R> Result<R> flatMap(final FN1<Result<R>, ? super T> mapper) {
         return fold(t -> (Result<R>) this, mapper);
     }
@@ -127,6 +129,11 @@ public interface Result<T> extends Either<Failure, T> {
      */
     Result<T> onSuccess(final Consumer<T> consumer);
 
+    /**
+     * Run provided action in case of success.
+     *
+     * @return current instance for fluent call chaining
+     */
     Result<T> onSuccessDo(final Runnable action);
 
     /**
@@ -139,6 +146,11 @@ public interface Result<T> extends Either<Failure, T> {
      */
     Result<T> onFailure(final Consumer<? super Failure> consumer);
 
+    /**
+     * Run provided action in case of failure.
+     *
+     * @return current instance for fluent call chaining
+     */
     Result<T> onFailureDo(final Runnable action);
 
     /**
@@ -149,7 +161,7 @@ public interface Result<T> extends Either<Failure, T> {
      * @return {@link Option} instance which is present in case of success and missing
      *         in case of failure.
      */
-    default Option<T> asOption() {
+    default Option<T> toOption() {
         return fold(t1 -> Option.empty(), Option::option);
     }
 
@@ -186,6 +198,7 @@ public interface Result<T> extends Either<Failure, T> {
                                   : Result.ok(List.from(values));
     }
 
+    //TODO: switch to "Mappers" approach
     static <T1> Result<Tuple1<T1>> flatten(final Result<T1> value) {
         return value.flatMap(vv1 -> ok(tuple(vv1)));
     }

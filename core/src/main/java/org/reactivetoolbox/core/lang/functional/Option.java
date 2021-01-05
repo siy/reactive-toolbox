@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020 Sergiy Yevtushenko
+ * Copyright (c) 2019-2021 Sergiy Yevtushenko
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * Implementation of basic immutable container for value which may or may not be present. Note that unlike {@link
- * java.util.Optional} this implementation does not treat {@code null} as {@code empty} value. The {@code null} value is a
- * completely valid content of non-empty instance. The {@code empty} instance actually does not contain anything. For convenience
- * there is a static factory method {@link #option(Object)} which creates empty instance for {@code null} values and non-empty
- * instance for other values.
+ * Implementation of basic immutable container for value which may or may not be present.
  *
  * @param <T>
  *         Type of contained value
@@ -57,8 +53,8 @@ public abstract class Option<T> implements Either<Void, T> {
         return (Option<R>) EMPTY_OPTION;
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static final Option EMPTY_OPTION = new Option() {
-        @SuppressWarnings("unchecked")
         @Override
         public Object fold(final FN1 leftMapper, final FN1 rightMapper) {
             return leftMapper.apply(null);
