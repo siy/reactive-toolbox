@@ -28,13 +28,13 @@ import static org.reactivetoolbox.core.lang.functional.Unit.unit;
  *
  * @param <S>
  *         State type
- * @param <A>
+ * @param <T>
  *         Value type
  */
-public class State<S, A> {
-    private final FN1<Tuple2<A, S>, S> runState;
+public class State<S, T> {
+    private final FN1<Tuple2<T, S>, S> runState;
 
-    private State(final FN1<Tuple2<A, S>, S> runState) {
+    private State(final FN1<Tuple2<T, S>, S> runState) {
         this.runState = runState;
     }
 
@@ -97,17 +97,17 @@ public class State<S, A> {
                             f -> acc -> f.map(acc, a -> b -> b.append(a)));
     }
 
-    public <B> State<S, B> flatMap(final FN1<State<S, B>, A> f) {
+    public <B> State<S, B> flatMap(final FN1<State<S, B>, T> f) {
         return new State<>(s -> run(s).map((value, state) -> f.apply(value)
                                                               .run(state)));
     }
 
-    public <B> State<S, B> map(final FN1<B, A> mapper) {
-        return flatMap(a -> state(mapper.apply(a)));
+    public <B> State<S, B> map(final FN1<B, T> mapper) {
+        return flatMap(t -> state(mapper.apply(t)));
     }
 
-    public <B, C> State<S, C> map(final State<S, B> sb, final FN1<FN1<C, B>, A> mapper) {
-        return flatMap(a -> sb.map(b -> mapper.apply(a)
+    public <B, C> State<S, C> map(final State<S, B> sb, final FN1<FN1<C, B>, T> mapper) {
+        return flatMap(t -> sb.map(b -> mapper.apply(t)
                                               .apply(b)));
     }
 
@@ -118,11 +118,11 @@ public class State<S, A> {
      *         Input state.
      * @return retrieved value
      */
-    public A eval(final S s) {
+    public T eval(final S s) {
         return run(s).map((value, state) -> value);
     }
 
-    private Tuple2<A, S> run(final S s) {
+    private Tuple2<T, S> run(final S s) {
         return runState.apply(s);
     }
 }
